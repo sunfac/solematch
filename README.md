@@ -33,6 +33,10 @@ Science-backed running shoe matching with FIFA-style card reveals. An Expo (Reac
 5. **Strava (Phase 2):** developer app + paid sub (~$12/mo) + compliance memo per spec §8.
 6. **Imagery:** offers currently link brand sites with images only where press-kit licensed; Skimlinks Product Search API images unlock once the publisher ID exists.
 
+## Status (12 June 2026)
+
+MVP complete and gate-verified: `tsc` clean · 92 unit tests green · 3 Playwright E2E green against the static export · `expo export` clean. Lighthouse not yet run — score it against `npm run e2e:serve` before launch (spec P1 target ≥85 mobile).
+
 ## Architecture notes
 
 - `src/engine`, `src/data`, `src/scores` are **pure TypeScript** (no React imports) — the deterministic matching engine, fully unit-tested, importable by app and (Phase 2) Supabase Edge Function alike. No ML, no LLM in the matching path (Strava-compliance + honest-science policy, spec §4/§8).
