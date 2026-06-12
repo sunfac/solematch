@@ -70,7 +70,7 @@ export default function ResultsScreen() {
           <Pressable key={r.role} onPress={() => router.push(`/shoe/${r.pick.shoe.slug}`)}>
             <View style={styles.fanCard}>
               <View style={styles.fanScale}>
-                <ShoeCard shoe={r.pick.shoe} scores={r.pick.scores} match={r.pick.match} tiltEnabled={false} />
+                <ShoeCard shoe={r.pick.shoe} scores={r.pick.scores} match={r.pick.match} context="match" tiltEnabled={false} />
               </View>
             </View>
           </Pressable>
@@ -117,6 +117,18 @@ export default function ResultsScreen() {
               <Text style={styles.edge} numberOfLines={2}>
                 {r.edge}
               </Text>
+            ) : null}
+            {r.alternates.length > 0 ? (
+              <View style={styles.altRow}>
+                <Text style={styles.altLabel}>Also strong:</Text>
+                {r.alternates.map((alt) => (
+                  <Pressable key={alt.shoe.slug} onPress={() => router.push(`/shoe/${alt.shoe.slug}`)}>
+                    <Text style={styles.altChip}>
+                      {alt.shoe.brand} {alt.shoe.model} {alt.match}% · £{alt.shoe.msrpGbp}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             ) : null}
           </View>
           <View style={styles.roleRight}>
@@ -183,6 +195,19 @@ const styles = StyleSheet.create({
   reasonRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: space(2) },
   reasonText: { flex: 1, fontFamily: font.ui, fontSize: 12, color: color.muted, lineHeight: 16 },
   edge: { fontFamily: font.ui, fontSize: 11.5, color: color.cyan, marginTop: space(1.5), lineHeight: 15 },
+  altRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space(2), marginTop: space(2.5) },
+  altLabel: { fontFamily: font.uiMed, fontSize: 11, color: color.muted },
+  altChip: {
+    fontFamily: font.uiMed,
+    fontSize: 11,
+    color: color.ink,
+    borderWidth: 1,
+    borderColor: color.line,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    overflow: 'hidden',
+  },
   roleRight: { alignItems: 'flex-end', justifyContent: 'space-between' },
   roleMatch: { fontFamily: font.display, fontSize: 22, color: color.volt },
   rolePrice: { fontFamily: font.ui, fontSize: 13, color: color.muted },

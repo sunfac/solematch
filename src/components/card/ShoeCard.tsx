@@ -16,6 +16,18 @@ export const CARD_W = 320;
 export const CARD_H = 460;
 
 /**
+ * On personal-match surfaces the card celebrates YOUR fit, not the market tier —
+ * a 90% match framed "BRONZE" reads as a downgrade (owner feedback). Tier
+ * framing stays on catalogue surfaces where it ranks the market.
+ */
+export function matchBand(match: number): { label: string; colour: string } {
+  if (match >= 92) return { label: 'ELITE MATCH', colour: tierColor.ELITE };
+  if (match >= 85) return { label: 'STRONG MATCH', colour: color.volt };
+  if (match >= 78) return { label: 'SOLID MATCH', colour: color.cyan };
+  return { label: 'YOUR MATCH', colour: tierColor.SILVER };
+}
+
+/**
  * The FUT-style shoe card: tier frame → stage gradient → shoe image (counter-
  * parallax) → holographic foil (web) → identity + six-stat panel. Drag to tilt.
  */
@@ -23,6 +35,7 @@ export function ShoeCard({
   shoe,
   scores,
   match,
+  context = 'catalogue',
   animateStats = false,
   statsDelay = 0,
   tiltEnabled = true,
@@ -30,14 +43,18 @@ export function ShoeCard({
   shoe: Shoe;
   scores: ShoeScores;
   match?: number;
+  /** 'match' = personal result surfaces (match-quality framing); 'catalogue' = market tier framing */
+  context?: 'match' | 'catalogue';
   animateStats?: boolean;
   statsDelay?: number;
   tiltEnabled?: boolean;
 }) {
   const { rx, ry, pan } = useTilt(tiltEnabled);
   const tier = scores.tier;
-  const frame = tierColor[tier];
-  const imageUrl = imageFor(shoe.slug);
+  const personal = context === 'match' && match !== undefined;
+  const band = personal ? matchBand(match) : undefined;
+  const frame = band ? band.colour : tierColor[tier];
+  const image = imageFor(shoe.slug);
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [
@@ -66,21 +83,27 @@ export function ShoeCard({
         <View style={styles.topRow}>
           {match !== undefined ? (
             <View style={styles.matchWrap}>
-              <Text style={styles.matchValue}>{match}</Text>
-              <Text style={styles.matchLabel}>% MATCH</Text>
+              <Text style={[styles.matchValue, band && { color: band.colour }]}>{match}</Text>
+              <Text style={[styles.matchLabel, band && { color: band.colour }]}>% MATCH</Text>
             </View>
           ) : (
             <Text style={styles.overall}>{scores.overall}</Text>
           )}
-          <TierBadge tier={tier} />
+          {band ? (
+            <View style={[styles.bandBadge, { borderColor: band.colour }]}>
+              <Text style={[styles.bandText, { color: band.colour }]}>{band.label}</Text>
+            </View>
+          ) : (
+            <TierBadge tier={tier} />
+          )}
         </View>
 
         <Animated.View style={[styles.imageZone, parallaxStyle]}>
-          {imageUrl ? (
-            <View style={styles.imageTile}>
+          {image ? (
+            <View style={image.cut ? styles.imageFloat : styles.imageTile}>
               <Image
-                source={{ uri: imageUrl }}
-                style={styles.image}
+                source={{ uri: image.url }}
+                style={image.cut ? styles.imageCut : styles.image}
                 contentFit="contain"
                 transition={200}
                 accessibilityLabel={`${shoe.brand} ${shoe.model}`}
@@ -115,7 +138,7 @@ export function ShoeCard({
           <StatPanel scores={scores} animate={animateStats} startDelay={statsDelay} />
         </View>
 
-        <HoloFoil intense={tier === 'ELITE'} />
+        <HoloFoil intense={personal ? (match ?? 0) >= 92 : tier === 'ELITE'} />
       </Animated.View>
     </GestureDetector>
   );
@@ -138,8 +161,11 @@ const styles = StyleSheet.create({
   matchValue: { fontFamily: font.display, fontSize: 30, color: color.volt },
   matchLabel: { fontFamily: font.display, fontSize: 11, letterSpacing: 1, color: color.volt },
   overall: { fontFamily: font.display, fontSize: 30, color: color.ink },
-  imageZone: { height: 150, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  // Nike-PDP-style light tile: product photos on any background read as intentional
+  imageZone: { height: 162, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  // background-free product shots float straight on the card, rendered large
+  imageFloat: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  imageCut: { width: '100%', height: '100%' },
+  // Nike-PDP-style light tile for sources with baked backgrounds
   imageTile: {
     width: '96%',
     height: '100%',
@@ -150,6 +176,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: { width: '94%', height: '92%' },
+  bandBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  bandText: { fontFamily: font.display, fontSize: 10, letterSpacing: 1.5 },
   monogram: { alignItems: 'center', justifyContent: 'center', gap: 6 },
   monogramModel: {
     fontFamily: font.display,

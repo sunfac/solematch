@@ -13,11 +13,11 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { CARD_W, ShoeCard } from '@/components/card/ShoeCard';
+import { CARD_W, matchBand, ShoeCard } from '@/components/card/ShoeCard';
 import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
 import { PillButton } from '@/components/ui/PillButton';
 import type { RoleResult } from '@/types/match';
-import { color, font, space, tierColor } from '@/theme/tokens';
+import { color, font, space } from '@/theme/tokens';
 import { CountUp } from './CountUp';
 import { ParticleBurst } from './ParticleBurst';
 import { RoleBanner } from './RoleBanner';
@@ -44,7 +44,8 @@ export function RevealSequence({
   const [stage, setStage] = useState<Stage>(reduced ? 'done' : 'banner');
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const { pick } = roleResult;
-  const elite = pick.scores.tier === 'ELITE';
+  // the celebration scales with YOUR match quality, not the market tier
+  const elite = pick.match >= 92;
 
   const bannerY = useSharedValue(reduced ? 0 : -60);
   const bannerOpacity = useSharedValue(reduced ? 1 : 0);
@@ -109,7 +110,7 @@ export function RevealSequence({
 
   const showCard = stage === 'slam' || stage === 'stats' || stage === 'done';
   const statsOn = stage === 'stats' || stage === 'done';
-  const tierColour = tierColor[pick.scores.tier];
+  const tierColour = matchBand(pick.match).colour;
 
   return (
     <Pressable style={styles.stage} onPress={stage !== 'done' ? skip : undefined} testID="reveal-stage">
@@ -148,6 +149,7 @@ export function RevealSequence({
               shoe={pick.shoe}
               scores={pick.scores}
               match={pick.match}
+              context="match"
               animateStats={!reduced}
               statsDelay={statsOn ? 0 : 99999}
               tiltEnabled={stage === 'done'}

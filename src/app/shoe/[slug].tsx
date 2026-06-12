@@ -60,7 +60,12 @@ export default function ShoeDetailScreen() {
       </Pressable>
 
       <View style={styles.cardWrap}>
-        <ShoeCard shoe={shoe} scores={scores} match={inResult?.pick.match} />
+        <ShoeCard
+          shoe={shoe}
+          scores={scores}
+          match={inResult?.pick.match}
+          context={inResult ? 'match' : 'catalogue'}
+        />
       </View>
 
       {inResult ? (

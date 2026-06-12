@@ -1,7 +1,13 @@
 import devImagesRaw from '@/data/devImages.json';
 import offersRaw from '@/data/offers.json';
 
-const DEV_IMAGES: Record<string, string> = devImagesRaw as Record<string, string>;
+export interface ImageRef {
+  url: string;
+  /** background-free (transparent) — render floating; otherwise on a light tile */
+  cut: boolean;
+}
+
+const DEV_IMAGES: Record<string, ImageRef> = devImagesRaw as Record<string, ImageRef>;
 
 export interface Offer {
   retailer: string;
@@ -45,9 +51,9 @@ const isLocalPreview =
   typeof window !== 'undefined' &&
   /^(localhost|127\.|0\.0\.0\.0)/.test(window.location?.hostname ?? '');
 
-export function imageFor(slug: string): string | undefined {
+export function imageFor(slug: string): ImageRef | undefined {
   const licensed = (OFFERS[slug] ?? []).find((o) => o.imageUrl)?.imageUrl;
-  if (licensed) return licensed;
+  if (licensed) return { url: licensed, cut: false };
   if (isLocalPreview) return DEV_IMAGES[slug];
   return undefined;
 }
