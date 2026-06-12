@@ -47,7 +47,8 @@
     "typecheck": "tsc --noEmit",
     "export:web": "expo export --platform web",
     "e2e": "playwright test",
-    "e2e:serve": "npx serve dist -s -l 4173"
+    "e2e:serve": "npx serve dist -s -l 4173",
+    "e2e:serve:full": "expo export --platform web && npx serve dist -s -l 4173"
   },
   "private": true
 }
