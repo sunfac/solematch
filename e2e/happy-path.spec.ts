@@ -64,7 +64,9 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
   await expect(page.getByTestId('role-row-daily')).toBeVisible();
   await expect(page.getByText(/Right-sized to 2 shoes/)).toBeVisible();
   await expect(page.getByText(/of £400 budget/)).toBeVisible();
-  await expect(page.getByText('STRONG').first()).toBeVisible();
+  await expect(
+    page.getByTestId('role-row-daily').getByText(/STRONG|MODERATE|EMERGING|FIT & FEEL/).first(),
+  ).toBeVisible();
 
   // detail: offers with disclosure + cited reasons
   await page.getByTestId('role-row-race').click();

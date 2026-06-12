@@ -179,15 +179,14 @@ export function RevealSequence({
           </Animated.View>
           <View style={styles.ctaRow}>
             <PillButton
-              label="Why this shoe"
-              variant="ghost"
-              onPress={() => router.push(`/shoe/${pick.shoe.slug}`)}
-              style={{ flex: 1 }}
+              label={`Where to buy · £${pick.shoe.msrpGbp}`}
+              onPress={() => router.push(`/shoe/${pick.shoe.slug}#offers`)}
+              style={{ flex: 1.4 }}
             />
             <PillButton
-              label="Where to buy"
+              label="The science"
               variant="ghost"
-              onPress={() => router.push(`/shoe/${pick.shoe.slug}#offers`)}
+              onPress={() => router.push(`/shoe/${pick.shoe.slug}`)}
               style={{ flex: 1 }}
             />
           </View>

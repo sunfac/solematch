@@ -1,7 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { buildAffiliateUrl, offersFor } from '@/lib/affiliate';
 import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
@@ -20,9 +21,21 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default function ResultsScreen() {
   const result = useResultsStore((s) => s.result);
+  const matchId = useResultsStore((s) => s.matchId);
+  const region = useQuizStore((s) => s.region);
   const resetQuiz = useQuizStore((s) => s.reset);
   const clearResults = useResultsStore((s) => s.clear);
   const [copied, setCopied] = useState(false);
+
+  // the direct money path: cheapest offer for a pick, attributed to this match
+  const buyNow = (slug: string) => {
+    const offers = offersFor(slug, region);
+    if (offers.length === 0) return;
+    const best = [...offers].sort((a, b) => a.priceGbp - b.priceGbp)[0];
+    const subId = `${matchId ?? 'results'}:${slug}:results`;
+    track('offer_click', { slug, retailer: best.retailer, subId });
+    Linking.openURL(buildAffiliateUrl(best, subId)).catch(() => {});
+  };
 
   if (!result) {
     return (
@@ -133,7 +146,9 @@ export default function ResultsScreen() {
           </View>
           <View style={styles.roleRight}>
             <Text style={styles.roleMatch}>{r.pick.match}%</Text>
-            <Text style={styles.rolePrice}>£{r.pick.shoe.msrpGbp}</Text>
+            <Pressable onPress={() => buyNow(r.pick.shoe.slug)} accessibilityRole="button">
+              <Text style={styles.buyLink}>£{r.pick.shoe.msrpGbp} →</Text>
+            </Pressable>
           </View>
         </Pressable>
       ))}
@@ -210,7 +225,7 @@ const styles = StyleSheet.create({
   },
   roleRight: { alignItems: 'flex-end', justifyContent: 'space-between' },
   roleMatch: { fontFamily: font.display, fontSize: 22, color: color.volt },
-  rolePrice: { fontFamily: font.ui, fontSize: 13, color: color.muted },
+  buyLink: { fontFamily: font.uiMed, fontSize: 13, color: color.cyan },
   notes: {
     marginTop: space(5),
     backgroundColor: color.surface,

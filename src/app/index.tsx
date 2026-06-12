@@ -22,17 +22,18 @@ export default function Landing() {
         />
         <Text style={styles.wordmark}>SOLEMATCH</Text>
         <Text style={styles.headline}>
-          Your perfect running shoe,{'\n'}
+          Stop guessing.{'\n'}Your shoe,{' '}
           <Text style={{ color: color.volt }}>revealed.</Text>
         </Text>
         <Text style={styles.sub}>
-          Nine quick questions. Our evidence-cited engine matches you to real, current shoes —
-          one perfect pick or a full training rotation — and reveals them as cards worth
-          screenshotting.
+          Nine questions about how you actually run — pace, miles, body, budget. Our engine reads
+          the published science, cuts through the shop-floor myths, and deals your match as a
+          holographic card built to be screenshotted. Every pick explains itself, with the study
+          to prove it.
         </Text>
         <PillButton
           testID="cta-start"
-          label="Find my shoe"
+          label="Reveal my match"
           onPress={() => {
             reset();
             track('quiz_start');
@@ -41,29 +42,30 @@ export default function Landing() {
           style={{ marginTop: space(6), alignSelf: 'stretch' }}
         />
         <Link href="/browse" style={styles.browseLink}>
-          or browse the full catalogue →
+          or scout the full catalogue →
         </Link>
       </View>
 
       <View style={styles.strip}>
         <Text style={styles.stripStat}>25+</Text>
         <Text style={styles.stripText}>
-          peer-reviewed studies behind every recommendation — every reason carries its citation and
-          an honest confidence badge.
+          peer-reviewed studies power every pick. Tap any reason and read the actual science —
+          graded honestly, STRONG to EMERGING.
         </Text>
       </View>
       <View style={styles.strip}>
         <Text style={[styles.stripStat, { color: color.cyan }]}>{SHOES.length}</Text>
         <Text style={styles.stripText}>
-          real, current road shoes — specs verified, scored across six attributes, tiered against
-          the live market. Catalogue refreshed June 2026; new releases land continuously.
+          current road shoes, spec-verified and tiered against the live market — with prices
+          compared across the retailers runners actually use.
         </Text>
       </View>
       <View style={styles.strip}>
         <Text style={[styles.stripStat, { color: color.magenta }]}>−39%</Text>
         <Text style={styles.stripText}>
-          injury hazard associated with rotating differing pairs (Malisoux 2015) — the science our
-          rotation builder is named for.
+          injury hazard associated with rotating differing pairs (Malisoux 2015). It is the
+          single best-evidenced reason to own more than one shoe — our rotation builder is named
+          for it.
         </Text>
       </View>
 
