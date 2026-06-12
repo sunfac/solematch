@@ -12,6 +12,8 @@ export interface ScoreCtx {
   factor: number;
   /** single-shoe "one for everything" mode */
   versatility: boolean;
+  /** profile-derived seed for the published near-tie variety jitter */
+  seed: string;
 }
 
 export interface Contribution {

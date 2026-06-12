@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
+  FadeIn,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -13,14 +14,15 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { CARD_W, ShoeCard } from '@/components/card/ShoeCard';
+import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
 import { PillButton } from '@/components/ui/PillButton';
 import type { RoleResult } from '@/types/match';
-import { color, font, space } from '@/theme/tokens';
+import { color, font, space, tierColor } from '@/theme/tokens';
 import { CountUp } from './CountUp';
 import { ParticleBurst } from './ParticleBurst';
 import { RoleBanner } from './RoleBanner';
 
-type Stage = 'banner' | 'match' | 'slam' | 'stats' | 'done';
+type Stage = 'banner' | 'match' | 'tease' | 'slam' | 'stats' | 'done';
 
 /**
  * One card's walkout, staged per spec §6.2: banner drop → match odometer →
@@ -49,6 +51,7 @@ export function RevealSequence({
   const cardScale = useSharedValue(reduced ? 1 : 0.55);
   const cardOpacity = useSharedValue(reduced ? 1 : 0);
   const shineX = useSharedValue(reduced ? CARD_W * 1.4 : -CARD_W);
+  const flash = useSharedValue(0);
 
   useEffect(() => {
     if (reduced) return;
@@ -58,20 +61,24 @@ export function RevealSequence({
     bannerOpacity.value = withTiming(1, { duration: 350 });
 
     at(650, () => setStage('match'));
-    at(elite ? 1450 : 1250, () => {
+    // the FUT guessing gap: brand silhouette glows before the card lands
+    at(1350, () => setStage('tease'));
+    at(elite ? 2350 : 2050, () => {
       setStage('slam');
-      cardOpacity.value = withTiming(1, { duration: 180 });
+      flash.value = withSequence(withTiming(0.85, { duration: 90 }), withTiming(0, { duration: 380 }));
+      cardOpacity.value = withTiming(1, { duration: 160 });
       cardScale.value = withSequence(
-        withTiming(1.05, { duration: 320, easing: Easing.out(Easing.quad) }),
-        withTiming(1, { duration: 140 }),
+        withTiming(1.08, { duration: 300, easing: Easing.out(Easing.quad) }),
+        withTiming(0.985, { duration: 110 }),
+        withTiming(1, { duration: 90 }),
       );
-      shineX.value = withDelay(360, withTiming(CARD_W * 1.4, { duration: 520 }));
+      shineX.value = withDelay(340, withTiming(CARD_W * 1.4, { duration: 520 }));
       if (Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
       }
     });
-    at(elite ? 2050 : 1850, () => setStage('stats'));
-    at(elite ? 3100 : 2900, () => setStage('done'));
+    at(elite ? 2950 : 2650, () => setStage('stats'));
+    at(elite ? 4000 : 3700, () => setStage('done'));
 
     return () => timers.current.forEach(clearTimeout);
   }, [reduced, elite, bannerY, bannerOpacity, cardScale, cardOpacity, shineX]);
@@ -83,6 +90,7 @@ export function RevealSequence({
     cardScale.value = 1;
     cardOpacity.value = 1;
     shineX.value = CARD_W * 1.4;
+    flash.value = 0;
     setStage('done');
   };
 
@@ -97,9 +105,11 @@ export function RevealSequence({
   const shineStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shineX.value }, { rotateZ: '18deg' }],
   }));
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
 
   const showCard = stage === 'slam' || stage === 'stats' || stage === 'done';
   const statsOn = stage === 'stats' || stage === 'done';
+  const tierColour = tierColor[pick.scores.tier];
 
   return (
     <Pressable style={styles.stage} onPress={stage !== 'done' ? skip : undefined} testID="reveal-stage">
@@ -126,6 +136,12 @@ export function RevealSequence({
       </View>
 
       <View style={styles.cardZone}>
+        {stage === 'tease' ? (
+          <Animated.View entering={FadeIn.duration(200)} style={styles.tease}>
+            <ShoeSilhouette accent={tierColour} secondary={color.cyan} detail={color.line} width={250} height={110} />
+            <Text style={[styles.teaseBrand, { color: tierColour }]}>{pick.shoe.brand.toUpperCase()}</Text>
+          </Animated.View>
+        ) : null}
         {showCard ? (
           <Animated.View style={cardStyle}>
             <ShoeCard
@@ -147,6 +163,7 @@ export function RevealSequence({
           </Animated.View>
         ) : null}
         {elite && (stage === 'slam' || stage === 'stats') && !reduced ? <ParticleBurst /> : null}
+        <Animated.View pointerEvents="none" style={[styles.flash, { backgroundColor: tierColour }, flashStyle]} />
       </View>
 
       {stage === 'done' ? (
@@ -188,6 +205,9 @@ const styles = StyleSheet.create({
   matchBig: { fontFamily: font.display, fontSize: 44, color: color.volt },
   matchPct: { fontFamily: font.display, fontSize: 13, letterSpacing: 2, color: color.volt },
   cardZone: { marginTop: space(2), height: 480, alignItems: 'center', justifyContent: 'center' },
+  tease: { alignItems: 'center', gap: space(3) },
+  teaseBrand: { fontFamily: font.display, fontSize: 15, letterSpacing: 8 },
+  flash: { position: 'absolute', top: -60, bottom: -60, left: -600, right: -600, opacity: 0 },
   shine: { position: 'absolute', top: -40, bottom: -40, width: 90 },
   ctas: { width: '100%', maxWidth: 360, gap: space(2.5), marginTop: space(2) },
   ctaRow: { flexDirection: 'row', gap: space(2.5) },

@@ -8,7 +8,7 @@ import { baseProfile } from './filtersRolePlan.test';
 
 function ctxFor(p: Profile) {
   const mp = marathonPaceSecPerKm(p);
-  return { mp, factor: plateFactor(mp), versatility: false };
+  return { mp, factor: plateFactor(mp), versatility: false, seed: JSON.stringify(p) };
 }
 
 function raceRanking(p: Profile) {

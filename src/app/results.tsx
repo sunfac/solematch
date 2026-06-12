@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ShoeCard } from '@/components/card/ShoeCard';
+import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
@@ -62,12 +62,16 @@ export default function ResultsScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        snapToInterval={CARD_W * 0.78 + 14}
+        decelerationRate="fast"
         contentContainerStyle={styles.fan}
       >
         {result.roles.map((r) => (
           <Pressable key={r.role} onPress={() => router.push(`/shoe/${r.pick.shoe.slug}`)}>
             <View style={styles.fanCard}>
-              <ShoeCard shoe={r.pick.shoe} scores={r.pick.scores} match={r.pick.match} tiltEnabled={false} />
+              <View style={styles.fanScale}>
+                <ShoeCard shoe={r.pick.shoe} scores={r.pick.scores} match={r.pick.match} tiltEnabled={false} />
+              </View>
             </View>
           </Pressable>
         ))}
@@ -109,6 +113,11 @@ export default function ResultsScreen() {
                 {r.pick.reasons[0].text}
               </Text>
             </View>
+            {r.edge ? (
+              <Text style={styles.edge} numberOfLines={2}>
+                {r.edge}
+              </Text>
+            ) : null}
           </View>
           <View style={styles.roleRight}>
             <Text style={styles.roleMatch}>{r.pick.match}%</Text>
@@ -147,8 +156,14 @@ export default function ResultsScreen() {
 
 const styles = StyleSheet.create({
   title: { fontFamily: font.display, fontSize: 26, color: color.ink, marginBottom: space(4) },
-  fan: { gap: space(3), paddingBottom: space(2) },
-  fanCard: { transform: [{ scale: 0.86 }], marginHorizontal: -20, marginVertical: -28 },
+  fan: { gap: 14, paddingBottom: space(2), paddingRight: space(8) },
+  fanCard: { width: CARD_W * 0.78, height: CARD_H * 0.78, overflow: 'visible' },
+  fanScale: {
+    width: CARD_W,
+    height: CARD_H,
+    transform: [{ scale: 0.78 }],
+    transformOrigin: 'top left',
+  } as object,
   budgetBar: { marginTop: space(4), gap: 6 },
   budgetText: { fontFamily: font.ui, fontSize: 13, color: color.muted },
   budgetTrack: { height: 6, borderRadius: 3, backgroundColor: color.surface2, overflow: 'hidden' },
@@ -167,6 +182,7 @@ const styles = StyleSheet.create({
   roleShoe: { fontFamily: font.uiMed, fontSize: 16, color: color.ink, marginTop: 3 },
   reasonRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: space(2) },
   reasonText: { flex: 1, fontFamily: font.ui, fontSize: 12, color: color.muted, lineHeight: 16 },
+  edge: { fontFamily: font.ui, fontSize: 11.5, color: color.cyan, marginTop: space(1.5), lineHeight: 15 },
   roleRight: { alignItems: 'flex-end', justifyContent: 'space-between' },
   roleMatch: { fontFamily: font.display, fontSize: 22, color: color.volt },
   rolePrice: { fontFamily: font.ui, fontSize: 13, color: color.muted },

@@ -5,6 +5,7 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { TierBadge } from '@/components/ui/Badge';
 import { HoloFoil } from './HoloFoil';
+import { ShoeSilhouette } from './ShoeSilhouette';
 import { StatPanel } from './StatPanel';
 import { useTilt } from '@/components/reveal/useTilt';
 import { imageFor } from '@/lib/affiliate';
@@ -85,10 +86,10 @@ export function ShoeCard({
             />
           ) : (
             <View style={styles.monogram}>
-              <Text style={[styles.monogramText, { color: frame }]}>
-                {shoe.brand.slice(0, 1)}
+              <ShoeSilhouette accent={frame} secondary={color.cyan} detail={color.muted} />
+              <Text style={styles.monogramModel}>
+                {shoe.brand.toUpperCase()} {shoe.model.toUpperCase()}
               </Text>
-              <Text style={styles.monogramModel}>{shoe.model.toUpperCase()}</Text>
             </View>
           )}
         </Animated.View>
@@ -101,6 +102,11 @@ export function ShoeCard({
             {shoe.weightG} g · {shoe.dropMm} mm drop · {shoe.foamName}
             {shoe.plate !== 'none' ? ` · ${shoe.plate} plate` : ''}
           </Text>
+          {shoe.athleteNotes ? (
+            <Text style={styles.athlete} numberOfLines={2}>
+              {shoe.athleteNotes}
+            </Text>
+          ) : null}
         </View>
 
         <View style={styles.stats}>
@@ -132,11 +138,18 @@ const styles = StyleSheet.create({
   overall: { fontFamily: font.display, fontSize: 30, color: color.ink },
   imageZone: { height: 150, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   image: { width: '92%', height: '100%' },
-  monogram: { alignItems: 'center', justifyContent: 'center' },
-  monogramText: { fontFamily: font.display, fontSize: 84, lineHeight: 88 },
-  monogramModel: { fontFamily: font.display, fontSize: 11, letterSpacing: 3, color: color.muted },
+  monogram: { alignItems: 'center', justifyContent: 'center', gap: 6 },
+  monogramModel: {
+    fontFamily: font.display,
+    fontSize: 10,
+    letterSpacing: 2.5,
+    color: color.muted,
+    maxWidth: 250,
+    textAlign: 'center',
+  },
   identity: { marginTop: 6, marginBottom: 12 },
   name: { fontFamily: font.uiMed, fontSize: 16.5, color: color.ink },
   meta: { fontFamily: font.ui, fontSize: 11.5, color: color.muted, marginTop: 2 },
+  athlete: { fontFamily: font.ui, fontSize: 10.5, color: color.cyan, marginTop: 4, fontStyle: 'italic' },
   stats: { marginTop: 'auto' },
 });

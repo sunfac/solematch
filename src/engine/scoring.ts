@@ -35,11 +35,32 @@ const roleCeiling = (role: Role, factor: number): number =>
 
 const clampMatch = (n: number) => Math.max(40, Math.min(99, Math.round(n)));
 
+/** FNV-1a — tiny deterministic hash for the near-tie variety jitter. */
+function fnv(str: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Near-tie variety (published on /methodology): a deterministic, profile-seeded
+ * jitter of at most ±0.8 points. Far below any meaningful score difference, so
+ * it can only reorder shoes that are statistically tied — different runners see
+ * different (equally right) picks instead of one shoe for everyone, and the
+ * same runner always sees the same result.
+ */
+export const TIE_JITTER = 0.8;
+const jitterFor = (seed: string, slug: string): number =>
+  ((fnv(`${seed}|${slug}`) % 2000) / 1000 - 1) * TIE_JITTER;
+
 export function scoreShoeForRole(s: Shoe, p: Profile, role: Role, ctx: ScoreCtx): ScoredShoe {
   const scores = SCORED.get(s.slug);
   if (!scores) throw new Error(`no scores for ${s.slug}`);
 
-  let roleScore = 0.55 * CATEGORY_FIT[role][s.category];
+  let roleScore = 0.55 * CATEGORY_FIT[role][s.category] + jitterFor(ctx.seed, s.slug);
   const contributions: Array<{ delta: number; reason?: Reason }> = [];
 
   for (const mod of MODIFIERS) {

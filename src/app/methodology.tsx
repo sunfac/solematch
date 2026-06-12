@@ -41,7 +41,10 @@ export default function MethodologyScreen() {
         role-weighted expression of those six. Community consensus — when independent reviewers
         and the running community converge on a shoe — adds a published +{COMMUNITY_BONUS}, never
         more. Tiers are percentile-based against the current market: the top 10% of the catalogue
-        is ELITE, the next 25% GOLD, the next 40% SILVER, the rest BRONZE.
+        is ELITE, the next 25% GOLD, the next 40% SILVER, the rest BRONZE. When two shoes are
+        statistically tied for your slot (within ±0.8 points), a deterministic, profile-seeded
+        tiebreak decides — different runners see different but equally right picks, and the same
+        runner always gets the same answer.
       </Text>
 
       <Text style={styles.sectionTitle}>What we deliberately do NOT do</Text>

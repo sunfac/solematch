@@ -1,4 +1,7 @@
+import devImagesRaw from '@/data/devImages.json';
 import offersRaw from '@/data/offers.json';
+
+const DEV_IMAGES: Record<string, string> = devImagesRaw as Record<string, string>;
 
 export interface Offer {
   retailer: string;
@@ -31,7 +34,15 @@ export function offersFor(slug: string, region: 'UK' | 'US' = 'UK'): Offer[] {
   return regional.length > 0 ? regional : all;
 }
 
-/** Licensed product image where one exists (press-kit/brand newsroom seeded). */
+/**
+ * Product image resolution. Licensed sources (offer feeds / press kits) always
+ * win. devImages.json holds brand-site product images for LOCAL PREVIEW ONLY —
+ * gated behind EXPO_PUBLIC_PREVIEW_IMAGES, which deployed builds must NOT set
+ * until affiliate image licences exist (spec §5.3 / §9.2).
+ */
 export function imageFor(slug: string): string | undefined {
-  return (OFFERS[slug] ?? []).find((o) => o.imageUrl)?.imageUrl;
+  const licensed = (OFFERS[slug] ?? []).find((o) => o.imageUrl)?.imageUrl;
+  if (licensed) return licensed;
+  if (process.env.EXPO_PUBLIC_PREVIEW_IMAGES === '1') return DEV_IMAGES[slug];
+  return undefined;
 }

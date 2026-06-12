@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { SHOES } from '@/data/catalogue';
 import { runMatch } from '@/engine';
 import { RevealSequence } from '@/components/reveal/RevealSequence';
 import { Screen } from '@/components/ui/Screen';
@@ -10,18 +11,10 @@ import { useQuizStore } from '@/state/quizStore';
 import { useResultsStore } from '@/state/resultsStore';
 import { color, font, space } from '@/theme/tokens';
 
-const SUSPENSE_COPY = [
-  'Reading the evidence…',
-  'Weighing 19 carbon plates…',
-  'Checking foam energy return…',
-  'Consulting Malisoux et al. (2015)…',
-  'Balancing your budget…',
-  'Building your reveal…',
-];
+const SUSPENSE_MS = 2400;
 
-const SUSPENSE_MS = 2000;
-
-function Suspense() {
+function Suspense({ lines }: { lines: string[] }) {
+  const SUSPENSE_COPY = lines;
   const [line, setLine] = useState(0);
   const sweep = useSharedValue(-1);
   useEffect(() => {
@@ -57,9 +50,18 @@ export default function RevealScreen() {
   }, [result, setResult]);
 
   if (!ready) {
+    const draft = useQuizStore.getState();
+    const lines = [
+      `Scanning ${SHOES.length} shoes against your ${draft.weeklyKm ?? 25} km weeks…`,
+      'Reading the evidence…',
+      'Weighing 19 carbon plates…',
+      `Balancing your £${draft.budgetAmountGbp} budget…`,
+      'Consulting Malisoux et al. (2015)…',
+      'Building your reveal…',
+    ];
     return (
       <Screen>
-        <Suspense />
+        <Suspense lines={lines} />
       </Screen>
     );
   }

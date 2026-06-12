@@ -103,13 +103,47 @@ export function assembleRotation(
     notes.push('Includes a stretch pick within 10% of your budget.');
   }
 
+  const STAT_LABEL: Record<string, string> = {
+    spd: 'speed',
+    csh: 'cushioning',
+    stb: 'stability',
+    lgt: 'lightness',
+    dur: 'durability',
+    val: 'value',
+  };
+
   const results: RoleResult[] = roles.map((role, i) => {
     const ranking = rankingsByRole.get(role)!;
     const pick = picks[i];
     const alternates = ranking
       .filter((s) => !picks.some((f) => f.shoe.slug === s.shoe.slug))
       .slice(0, 2);
-    return { role, pick, alternates };
+
+    // Budget-allocation transparency: when the optimiser passed over a
+    // higher-scoring shoe to fund the rest of the rotation, say so.
+    const top = ranking[0];
+    if (top.shoe.slug !== pick.shoe.slug && top.roleScore - pick.roleScore >= 1.5 && top.shoe.msrpGbp > pick.shoe.msrpGbp + 10) {
+      notes.push(
+        `Budget allocation: in the ${role} slot we picked the ${pick.shoe.brand} ${pick.shoe.model} (£${pick.shoe.msrpGbp}) over the higher-scoring ${top.shoe.brand} ${top.shoe.model} (£${top.shoe.msrpGbp}) — the saving buys a stronger shoe elsewhere in your rotation.`,
+      );
+    }
+
+    // Comparative edge vs the nearest alternate — the "why this one" line.
+    let edge: string | undefined;
+    const rival = alternates[0];
+    if (rival) {
+      const dims = ['spd', 'csh', 'stb', 'lgt', 'dur', 'val'] as const;
+      const bestDim = dims.reduce((a, b) =>
+        pick.scores[a] - rival.scores[a] >= pick.scores[b] - rival.scores[b] ? a : b,
+      );
+      const gap = pick.scores[bestDim] - rival.scores[bestDim];
+      edge =
+        gap >= 3
+          ? `Beats the ${rival.shoe.brand} ${rival.shoe.model} on ${STAT_LABEL[bestDim]} (+${gap}) for this slot`
+          : `A dead heat with the ${rival.shoe.brand} ${rival.shoe.model} — fit and feel should decide`;
+    }
+
+    return { role, pick, alternates, edge };
   });
 
   return { roles: results, notes, costGbp: cost };

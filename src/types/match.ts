@@ -22,6 +22,8 @@ export interface RoleResult {
   role: Role;
   pick: ScoredShoe;
   alternates: ScoredShoe[];
+  /** one-line comparative edge vs the nearest alternate ("intelligence" line) */
+  edge?: string;
 }
 
 export interface MatchResult {

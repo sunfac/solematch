@@ -23,6 +23,16 @@ Science-backed running shoe matching with FIFA-style card reveals. An Expo (Reac
 | `EXPO_PUBLIC_SKIMLINKS_ID` | Wraps outbound retailer links for commission | Plain links, no tracking |
 | `EXPO_PUBLIC_POSTHOG_KEY` | Analytics events | `console.debug` fallback |
 | `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Phase-2 remote data mode | Bundled static catalogue |
+| `EXPO_PUBLIC_PREVIEW_IMAGES` | `1` enables brand-site product images from `devImages.json` — **local preview only, never set on deployed builds** until affiliate image licences exist | Tier-coloured shoe silhouettes |
+
+## Data freshness
+
+The market cycles ~12 months, so the catalogue is built to refresh: `src/data/shoes.json` is the
+single source (validated by tests), `scripts/gen-offers.ts` regenerates offers, and
+`scripts/calibrate.ts` re-ranks tiers after any change — test invariants are authoritative over
+formula constants (plan decision 8). Refresh cadence: quarterly review + release-watch
+(Phase 2 automates this via the Supabase cron per spec §5.4); the landing page shows the
+catalogue stamp.
 
 ## Owner checklist (launch + Phase 2)
 

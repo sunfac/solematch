@@ -1,5 +1,7 @@
 import { Link, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
+import { SHOES } from '@/data/catalogue';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
 import { track } from '@/lib/analytics';
@@ -11,6 +13,9 @@ export default function Landing() {
   return (
     <Screen scroll>
       <View style={styles.hero}>
+        <View style={styles.heroArt}>
+          <ShoeSilhouette width={300} height={132} accent={color.volt} secondary={color.cyan} detail={color.line} />
+        </View>
         <Text style={styles.wordmark}>SOLEMATCH</Text>
         <Text style={styles.headline}>
           Your perfect running shoe,{'\n'}
@@ -44,10 +49,10 @@ export default function Landing() {
         </Text>
       </View>
       <View style={styles.strip}>
-        <Text style={[styles.stripStat, { color: color.cyan }]}>67</Text>
+        <Text style={[styles.stripStat, { color: color.cyan }]}>{SHOES.length}</Text>
         <Text style={styles.stripText}>
-          real, current road shoes in the database — specs verified, scored across six attributes,
-          tiered against the live market.
+          real, current road shoes — specs verified, scored across six attributes, tiered against
+          the live market. Catalogue refreshed June 2026; new releases land continuously.
         </Text>
       </View>
       <View style={styles.strip}>
@@ -77,7 +82,8 @@ export default function Landing() {
 }
 
 const styles = StyleSheet.create({
-  hero: { marginTop: space(10), marginBottom: space(8) },
+  hero: { marginTop: space(8), marginBottom: space(8) },
+  heroArt: { alignItems: 'center', marginBottom: space(4), opacity: 0.9 },
   wordmark: { fontFamily: font.display, fontSize: 13, letterSpacing: 6, color: color.muted },
   headline: { fontFamily: font.display, fontSize: 40, lineHeight: 46, color: color.ink, marginTop: space(3) },
   sub: { fontFamily: font.ui, fontSize: 15, lineHeight: 22, color: color.muted, marginTop: space(4) },

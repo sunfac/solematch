@@ -18,7 +18,12 @@ export const ENGINE_VERSION = '1.0.0';
  */
 export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
   const mp = marathonPaceSecPerKm(profile);
-  const ctx = { mp, factor: plateFactor(mp), versatility: isVersatilityMode(profile) };
+  const ctx = {
+    mp,
+    factor: plateFactor(mp),
+    versatility: isVersatilityMode(profile),
+    seed: JSON.stringify(profile),
+  };
 
   const { eligible, stretch } = hardFilter(shoes, profile);
   const roles = planRoles(profile);
