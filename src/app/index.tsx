@@ -1,6 +1,6 @@
 import { Link, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
+import { Image } from 'expo-image';
 import { SHOES } from '@/data/catalogue';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
@@ -13,9 +13,13 @@ export default function Landing() {
   return (
     <Screen scroll>
       <View style={styles.hero}>
-        <View style={styles.heroArt}>
-          <ShoeSilhouette width={300} height={132} accent={color.volt} secondary={color.cyan} detail={color.line} />
-        </View>
+        <Image
+          source={require('../../assets/hero-shoe.png')}
+          style={styles.heroImage}
+          contentFit="cover"
+          transition={300}
+          accessibilityLabel="Neon-lit running shoe"
+        />
         <Text style={styles.wordmark}>SOLEMATCH</Text>
         <Text style={styles.headline}>
           Your perfect running shoe,{'\n'}
@@ -82,8 +86,13 @@ export default function Landing() {
 }
 
 const styles = StyleSheet.create({
-  hero: { marginTop: space(8), marginBottom: space(8) },
-  heroArt: { alignItems: 'center', marginBottom: space(4), opacity: 0.9 },
+  hero: { marginTop: space(6), marginBottom: space(8) },
+  heroImage: {
+    width: '100%',
+    height: 230,
+    borderRadius: 20,
+    marginBottom: space(5),
+  },
   wordmark: { fontFamily: font.display, fontSize: 13, letterSpacing: 6, color: color.muted },
   headline: { fontFamily: font.display, fontSize: 40, lineHeight: 46, color: color.ink, marginTop: space(3) },
   sub: { fontFamily: font.ui, fontSize: 15, lineHeight: 22, color: color.muted, marginTop: space(4) },

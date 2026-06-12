@@ -42,6 +42,14 @@ for (const s of shoes as Array<{ slug: string; brand: string; model: string; ver
       priceGbp: s.msrpGbp,
       checkedAt: CHECKED,
     },
+    {
+      // Webgains programme pays 8% — the strongest UK commission surface (spec §9.1)
+      retailer: 'Runners Need',
+      region: 'UK',
+      url: `https://www.runnersneed.com/search?q=${qFull(s)}`,
+      priceGbp: s.msrpGbp,
+      checkedAt: CHECKED,
+    },
   ];
   const brandUrl = BRAND_SEARCH[s.brand];
   if (brandUrl) {

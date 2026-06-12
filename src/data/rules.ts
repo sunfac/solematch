@@ -133,6 +133,14 @@ export const RULES: Record<string, EvidenceRule> = {
     url: 'https://pubmed.ncbi.nlm.nih.gov/28365220/',
     confidence: 'MODERATE',
   },
+  'fit-continuity': {
+    id: 'fit-continuity',
+    statement:
+      'A good fitter anchors on what already works on your feet: shoes sharing the brand last, foam class and geometry of a shoe you love tend to fit and feel familiar — and the formula of a shoe you disliked is worth steering around. Known roomy-toe-box lasts (Altra, Topo and similar) serve wide-forefoot preferences.',
+    citation: 'Professional fitting practice; brand last consistency (e.g. Fleet Feet outfitting process)',
+    url: 'https://www.fleetfeet.com/fit-process',
+    confidence: 'FIT & FEEL',
+  },
   'community-consensus': {
     id: 'community-consensus',
     statement:

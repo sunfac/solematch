@@ -80,6 +80,25 @@ test('match% is plausible and not uniformly 99 across personas', () => {
   expect(new Set(tops).size).toBeGreaterThan(1);
 });
 
+test('fitter expertise: current-shoe verdict and roomy toe box both change results with cited reasons', () => {
+  const base = baseProfile({});
+  const lover = baseProfile({ currentShoeSlug: 'asics-novablast-5', currentShoeVerdict: 'love' });
+  const { eligible } = hardFilter(SHOES, base);
+  const plain = scoreRole(eligible, base, 'daily', ctxFor(base));
+  const anchored = scoreRole(hardFilter(SHOES, lover).eligible, lover, 'daily', ctxFor(lover));
+  expect(JSON.stringify(plain.map((s) => s.roleScore))).not.toBe(
+    JSON.stringify(anchored.map((s) => s.roleScore)),
+  );
+  expect(
+    anchored.some((s) => s.reasons.some((x) => x.ruleId === 'fit-continuity')),
+  ).toBe(true);
+
+  const roomy = baseProfile({ fit: { wide: false, roomyToe: true } });
+  const roomyRanked = scoreRole(hardFilter(SHOES, roomy).eligible, roomy, 'daily', ctxFor(roomy));
+  const altra = roomyRanked.find((s) => s.shoe.brand === 'Altra')!;
+  expect(altra.reasons.some((x) => x.ruleId === 'fit-continuity')).toBe(true);
+});
+
 test('every reason cites an existing rule', () => {
   const p = baseProfile({ sex: 'F', age: 55, brandLoves: ['Asics'], wantsStability: true, raceDistanceTargetKm: 42.2 });
   const { eligible } = hardFilter(SHOES, p);

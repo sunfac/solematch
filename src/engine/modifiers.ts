@@ -227,6 +227,48 @@ const womensFit: Modifier = (s, p) => {
   return null;
 };
 
+/**
+ * Current-shoe anchoring — the fitter's first question. Similarity = shared
+ * brand last + foam class + drop band + category; loving your current shoe
+ * boosts its close cousins, disliking it steers away from the same formula.
+ */
+const currentShoeAffinity: Modifier = (s, p) => {
+  if (!p.currentShoeSlug || !p.currentShoeVerdict || p.currentShoeVerdict === 'meh') return null;
+  const cur = bySlug.get(p.currentShoeSlug);
+  if (!cur || cur.slug === s.slug) return null;
+  const similar =
+    (s.brand === cur.brand ? 1 : 0) +
+    (s.foamClass === cur.foamClass ? 1 : 0) +
+    (Math.abs(s.dropMm - cur.dropMm) <= 2 ? 1 : 0) +
+    (s.category === cur.category ? 1 : 0);
+  if (similar < 2) return null;
+  if (p.currentShoeVerdict === 'love') {
+    return {
+      delta: similar * 1.8,
+      reason:
+        similar >= 3
+          ? r('fit-continuity', `Close cousin of the ${cur.model} you love — same fit DNA`)
+          : undefined,
+    };
+  }
+  return {
+    delta: -similar * 2.2,
+    reason:
+      similar >= 3
+        ? r('fit-continuity', `Different formula to the ${cur.model} that didn't work for you`)
+        : undefined,
+  };
+};
+
+/** Roomy-toe-box expertise: foot-shaped lasts and models reviewers flag as roomy. */
+const toeBoxFit: Modifier = (s, p) => {
+  if (!p.fit.roomyToe) return null;
+  const roomy =
+    s.brand === 'Altra' || s.brand === 'Topo' || /toe box|foot-shaped|roomy/i.test(s.consensus);
+  if (!roomy) return null;
+  return { delta: 6, reason: r('fit-continuity', 'Known roomy toe box for a wide-forefoot fit') };
+};
+
 /** Brand preference (FIT & FEEL). */
 const brandLove: Modifier = (s, p) => {
   if (p.brandLoves.some((b) => b.toLowerCase() === s.brand.toLowerCase())) {
@@ -265,6 +307,8 @@ export const MODIFIERS: Modifier[] = [
   injuryFlags,
   stabilityPref,
   womensFit,
+  currentShoeAffinity,
+  toeBoxFit,
   brandLove,
   consensusBoost,
   versatility,
