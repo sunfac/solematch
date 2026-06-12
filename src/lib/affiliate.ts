@@ -36,13 +36,18 @@ export function offersFor(slug: string, region: 'UK' | 'US' = 'UK'): Offer[] {
 
 /**
  * Product image resolution. Licensed sources (offer feeds / press kits) always
- * win. devImages.json holds brand-site product images for LOCAL PREVIEW ONLY —
- * gated behind EXPO_PUBLIC_PREVIEW_IMAGES, which deployed builds must NOT set
- * until affiliate image licences exist (spec §5.3 / §9.2).
+ * win. devImages.json holds official brand-site product images for LOCAL
+ * PREVIEW ONLY — gated by hostname, so they can show on localhost but can
+ * never leak to a deployed domain until affiliate image licences exist
+ * (spec §5.3 / §9.2), at which point licensed feed images replace them anyway.
  */
+const isLocalPreview =
+  typeof window !== 'undefined' &&
+  /^(localhost|127\.|0\.0\.0\.0)/.test(window.location?.hostname ?? '');
+
 export function imageFor(slug: string): string | undefined {
   const licensed = (OFFERS[slug] ?? []).find((o) => o.imageUrl)?.imageUrl;
   if (licensed) return licensed;
-  if (process.env.EXPO_PUBLIC_PREVIEW_IMAGES === '1') return DEV_IMAGES[slug];
+  if (isLocalPreview) return DEV_IMAGES[slug];
   return undefined;
 }

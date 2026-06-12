@@ -77,13 +77,15 @@ export function ShoeCard({
 
         <Animated.View style={[styles.imageZone, parallaxStyle]}>
           {imageUrl ? (
-            <Image
-              source={{ uri: imageUrl }}
-              style={styles.image}
-              contentFit="contain"
-              transition={200}
-              accessibilityLabel={`${shoe.brand} ${shoe.model}`}
-            />
+            <View style={styles.imageTile}>
+              <Image
+                source={{ uri: imageUrl }}
+                style={styles.image}
+                contentFit="contain"
+                transition={200}
+                accessibilityLabel={`${shoe.brand} ${shoe.model}`}
+              />
+            </View>
           ) : (
             <View style={styles.monogram}>
               <ShoeSilhouette accent={frame} secondary={color.cyan} detail={color.muted} />
@@ -137,7 +139,17 @@ const styles = StyleSheet.create({
   matchLabel: { fontFamily: font.display, fontSize: 11, letterSpacing: 1, color: color.volt },
   overall: { fontFamily: font.display, fontSize: 30, color: color.ink },
   imageZone: { height: 150, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  image: { width: '92%', height: '100%' },
+  // Nike-PDP-style light tile: product photos on any background read as intentional
+  imageTile: {
+    width: '96%',
+    height: '100%',
+    backgroundColor: '#EDEEF0',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  image: { width: '94%', height: '92%' },
   monogram: { alignItems: 'center', justifyContent: 'center', gap: 6 },
   monogramModel: {
     fontFamily: font.display,
