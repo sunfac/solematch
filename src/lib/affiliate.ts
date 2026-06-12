@@ -20,8 +20,23 @@ export interface Offer {
   region: 'UK' | 'US';
   url: string;
   priceGbp: number;
+  /**
+   * 'search' lands on results for this exact model; 'brand' lands on the
+   * retailer's brand range page (used where no url-addressable search exists,
+   * e.g. Runners Need until the Webgains datafeed gives per-SKU deep links).
+   * Absent = 'search' (pre-kind data).
+   */
+  kind?: 'search' | 'brand' | 'product';
   imageUrl?: string;
   checkedAt: string;
+}
+
+/** Model-specific destinations beat brand range pages at equal price. */
+export function bestOffer(offers: Offer[]): Offer | undefined {
+  return [...offers].sort(
+    (a, b) =>
+      (a.kind === 'brand' ? 1 : 0) - (b.kind === 'brand' ? 1 : 0) || a.priceGbp - b.priceGbp,
+  )[0];
 }
 
 const OFFERS: Record<string, Offer[]> = offersRaw as Record<string, Offer[]>;

@@ -113,9 +113,11 @@ export default function ShoeDetailScreen() {
             <Pressable key={o.retailer + o.url} style={styles.offerRow} onPress={() => openOffer(o)}>
               <View>
                 <Text style={styles.offerRetailer}>{o.retailer}</Text>
-                <Text style={styles.offerChecked}>price as of {o.checkedAt}</Text>
+                <Text style={styles.offerChecked}>
+                  {o.kind === 'brand' ? `stocks ${shoe.brand} — find this model in range` : `price as of ${o.checkedAt}`}
+                </Text>
               </View>
-              <Text style={styles.offerPrice}>£{o.priceGbp} →</Text>
+              <Text style={styles.offerPrice}>{o.kind === 'brand' ? 'browse →' : `£${o.priceGbp} →`}</Text>
             </Pressable>
           ))
         ) : (

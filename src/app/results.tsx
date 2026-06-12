@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { buildAffiliateUrl, offersFor } from '@/lib/affiliate';
+import { bestOffer, buildAffiliateUrl, offersFor } from '@/lib/affiliate';
 import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
@@ -30,8 +30,8 @@ export default function ResultsScreen() {
   // the direct money path: cheapest offer for a pick, attributed to this match
   const buyNow = (slug: string) => {
     const offers = offersFor(slug, region);
-    if (offers.length === 0) return;
-    const best = [...offers].sort((a, b) => a.priceGbp - b.priceGbp)[0];
+    const best = bestOffer(offers);
+    if (!best) return;
     const subId = `${matchId ?? 'results'}:${slug}:results`;
     track('offer_click', { slug, retailer: best.retailer, subId });
     Linking.openURL(buildAffiliateUrl(best, subId)).catch(() => {});
