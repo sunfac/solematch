@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { color, font } from '@/theme/tokens';
 
 type Props = {
   label: string;
+  /** full attribute name revealed on hover (web) or press-hold (touch) */
+  fullName?: string;
   value: number; // 0-99
   /** highlight bar+value in volt for standout stats */
   hot?: boolean;
@@ -14,9 +16,10 @@ type Props = {
   animate?: boolean;
 };
 
-export function StatBar({ label, value, hot = false, delay = 0, animate = true }: Props) {
+export function StatBar({ label, fullName, value, hot = false, delay = 0, animate = true }: Props) {
   const pct = Math.max(0, Math.min(99, value));
   const width = useSharedValue(animate ? 0 : pct);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (animate) width.value = withDelay(delay, withTiming(pct, { duration: 600 }));
@@ -25,9 +28,18 @@ export function StatBar({ label, value, hot = false, delay = 0, animate = true }
   const fillStyle = useAnimatedStyle(() => ({ width: `${width.value}%` }));
 
   return (
-    <View style={styles.wrap}>
+    <Pressable
+      style={styles.wrap}
+      onHoverIn={() => setExpanded(true)}
+      onHoverOut={() => setExpanded(false)}
+      onPressIn={() => setExpanded(true)}
+      onPressOut={() => setExpanded(false)}
+      accessibilityLabel={`${fullName ?? label}: ${pct}`}
+    >
       <View style={styles.row}>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, expanded && fullName ? { color: color.ink } : null]}>
+          {expanded && fullName ? fullName.toUpperCase() : label}
+        </Text>
         <Text style={[styles.value, hot && { color: color.volt }]}>{pct}</Text>
       </View>
       <View style={styles.track}>
@@ -35,7 +47,7 @@ export function StatBar({ label, value, hot = false, delay = 0, animate = true }
           style={[styles.fill, { backgroundColor: hot ? color.volt : color.cyan }, fillStyle]}
         />
       </View>
-    </View>
+    </Pressable>
   );
 }
 

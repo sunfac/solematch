@@ -25,18 +25,19 @@ export function useTilt(enabled = true) {
 
   useEffect(() => {
     if (!enabled || reduced) return;
+    // pronounced showcase sway — the card visibly turns in 3D while idle
     ry.value = withRepeat(
       withSequence(
-        withTiming(4, { duration: 2600, easing: Easing.inOut(Easing.quad) }),
-        withTiming(-4, { duration: 2600, easing: Easing.inOut(Easing.quad) }),
+        withTiming(12, { duration: 2800, easing: Easing.inOut(Easing.quad) }),
+        withTiming(-12, { duration: 2800, easing: Easing.inOut(Easing.quad) }),
       ),
       -1,
       true,
     );
     rx.value = withRepeat(
       withSequence(
-        withTiming(-2, { duration: 3400, easing: Easing.inOut(Easing.quad) }),
-        withTiming(2, { duration: 3400, easing: Easing.inOut(Easing.quad) }),
+        withTiming(-4, { duration: 3600, easing: Easing.inOut(Easing.quad) }),
+        withTiming(4, { duration: 3600, easing: Easing.inOut(Easing.quad) }),
       ),
       -1,
       true,

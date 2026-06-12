@@ -102,7 +102,7 @@ export function ShoeCard({
           {image ? (
             <View style={image.cut ? styles.imageFloat : styles.imageTile}>
               <Image
-                source={{ uri: image.url }}
+                source={{ uri: image.source }}
                 style={image.cut ? styles.imageCut : styles.image}
                 contentFit="contain"
                 transition={200}

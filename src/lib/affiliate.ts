@@ -1,13 +1,19 @@
+import { Asset } from 'expo-asset';
 import devImagesRaw from '@/data/devImages.json';
+import { LOCAL_SHOE_IMAGES } from '@/data/localShoeImages';
 import offersRaw from '@/data/offers.json';
 
 export interface ImageRef {
-  url: string;
+  /** resolved image URI (remote URL or bundled asset URI) */
+  source: string;
   /** background-free (transparent) — render floating; otherwise on a light tile */
   cut: boolean;
 }
 
-const DEV_IMAGES: Record<string, ImageRef> = devImagesRaw as Record<string, ImageRef>;
+const DEV_IMAGES: Record<string, { url: string; cut: boolean }> = devImagesRaw as Record<
+  string,
+  { url: string; cut: boolean }
+>;
 
 export interface Offer {
   retailer: string;
@@ -53,7 +59,12 @@ const isLocalPreview =
 
 export function imageFor(slug: string): ImageRef | undefined {
   const licensed = (OFFERS[slug] ?? []).find((o) => o.imageUrl)?.imageUrl;
-  if (licensed) return { url: licensed, cut: false };
-  if (isLocalPreview) return DEV_IMAGES[slug];
+  if (licensed) return { source: licensed, cut: false };
+  if (!isLocalPreview) return undefined;
+  const local = LOCAL_SHOE_IMAGES[slug];
+  // expo-image on web rejects bare asset-module numbers — resolve to a URI
+  if (local !== undefined) return { source: Asset.fromModule(local).uri, cut: true };
+  const dev = DEV_IMAGES[slug];
+  if (dev) return { source: dev.url, cut: dev.cut };
   return undefined;
 }

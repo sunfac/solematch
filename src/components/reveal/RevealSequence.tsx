@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { CARD_W, matchBand, ShoeCard } from '@/components/card/ShoeCard';
 import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
+import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
 import type { RoleResult } from '@/types/match';
 import { color, font, space } from '@/theme/tokens';
@@ -170,6 +171,12 @@ export function RevealSequence({
 
       {stage === 'done' ? (
         <View style={styles.ctas}>
+          <Animated.View entering={FadeIn.duration(300)} style={styles.whyChip}>
+            <EvidenceBadge level={pick.reasons[0].evidence} />
+            <Text style={styles.whyText} numberOfLines={3}>
+              {pick.reasons[0].text}
+            </Text>
+          </Animated.View>
           <View style={styles.ctaRow}>
             <PillButton
               label="Why this shoe"
@@ -212,6 +219,17 @@ const styles = StyleSheet.create({
   flash: { position: 'absolute', top: -60, bottom: -60, left: -600, right: -600, opacity: 0 },
   shine: { position: 'absolute', top: -40, bottom: -40, width: 90 },
   ctas: { width: '100%', maxWidth: 360, gap: space(2.5), marginTop: space(2) },
+  whyChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space(2.5),
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.line,
+    borderRadius: 14,
+    padding: space(3),
+  },
+  whyText: { flex: 1, fontFamily: font.ui, fontSize: 12, lineHeight: 16.5, color: color.ink },
   ctaRow: { flexDirection: 'row', gap: space(2.5) },
   tiltHint: { fontFamily: font.ui, fontSize: 11, color: color.muted, textAlign: 'center', opacity: 0.8 },
   skipHint: { fontFamily: font.ui, fontSize: 12, color: color.muted, marginTop: space(4), opacity: 0.7 },
