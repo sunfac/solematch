@@ -8,7 +8,7 @@ import { MODIFIERS, type ScoreCtx } from './modifiers';
 const CATEGORY_FIT: Record<Role, Record<Category, number>> = {
   race: { race: 100, tempo: 72, daily: 40, max_cushion: 15, stability: 20, budget: 25 },
   tempo: { race: 60, tempo: 100, daily: 70, max_cushion: 30, stability: 45, budget: 45 },
-  daily: { race: 15, tempo: 65, daily: 100, max_cushion: 80, stability: 80, budget: 75 },
+  daily: { race: 15, tempo: 65, daily: 100, max_cushion: 80, stability: 80, budget: 80 },
   recovery: { race: 5, tempo: 30, daily: 75, max_cushion: 100, stability: 70, budget: 60 },
 };
 
