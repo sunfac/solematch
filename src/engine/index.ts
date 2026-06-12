@@ -39,34 +39,70 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
     rankingsByRole.set(role, ranking);
   }
 
-  const { roles: roleResults, notes: rotationNotes, costGbp } = assembleRotation(rankingsByRole, profile);
+  /**
+   * Right-size the rotation to the budget: try the full role plan, then trim
+   * recovery, then tempo. Accept the first plan whose best combination has no
+   * weak slot (every match ≥ MIN_MATCH) — two excellent shoes beat three
+   * compromised ones, and any two differing pairs keep the rotation benefit.
+   * If no plan clears the bar, keep the feasible plan with the strongest
+   * weakest slot; if nothing is feasible at all, collapse to a single.
+   */
+  const MIN_MATCH = 80;
+  const planCandidates: Role[][] = [roles];
+  for (const trim of ['recovery', 'tempo'] as const) {
+    const prev = planCandidates[planCandidates.length - 1];
+    if (prev.includes(trim) && prev.length > 2) {
+      planCandidates.push(prev.filter((r) => r !== trim));
+    }
+  }
 
-  const budgetGbp =
-    profile.budget.type === 'total'
-      ? profile.budget.amountGbp
-      : profile.budget.amountGbp * roleResults.length;
+  let chosen: { roles: RoleResult[]; notes: string[] } | null = null;
+  let fallback: { roles: RoleResult[]; notes: string[]; minMatch: number } | null = null;
+  for (const plan of planCandidates) {
+    const subMap = new Map<Role, ScoredShoe[]>(plan.map((r) => [r, rankingsByRole.get(r)!]));
+    const outcome = assembleRotation(subMap, profile);
+    if (outcome.roles.length === 0) continue;
+    const minMatch = Math.min(...outcome.roles.map((r) => r.pick.match));
+    const trimmedNote =
+      plan.length < roles.length
+        ? [
+            `Right-sized to ${plan.length} shoes for your budget — stronger picks per slot beat a stretched-thin rotation, and rotating any two differing pairs keeps the load-variation benefit.`,
+          ]
+        : [];
+    if (minMatch >= MIN_MATCH) {
+      chosen = { roles: outcome.roles, notes: [...outcome.notes, ...trimmedNote] };
+      break;
+    }
+    if (!fallback || minMatch > fallback.minMatch) {
+      fallback = { roles: outcome.roles, notes: [...outcome.notes, ...trimmedNote], minMatch };
+    }
+  }
+  const assembled = chosen ?? fallback ?? { roles: [] as RoleResult[], notes: [] as string[] };
 
+  const roleResults = assembled.roles;
   let finalRoles: RoleResult[] = roleResults;
-  const notes = buildNotes(profile, roleResults, rotationNotes);
+  const notes = buildNotes(profile, roleResults, assembled.notes);
 
-  // Budget unreachable for a rotation → collapse to best versatile single + roadmap
-  if (
-    profile.mode === 'rotation' &&
-    profile.budget.type === 'total' &&
-    costGbp > profile.budget.amountGbp * (profile.budget.stretch ? 1.1 : 1)
-  ) {
+  // No feasible combination under the budget → collapse to best versatile single + roadmap
+  if (roleResults.length === 0) {
     const versatileCtx = { ...ctx, versatility: true };
     const affordable = eligible.filter((s) => s.msrpGbp <= profile.budget.amountGbp);
     const pool = affordable.length > 0 ? affordable : eligible;
     const single = scoreRole(pool, profile, 'daily', versatileCtx);
     finalRoles = [{ role: 'daily', pick: single[0], alternates: single.slice(1, 3) }];
-    const race = roleResults.find((r) => r.role === 'race');
-    if (race) {
+    const raceRanking = rankingsByRole.get('race');
+    if (raceRanking && raceRanking.length > 0) {
+      const top = raceRanking[0];
       notes.push(
-        `Add next: a race-day shoe (~£${race.pick.shoe.msrpGbp}) when budget allows — ${race.pick.shoe.brand} ${race.pick.shoe.model} tops your match today.`,
+        `Add next: a race-day shoe (~£${top.shoe.msrpGbp}) when budget allows — ${top.shoe.brand} ${top.shoe.model} tops your match today.`,
       );
     }
   }
+
+  const budgetGbp =
+    profile.budget.type === 'total'
+      ? profile.budget.amountGbp
+      : profile.budget.amountGbp * finalRoles.length;
 
   return {
     mode: profile.mode,

@@ -123,13 +123,36 @@ const tempoFit: Modifier = (s, _p, role) => {
   };
 };
 
-/** Body mass: durability for heavier runners (NOT injury), softness for lighter. */
-const bodyMass: Modifier = (s, p) => {
-  if (p.weightKg > 85 && ['TPU', 'EVA', 'BLEND'].includes(s.foamClass) && s.outsole >= 4) {
-    return { delta: 6, reason: r('durable-foam-heavier', 'Durable foam and outsole keep their ride longer at higher body mass') };
+/**
+ * Body mass: CONTINUOUS durability lean for heavier runners (durability/feel,
+ * never injury) and softness lean for lighter runners — no dead zones, so a
+ * changed answer always registers (the old thresholds ignored 61-85 kg entirely).
+ */
+const bodyMass: Modifier = (s, p, role) => {
+  const heavyLean = Math.max(0, Math.min(1, (p.weightKg - 72) / 28)); // 0 at ≤72 kg → 1 at 100 kg
+  const lightLean = Math.max(0, Math.min(1, (65 - p.weightKg) / 20)); // 0 at ≥65 kg → 1 at 45 kg
+  if (heavyLean > 0 && role !== 'race') {
+    // DIFFERENTIAL around dur 65: durable platforms rise, fragile foams sink —
+    // reorders without inflating every score (an additive boost let starved
+    // budget combos sneak past the right-sizing quality bar).
+    const delta = heavyLean * 0.25 * (stats(s).dur - 65);
+    return {
+      delta,
+      reason:
+        delta >= 2.5 && stats(s).dur >= 75
+          ? r('durable-foam-heavier', 'Durable foam and outsole keep their ride longer at higher body mass')
+          : undefined,
+    };
   }
-  if (p.weightKg <= 60 && s.softness >= 4) {
-    return { delta: 5, reason: r('soft-midsole-light-runners', 'Softer midsoles showed modestly lower injury risk for lighter runners') };
+  if (lightLean > 0) {
+    const delta = lightLean * 0.12 * (stats(s).csh - 72);
+    return {
+      delta,
+      reason:
+        delta >= 1 && s.softness >= 4
+          ? r('soft-midsole-light-runners', 'Softer midsoles showed modestly lower injury risk for lighter runners')
+          : undefined,
+    };
   }
   return null;
 };
@@ -147,12 +170,18 @@ const experienceDrop: Modifier = (s, p) => {
   return null;
 };
 
-/** Masters lean: rockered, cushioned rides offload ageing calves (EMERGING). */
+/** Masters lean: ramps continuously from 45 to 65 (no cliff at 50) toward rockered, cushioned rides (EMERGING). */
 const age: Modifier = (s, p) => {
-  if (p.age >= 50 && s.stackFfMm >= 30 && stats(s).csh >= 75) {
-    return { delta: 4, reason: r('masters-rocker', 'Rockered, cushioned ride offloads the calf-ankle complex') };
-  }
-  return null;
+  const lean = Math.max(0, Math.min(1, (p.age - 45) / 20));
+  if (lean === 0) return null;
+  const rocker = s.stackFfMm >= 30 ? 1 : s.stackFfMm >= 26 ? 0.5 : 0;
+  const cushion = stats(s).csh >= 75 ? 1 : stats(s).csh >= 65 ? 0.5 : 0;
+  const delta = lean * 6 * rocker * cushion;
+  if (delta === 0) return null;
+  return {
+    delta,
+    reason: delta >= 3 ? r('masters-rocker', 'Rockered, cushioned ride offloads the calf-ankle complex') : undefined,
+  };
 };
 
 /** Injury flags — bone-stress excludes carbon outside race; Achilles steers drop. */

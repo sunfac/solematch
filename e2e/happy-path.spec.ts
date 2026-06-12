@@ -48,8 +48,9 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
   // 9 injury (optional) → reveal
   await next();
 
-  // reveal: 3 cards (daily, tempo, race) — skip each animation, advance
-  for (let card = 0; card < 3; card++) {
+  // reveal: at £400 the engine right-sizes to 2 strong cards (daily + race) —
+  // skip each animation, advance
+  for (let card = 0; card < 2; card++) {
     const stage = page.getByTestId('reveal-stage').last();
     await expect(stage).toBeVisible({ timeout: 15_000 });
     await stage.click(); // skip animation
@@ -58,10 +59,10 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
     await advance.click();
   }
 
-  // results: 3 role rows, race present, budget respected, evidence badge visible
+  // results: right-sized rotation with quality floors, budget respected, evidence visible
   await expect(page.getByTestId('role-row-race')).toBeVisible({ timeout: 10_000 });
   await expect(page.getByTestId('role-row-daily')).toBeVisible();
-  await expect(page.getByTestId('role-row-tempo')).toBeVisible();
+  await expect(page.getByText(/Right-sized to 2 shoes/)).toBeVisible();
   await expect(page.getByText(/of £400 budget/)).toBeVisible();
   await expect(page.getByText('STRONG').first()).toBeVisible();
 

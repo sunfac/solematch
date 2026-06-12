@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useRef } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { STEPS } from '@/components/quiz/steps';
@@ -19,6 +19,12 @@ export default function QuizStepScreen() {
   const valid = step.valid(store);
   const last = stepNum === STEPS.length;
   const advancing = useRef(false);
+  // stacked screens stay mounted on web — re-arm the guard when this step regains focus
+  useFocusEffect(
+    useCallback(() => {
+      advancing.current = false;
+    }, []),
+  );
 
   const next = () => {
     if (advancing.current) return;

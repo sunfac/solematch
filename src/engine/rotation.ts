@@ -3,6 +3,7 @@ import type { Profile, Role } from '@/types/profile';
 import type { Shoe } from '@/types/shoe';
 
 export interface RotationOutcome {
+  /** empty = no feasible combination under the budget (caller collapses to single) */
   roles: RoleResult[];
   notes: string[];
   costGbp: number;
@@ -25,108 +26,91 @@ function diversityOk(picks: ScoredShoe[]): boolean {
   return true;
 }
 
-const cost = (picks: ScoredShoe[]) => picks.reduce((t, p) => t + p.shoe.msrpGbp, 0);
+/** Quality depth searched per role; price-coverage extras keep tight budgets feasible. */
+const POOL_DEPTH = 18;
+const CHEAP_EXTRAS = 6;
+/** The race slot degrades last for racers (spec §4.2-3) — via weighting, not absolute protection. */
+const ROLE_WEIGHT: Record<Role, number> = { race: 1.15, daily: 1, tempo: 1, recovery: 1 };
 
 /**
- * Greedy pick per role from pre-sorted rankings, then a bounded swap pass to
- * (a) deduplicate slugs, (b) satisfy diversity, (c) fit total budget — protecting
- * the race slot for racers, the daily slot otherwise (spec §4.2-3/5).
+ * Globally optimise the rotation: exhaustive search (pruned) over per-role
+ * candidate pools, maximising weighted total roleScore subject to budget,
+ * unique slugs and geometry diversity — all constraints checked TOGETHER,
+ * so a tight budget can no longer starve slots or re-break dedupe/diversity
+ * the way the old sequential greedy-and-walk passes did.
  */
 export function assembleRotation(
   rankingsByRole: Map<Role, ScoredShoe[]>,
   p: Profile,
 ): RotationOutcome {
   const roles = [...rankingsByRole.keys()];
-  const protectedRole: Role = roles.includes('race') ? 'race' : 'daily';
   const notes: string[] = [];
+  const capRaw = p.budget.type === 'total' ? p.budget.amountGbp : Infinity;
+  const cap = p.budget.stretch && capRaw !== Infinity ? capRaw * 1.1 : capRaw;
 
-  // candidate index per role (greedy = 0)
-  const idx = new Map<Role, number>(roles.map((r) => [r, 0]));
-  const pickAt = (role: Role) => rankingsByRole.get(role)![idx.get(role)!];
-  const advance = (role: Role): boolean => {
+  const pools: ScoredShoe[][] = roles.map((role) => {
     const ranking = rankingsByRole.get(role)!;
-    const next = idx.get(role)! + 1;
-    if (next >= ranking.length) return false;
-    idx.set(role, next);
-    return true;
+    const pool = ranking.slice(0, POOL_DEPTH);
+    const cheapest = [...ranking]
+      .sort((a, b) => a.shoe.msrpGbp - b.shoe.msrpGbp || a.shoe.slug.localeCompare(b.shoe.slug))
+      .slice(0, CHEAP_EXTRAS);
+    for (const c of cheapest) if (!pool.includes(c)) pool.push(c);
+    return pool;
+  });
+
+  // lower bound on remaining cost from role i onward, for pruning
+  const minCostFrom: number[] = new Array(roles.length + 1).fill(0);
+  for (let i = roles.length - 1; i >= 0; i--) {
+    minCostFrom[i] = minCostFrom[i + 1] + Math.min(...pools[i].map((c) => c.shoe.msrpGbp));
+  }
+
+  let best: ScoredShoe[] | null = null;
+  let bestScore = -Infinity;
+  let bestKey = '';
+  const combo: ScoredShoe[] = [];
+
+  const dfs = (i: number, cost: number, score: number) => {
+    if (cost + minCostFrom[i] > cap) return;
+    if (i === roles.length) {
+      if (!diversityOk(combo)) return;
+      const key = combo.map((c) => c.shoe.slug).join('+');
+      if (score > bestScore + 1e-9 || (Math.abs(score - bestScore) <= 1e-9 && key < bestKey)) {
+        best = [...combo];
+        bestScore = score;
+        bestKey = key;
+      }
+      return;
+    }
+    for (const cand of pools[i]) {
+      if (combo.some((c) => c.shoe.slug === cand.shoe.slug)) continue;
+      combo.push(cand);
+      dfs(i + 1, cost + cand.shoe.msrpGbp, score + cand.roleScore * ROLE_WEIGHT[roles[i]]);
+      combo.pop();
+    }
   };
+  dfs(0, 0, 0);
 
-  const picks = () => roles.map(pickAt);
-
-  // (a) dedupe identical slugs across roles — advance the lower-scoring role
-  let guard = 0;
-  const dedupe = () => {
-    for (let i = 0; i < roles.length; i++) {
-      for (let j = i + 1; j < roles.length; j++) {
-        const a = pickAt(roles[i]);
-        const b = pickAt(roles[j]);
-        if (a.shoe.slug === b.shoe.slug) {
-          const loser = a.roleScore >= b.roleScore ? roles[j] : roles[i];
-          if (!advance(loser)) advance(loser === roles[i] ? roles[j] : roles[i]);
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-  while (dedupe() && guard++ < 50) {
-    /* re-check until unique */
+  if (!best) {
+    notes.push(
+      `Your budget could not cover a full ${roles.length}-shoe rotation — see the single-shoe roadmap below.`,
+    );
+    return { roles: [], notes, costGbp: 0 };
   }
 
-  // (b) diversity: advance the least-protected, lowest-scoring role until satisfied
-  guard = 0;
-  while (!diversityOk(picks()) && guard++ < 100) {
-    const sacrificable = roles
-      .filter((r) => r !== protectedRole)
-      .sort((a, b) => pickAt(a).roleScore - pickAt(b).roleScore);
-    let moved = false;
-    for (const r of sacrificable) {
-      if (advance(r)) {
-        moved = true;
-        break;
-      }
-    }
-    if (!moved) break;
+  const picks: ScoredShoe[] = best;
+  const cost = picks.reduce((t, c) => t + c.shoe.msrpGbp, 0);
+  if (p.budget.stretch && capRaw !== Infinity && cost > capRaw && cost <= cap) {
+    notes.push('Includes a stretch pick within 10% of your budget.');
   }
 
-  // (c) total budget: walk non-protected roles down their rankings until affordable
-  if (p.budget.type === 'total') {
-    const capRaw = p.budget.amountGbp;
-    const cap = p.budget.stretch ? capRaw * 1.1 : capRaw;
-    guard = 0;
-    while (cost(picks()) > cap && guard++ < 200) {
-      // advance the role whose current pick is most expensive (excluding protected if possible)
-      const candidates = roles
-        .filter((r) => r !== protectedRole)
-        .sort((a, b) => pickAt(b).shoe.msrpGbp - pickAt(a).shoe.msrpGbp);
-      let moved = false;
-      for (const r of candidates) {
-        if (advance(r)) {
-          moved = true;
-          break;
-        }
-      }
-      if (!moved && !advance(protectedRole)) break;
-    }
-    if (cost(picks()) > cap) {
-      notes.push(
-        `Your budget could not cover a full ${roles.length}-shoe rotation — see the single-shoe roadmap below.`,
-      );
-    }
-    if (p.budget.stretch && cost(picks()) > capRaw && cost(picks()) <= cap) {
-      notes.push('Includes a stretch pick within 10% of your budget.');
-    }
-  }
-
-  const finalPicks = picks();
-  const results: RoleResult[] = roles.map((role) => {
+  const results: RoleResult[] = roles.map((role, i) => {
     const ranking = rankingsByRole.get(role)!;
-    const pick = pickAt(role);
+    const pick = picks[i];
     const alternates = ranking
-      .filter((s) => s.shoe.slug !== pick.shoe.slug && !finalPicks.some((f) => f !== pick && f.shoe.slug === s.shoe.slug))
+      .filter((s) => !picks.some((f) => f.shoe.slug === s.shoe.slug))
       .slice(0, 2);
     return { role, pick, alternates };
   });
 
-  return { roles: results, notes, costGbp: cost(finalPicks) };
+  return { roles: results, notes, costGbp: cost };
 }
