@@ -7,5 +7,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "exclude": ["supabase", "dist", "e2e", "node_modules"]
+  "exclude": ["supabase", "dist", "e2e", "scripts", "node_modules"]
 }

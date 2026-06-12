@@ -43,3 +43,6 @@ yarn-error.*
 dist/
 test-results/
 playwright-report/
+
+supabase/functions/match/engine.bundle.js
+supabase/seed/seed.sql
