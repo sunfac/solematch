@@ -11,21 +11,17 @@ export interface Offer {
 
 const OFFERS: Record<string, Offer[]> = offersRaw as Record<string, Offer[]>;
 
-const SKIMLINKS_ID = process.env.EXPO_PUBLIC_SKIMLINKS_ID;
-
 /**
  * Wrap a retailer URL for commission when the Skimlinks publisher id is
  * configured; pass through untouched otherwise (owner-blocked items never
  * block — plan). subId format: matchId:slug:placement for revenue attribution.
+ * Env is read per-call so configuration changes apply without a rebuild of
+ * this module (and so both branches are unit-testable).
  */
 export function buildAffiliateUrl(offer: Offer, subId: string): string {
-  if (!SKIMLINKS_ID) return offer.url;
-  const params = new URLSearchParams({
-    id: SKIMLINKS_ID,
-    xs: '1',
-    url: offer.url,
-    xcust: subId,
-  });
+  const id = process.env.EXPO_PUBLIC_SKIMLINKS_ID;
+  if (!id) return offer.url;
+  const params = new URLSearchParams({ id, xs: '1', url: offer.url, xcust: subId });
   return `https://go.skimresources.com/?${params.toString()}`;
 }
 
