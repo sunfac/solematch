@@ -47,6 +47,9 @@ interface QuizState extends QuizDraft {
 const initial: QuizDraft = {
   units: 'metric',
   region: 'UK',
+  // sensible prefills — focus-selects-all makes them one keystroke to replace
+  age: 35,
+  weightKg: 75,
   wide: false,
   roomyToe: false,
   wantsStability: false,

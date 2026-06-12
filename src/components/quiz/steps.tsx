@@ -7,6 +7,11 @@ import { useQuizStore, type QuizDraft } from '@/state/quizStore';
 import { color, font, space } from '@/theme/tokens';
 import { Chip, ChoiceGrid, NumberField, TimeField, ToggleRow } from './inputs';
 
+export interface StepProps {
+  /** call after a terminal single choice — the frame advances automatically */
+  onAutoNext: () => void;
+}
+
 export interface QuizStep {
   id: string;
   title: string;
@@ -15,17 +20,20 @@ export interface QuizStep {
   units?: boolean;
   optional?: boolean;
   valid: (d: QuizDraft) => boolean;
-  Component: () => React.JSX.Element;
+  Component: (props: StepProps) => React.JSX.Element;
 }
 
 const sub = (t: string) => <Text style={styles.note}>{t}</Text>;
 
-function StepMode() {
+function StepMode({ onAutoNext }: StepProps) {
   const { mode, set } = useQuizStore();
   return (
     <ChoiceGrid
       value={mode}
-      onSelect={(k) => set('mode', k)}
+      onSelect={(k) => {
+        set('mode', k);
+        onAutoNext();
+      }}
       options={[
         { key: 'single', label: 'One perfect shoe', hint: 'The single best match for how you run' },
         { key: 'rotation', label: 'A rotation', hint: 'Race / tempo / daily / recovery — rotating differing pairs was associated with ~39% lower injury hazard (Malisoux 2015)' },
@@ -34,34 +42,34 @@ function StepMode() {
   );
 }
 
-function StepSex() {
-  const { sex, set } = useQuizStore();
+function StepAbout(_: StepProps) {
+  const { sex, age, weightKg, units, set } = useQuizStore();
+  const display =
+    weightKg === undefined ? undefined : units === 'metric' ? Math.round(weightKg) : Math.round(lbFromKg(weightKg));
   return (
     <View style={{ gap: space(3) }}>
-      <ChoiceGrid
-        value={sex}
-        onSelect={(k) => set('sex', k)}
-        options={[
-          { key: 'F', label: 'Female' },
-          { key: 'M', label: 'Male' },
-          { key: 'NA', label: 'Prefer not to say' },
-        ]}
-      />
-      {sub('Used only to surface women-specific fits (narrower heel, roomier forefoot). It never changes performance claims — the research there is genuinely unsettled, and we say so.')}
-    </View>
-  );
-}
-
-function StepAge() {
-  const { age, set } = useQuizStore();
-  return <NumberField testID="age-input" value={age} onChange={(n) => set('age', n)} min={13} max={95} suffix="years" />;
-}
-
-function StepWeight() {
-  const { weightKg, units, set } = useQuizStore();
-  const display = weightKg === undefined ? undefined : units === 'metric' ? Math.round(weightKg) : Math.round(lbFromKg(weightKg));
-  return (
-    <View style={{ gap: space(3) }}>
+      <Text style={styles.fieldLabel}>How do you identify?</Text>
+      <View style={styles.chipWrap}>
+        {(
+          [
+            { key: 'F', label: 'Female' },
+            { key: 'M', label: 'Male' },
+            { key: 'NA', label: 'Prefer not to say' },
+          ] as const
+        ).map((o) => (
+          <Chip
+            key={o.key}
+            testID={`sex-${o.key}`}
+            label={o.label}
+            selected={sex === o.key}
+            onPress={() => set('sex', o.key)}
+          />
+        ))}
+      </View>
+      {sub('Used only to surface women-specific fits — never for performance claims; that research is genuinely unsettled and we say so.')}
+      <Text style={styles.fieldLabel}>Age</Text>
+      <NumberField testID="age-input" value={age} onChange={(n) => set('age', n)} min={13} max={95} suffix="years" />
+      <Text style={styles.fieldLabel}>Weight</Text>
       <NumberField
         testID="weight-input"
         value={display}
@@ -72,7 +80,7 @@ function StepWeight() {
       />
       {units === 'imperial' && weightKg
         ? sub(`≈ ${Math.floor(lbFromKg(weightKg) / 14)} st ${Math.round(lbFromKg(weightKg) % 14)} lb`)
-        : sub('Body mass tunes durability recommendations — the evidence says it does NOT mean you need maximal cushioning.')}
+        : sub('Body mass tunes durability picks — the evidence says it does NOT mean you need maximal cushioning.')}
     </View>
   );
 }
@@ -86,7 +94,7 @@ const VOLUME_BANDS = [
   { km: 80, metric: '70 km +', imperial: '45 mi +' },
 ];
 
-function StepVolume() {
+function StepVolume({ onAutoNext }: StepProps) {
   const { weeklyKm, units, set } = useQuizStore();
   return (
     <View style={styles.chipWrap}>
@@ -96,20 +104,26 @@ function StepVolume() {
           testID={`volume-${b.km}`}
           label={units === 'metric' ? b.metric : b.imperial}
           selected={weeklyKm === b.km}
-          onPress={() => set('weeklyKm', b.km)}
+          onPress={() => {
+            set('weeklyKm', b.km);
+            onAutoNext();
+          }}
         />
       ))}
     </View>
   );
 }
 
-function StepPace() {
+function StepPace({ onAutoNext }: StepProps) {
   const { paceKind, raceDistanceKm, raceTimeSec, easyPaceSecPerKm, units, set } = useQuizStore();
   return (
     <View style={{ gap: space(4) }}>
       <ChoiceGrid
         value={paceKind}
-        onSelect={(k) => set('paceKind', k)}
+        onSelect={(k) => {
+          set('paceKind', k);
+          if (k === 'unsure') onAutoNext();
+        }}
         options={[
           { key: 'race', label: 'I have a recent race result', hint: 'Most accurate — we project your marathon-equivalent pace' },
           { key: 'easy', label: 'I know my easy pace', hint: 'A solid signal' },
@@ -151,7 +165,7 @@ function StepPace() {
   );
 }
 
-function StepIntent() {
+function StepIntent(_: StepProps) {
   const store = useQuizStore();
   const { mode, primaryIntent, targetingRace, raceDistanceTargetKm, set } = store;
   const rolesPreview = mode === 'rotation' ? planRoles(store.toProfile()) : null;
@@ -195,7 +209,7 @@ function StepIntent() {
   );
 }
 
-function StepExperience() {
+function StepExperience(_: StepProps) {
   const { experience, currentShoeSlug, currentShoeVerdict, set } = useQuizStore();
   const [query, setQuery] = useState('');
   const matches =
@@ -258,7 +272,7 @@ function StepExperience() {
   );
 }
 
-function StepFit() {
+function StepFit(_: StepProps) {
   const { wide, roomyToe, wantsStability, brandLoves, brandBlocks, set, toggleBrand } = useQuizStore();
   return (
     <View style={{ gap: space(3) }}>
@@ -286,7 +300,7 @@ function StepFit() {
   );
 }
 
-function StepBudget() {
+function StepBudget(_: StepProps) {
   const { budgetType, budgetAmountGbp, budgetStretch, mode, set } = useQuizStore();
   return (
     <View style={{ gap: space(4) }}>
@@ -320,7 +334,7 @@ function StepBudget() {
   );
 }
 
-function StepInjury() {
+function StepInjury(_: StepProps) {
   const { injuryConsent, injuryFlags, set, toggleFlag } = useQuizStore();
   return (
     <View style={{ gap: space(3) }}>
@@ -346,9 +360,13 @@ function StepInjury() {
 
 export const STEPS: QuizStep[] = [
   { id: 'mode', title: 'What are we matching today?', valid: (d) => !!d.mode, Component: StepMode },
-  { id: 'sex', title: 'How do you identify?', valid: (d) => !!d.sex, Component: StepSex },
-  { id: 'age', title: 'How old are you?', valid: (d) => !!d.age && d.age >= 13, Component: StepAge },
-  { id: 'weight', title: 'Your weight', units: true, valid: (d) => !!d.weightKg, Component: StepWeight },
+  {
+    id: 'about',
+    title: 'About you',
+    units: true,
+    valid: (d) => !!d.sex && !!d.age && d.age >= 13 && !!d.weightKg,
+    Component: StepAbout,
+  },
   { id: 'volume', title: 'Weekly running volume', units: true, valid: (d) => !!d.weeklyKm, Component: StepVolume },
   {
     id: 'pace',

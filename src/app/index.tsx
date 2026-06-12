@@ -17,8 +17,8 @@ export default function Landing() {
           <Text style={{ color: color.volt }}>revealed.</Text>
         </Text>
         <Text style={styles.sub}>
-          Answer eleven quick questions. Our evidence-cited engine matches you to real, current
-          shoes — one perfect pick or a full training rotation — and reveals them as cards worth
+          Nine quick questions. Our evidence-cited engine matches you to real, current shoes —
+          one perfect pick or a full training rotation — and reveals them as cards worth
           screenshotting.
         </Text>
         <PillButton

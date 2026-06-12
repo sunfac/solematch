@@ -17,39 +17,35 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
 
   const next = () => page.getByTestId('quiz-next').last().click();
 
-  // 1 mode
+  // 1 mode — auto-advances on selection
   await page.getByTestId('choice-rotation').click();
+  // 2 about you (sex + age + weight on one screen)
+  await expect(page.getByTestId('sex-M')).toBeVisible();
+  await page.getByTestId('sex-M').click();
+  await page.getByTestId('age-input').last().fill('35');
+  await page.getByTestId('weight-input').last().fill('78');
   await next();
-  // 2 sex
-  await page.getByTestId('choice-M').click();
-  await next();
-  // 3 age
-  await page.getByTestId('age-input').fill('35');
-  await next();
-  // 4 weight
-  await page.getByTestId('weight-input').fill('78');
-  await next();
-  // 5 volume
+  // 3 volume — auto-advances
   await page.getByTestId('volume-32').click();
-  await next();
-  // 6 pace (easy 5:30/km)
+  // 4 pace (easy 5:30/km)
+  await expect(page.getByTestId('choice-easy')).toBeVisible();
   await page.getByTestId('choice-easy').click();
   await page.getByTestId('easy-pace-m').fill('5');
   await page.getByTestId('easy-pace-s').fill('30');
   await next();
-  // 7 intent: marathon target
+  // 5 intent: marathon target
   await page.getByTestId('targeting-race').click();
   await page.getByTestId('target-42.2').click();
   await next();
-  // 8 experience
+  // 6 experience
   await page.getByTestId('choice-regular').click();
   await next();
-  // 9 fit (optional)
+  // 7 fit (optional)
   await next();
-  // 10 budget 400
-  await page.getByTestId('budget-input').fill('400');
+  // 8 budget 400
+  await page.getByTestId('budget-input').last().fill('400');
   await next();
-  // 11 injury (optional) → reveal
+  // 9 injury (optional) → reveal
   await next();
 
   // reveal: 3 cards (daily, tempo, race) — skip each animation, advance

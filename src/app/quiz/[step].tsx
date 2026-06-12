@@ -1,5 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 import { STEPS } from '@/components/quiz/steps';
 import { PillButton } from '@/components/ui/PillButton';
 import { ProgressDots } from '@/components/ui/ProgressDots';
@@ -16,8 +18,11 @@ export default function QuizStepScreen() {
   const { units, set } = store;
   const valid = step.valid(store);
   const last = stepNum === STEPS.length;
+  const advancing = useRef(false);
 
   const next = () => {
+    if (advancing.current) return;
+    advancing.current = true;
     track('quiz_step', { step: step.id });
     if (last) {
       track('quiz_complete', { mode: store.mode });
@@ -26,6 +31,9 @@ export default function QuizStepScreen() {
       router.push(`/quiz/${stepNum + 1}`);
     }
   };
+
+  // single-choice steps advance themselves after a beat of visual feedback
+  const onAutoNext = () => setTimeout(next, 260);
 
   return (
     <Screen scroll>
@@ -51,12 +59,14 @@ export default function QuizStepScreen() {
         )}
       </View>
 
-      <Text style={styles.title}>{step.title}</Text>
-      {step.subtitle ? <Text style={styles.subtitle}>{step.subtitle}</Text> : null}
+      <Animated.View entering={FadeInRight.duration(240)}>
+        <Text style={styles.title}>{step.title}</Text>
+        {step.subtitle ? <Text style={styles.subtitle}>{step.subtitle}</Text> : null}
 
-      <View style={styles.body}>
-        <step.Component />
-      </View>
+        <View style={styles.body}>
+          <step.Component onAutoNext={onAutoNext} />
+        </View>
+      </Animated.View>
 
       <View style={styles.footer}>
         {step.optional && !last ? (

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { color, font, radius, space } from '@/theme/tokens';
 
@@ -58,6 +59,12 @@ export function ChoiceGrid<T extends string>({
   );
 }
 
+/**
+ * Numeric entry that is pleasant to TYPE in: focus selects the whole value so
+ * typing replaces it; no clamping mid-keystroke (the old behaviour turned a
+ * typed "3" into the minimum instantly) — out-of-range text is held locally
+ * and snapped to range on blur. Steppers clamp immediately as before.
+ */
 export function NumberField({
   value,
   onChange,
@@ -76,14 +83,21 @@ export function NumberField({
   testID?: string;
 }) {
   const clamp = (n: number) => Math.max(min, Math.min(max, n));
-  const current = value ?? 0;
+  const [text, setText] = useState(value === undefined ? '' : String(value));
+  const current = value ?? min;
+
+  useEffect(() => {
+    setText(value === undefined ? '' : String(value));
+  }, [value]);
+
+  const bump = (dir: 1 | -1) => {
+    const next = clamp(Math.round((current + dir * step) * 10) / 10);
+    onChange(next);
+  };
+
   return (
     <View style={styles.numberRow}>
-      <Pressable
-        accessibilityLabel="decrease"
-        onPress={() => onChange(clamp(Math.round((current - step) * 10) / 10))}
-        style={styles.stepBtn}
-      >
+      <Pressable accessibilityLabel="decrease" onPress={() => bump(-1)} style={styles.stepBtn}>
         <Text style={styles.stepBtnText}>−</Text>
       </Pressable>
       <View style={styles.numberBox}>
@@ -92,19 +106,28 @@ export function NumberField({
           style={styles.numberInput}
           keyboardType="numeric"
           inputMode="numeric"
-          value={value === undefined ? '' : String(value)}
+          selectTextOnFocus
+          value={text}
           onChangeText={(t) => {
-            const n = Number(t.replace(/[^0-9.]/g, ''));
-            if (!Number.isNaN(n)) onChange(clamp(n));
+            const cleaned = t.replace(/[^0-9.]/g, '');
+            setText(cleaned);
+            const n = Number(cleaned);
+            if (cleaned !== '' && !Number.isNaN(n) && n >= min && n <= max) onChange(n);
+          }}
+          onBlur={() => {
+            const n = Number(text);
+            if (text === '' || Number.isNaN(n)) {
+              setText(value === undefined ? '' : String(value));
+            } else if (n < min || n > max) {
+              const snapped = clamp(n);
+              onChange(snapped);
+              setText(String(snapped));
+            }
           }}
         />
         {suffix ? <Text style={styles.suffix}>{suffix}</Text> : null}
       </View>
-      <Pressable
-        accessibilityLabel="increase"
-        onPress={() => onChange(clamp(Math.round((current + step) * 10) / 10))}
-        style={styles.stepBtn}
-      >
+      <Pressable accessibilityLabel="increase" onPress={() => bump(1)} style={styles.stepBtn}>
         <Text style={styles.stepBtnText}>+</Text>
       </Pressable>
     </View>
