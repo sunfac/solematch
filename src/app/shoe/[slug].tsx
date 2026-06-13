@@ -114,10 +114,16 @@ export default function ShoeDetailScreen() {
               <View>
                 <Text style={styles.offerRetailer}>{o.retailer}</Text>
                 <Text style={styles.offerChecked}>
-                  {o.kind === 'brand' ? `stocks ${shoe.brand} — find this model in range` : `price as of ${o.checkedAt}`}
+                  {o.kind === 'brand'
+                    ? `stocks ${shoe.brand} — find this model in range`
+                    : o.streetPriceGbp && o.streetPriceGbp < o.priceGbp
+                      ? `was £${o.priceGbp} · checked ${o.checkedAt}`
+                      : `price as of ${o.checkedAt}`}
                 </Text>
               </View>
-              <Text style={styles.offerPrice}>{o.kind === 'brand' ? 'browse →' : `£${o.priceGbp} →`}</Text>
+              <Text style={styles.offerPrice}>
+                {o.kind === 'brand' ? 'browse →' : `£${o.streetPriceGbp ?? o.priceGbp} →`}
+              </Text>
             </Pressable>
           ))
         ) : (

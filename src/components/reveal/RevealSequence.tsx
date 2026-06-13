@@ -17,6 +17,7 @@ import { CARD_W, matchBand, ShoeCard } from '@/components/card/ShoeCard';
 import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
+import { dropFor, offersFor } from '@/lib/affiliate';
 import type { RoleResult } from '@/types/match';
 import { color, font, space } from '@/theme/tokens';
 import { CountUp } from './CountUp';
@@ -179,7 +180,12 @@ export function RevealSequence({
           </Animated.View>
           <View style={styles.ctaRow}>
             <PillButton
-              label={`Where to buy · £${pick.shoe.msrpGbp}`}
+              label={(() => {
+                const drop = dropFor(offersFor(pick.shoe.slug, 'UK'));
+                return drop
+                  ? `Where to buy · £${drop.streetGbp} · was £${drop.rrpGbp} · -${drop.pctOff}%`
+                  : `Where to buy · £${pick.shoe.msrpGbp}`;
+              })()}
               onPress={() => router.push(`/shoe/${pick.shoe.slug}#offers`)}
               style={{ flex: 1.4 }}
             />

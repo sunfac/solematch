@@ -1,5 +1,5 @@
 import { SHOES } from '@/data/catalogue';
-import { buildAffiliateUrl, offersFor, type Offer } from '../affiliate';
+import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice, type Offer } from '../affiliate';
 
 const offer: Offer = {
   retailer: 'SportsShoes',
@@ -39,4 +39,35 @@ test('every current shoe has at least one UK offer with an https url and a check
 test('regional filter falls back to any region when none match', () => {
   const offers = offersFor('nike-vaporfly-4', 'US');
   expect(offers.length).toBeGreaterThanOrEqual(1);
+});
+
+test('payPrice prefers a live street price below RRP', () => {
+  expect(payPrice({ ...offer, streetPriceGbp: 180 })).toBe(180);
+  expect(payPrice(offer)).toBe(offer.priceGbp);
+});
+
+test('bestOffer prefers cheaper SEARCH-kind over equal-price BRAND', () => {
+  const search: Offer = { ...offer, kind: 'search', priceGbp: 200 };
+  const brand: Offer = { ...offer, kind: 'brand', retailer: 'Runners Need', url: 'https://example/brand', priceGbp: 200 };
+  expect(bestOffer([brand, search])?.kind).toBe('search');
+});
+
+test('bestOffer prefers the live street price when present', () => {
+  const expensive: Offer = { ...offer, kind: 'search', priceGbp: 200, streetPriceGbp: 140 };
+  const cheaper: Offer = { ...offer, kind: 'search', retailer: 'X', priceGbp: 180 };
+  expect(bestOffer([cheaper, expensive])?.streetPriceGbp).toBe(140);
+});
+
+test('dropFor surfaces the biggest absolute saving across retailers', () => {
+  const drop = dropFor([
+    { ...offer, kind: 'search', priceGbp: 240, streetPriceGbp: 180 }, // £60 off
+    { ...offer, kind: 'search', retailer: 'X', priceGbp: 240, streetPriceGbp: 200 }, // £40 off
+  ]);
+  expect(drop?.rrpGbp).toBe(240);
+  expect(drop?.streetGbp).toBe(180);
+  expect(drop?.pctOff).toBe(25);
+});
+
+test('dropFor returns undefined when nothing is dropped', () => {
+  expect(dropFor([offer])).toBeUndefined();
 });

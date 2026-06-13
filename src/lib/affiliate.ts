@@ -19,7 +19,16 @@ export interface Offer {
   retailer: string;
   region: 'UK' | 'US';
   url: string;
+  /** RRP/list price for this offer in GBP. */
   priceGbp: number;
+  /**
+   * Live street price in GBP from scripts/check-prices.ts (when present and
+   * meaningfully under RRP). Drives "was £RRP / now £street" UI surfaces and
+   * tilts bestOffer() toward the lower live price.
+   */
+  streetPriceGbp?: number;
+  /** Inferred from streetPriceGbp/priceGbp at check time; cached for ranking. */
+  priceDropped?: boolean;
   /**
    * 'search' lands on results for this exact model; 'brand' lands on the
    * retailer's brand range page (used where no url-addressable search exists,
@@ -31,12 +40,33 @@ export interface Offer {
   checkedAt: string;
 }
 
-/** Model-specific destinations beat brand range pages at equal price. */
+/** The price the runner will actually pay. */
+export const payPrice = (o: Offer): number => o.streetPriceGbp ?? o.priceGbp;
+
+/** Model-specific destinations beat brand range pages; among those, lowest payable price wins. */
 export function bestOffer(offers: Offer[]): Offer | undefined {
   return [...offers].sort(
     (a, b) =>
-      (a.kind === 'brand' ? 1 : 0) - (b.kind === 'brand' ? 1 : 0) || a.priceGbp - b.priceGbp,
+      (a.kind === 'brand' ? 1 : 0) - (b.kind === 'brand' ? 1 : 0) || payPrice(a) - payPrice(b),
   )[0];
+}
+
+export interface PriceDrop {
+  rrpGbp: number;
+  streetGbp: number;
+  pctOff: number;
+}
+
+/** "Was £180, now £140 (22% off)" — surfaced where it matters most. */
+export function dropFor(offers: Offer[]): PriceDrop | undefined {
+  const dropped = offers.filter((o) => o.streetPriceGbp && o.streetPriceGbp < o.priceGbp);
+  if (dropped.length === 0) return undefined;
+  // pick the biggest absolute saving for the headline number
+  const best = dropped.sort(
+    (a, b) => (b.priceGbp - b.streetPriceGbp!) - (a.priceGbp - a.streetPriceGbp!),
+  )[0];
+  const street = best.streetPriceGbp!;
+  return { rrpGbp: best.priceGbp, streetGbp: street, pctOff: Math.round(((best.priceGbp - street) / best.priceGbp) * 100) };
 }
 
 const OFFERS: Record<string, Offer[]> = offersRaw as Record<string, Offer[]>;

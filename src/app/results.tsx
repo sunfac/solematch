@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { bestOffer, buildAffiliateUrl, offersFor } from '@/lib/affiliate';
+import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice } from '@/lib/affiliate';
 import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
@@ -147,7 +147,21 @@ export default function ResultsScreen() {
           <View style={styles.roleRight}>
             <Text style={styles.roleMatch}>{r.pick.match}%</Text>
             <Pressable onPress={() => buyNow(r.pick.shoe.slug)} accessibilityRole="button">
-              <Text style={styles.buyLink}>£{r.pick.shoe.msrpGbp} →</Text>
+              {(() => {
+                const drop = dropFor(offersFor(r.pick.shoe.slug, region));
+                if (drop) {
+                  return (
+                    <View style={styles.priceStack}>
+                      <Text style={styles.priceWas}>was £{drop.rrpGbp}</Text>
+                      <Text style={styles.buyLink}>£{drop.streetGbp} →</Text>
+                      <Text style={styles.priceDropTag}>-{drop.pctOff}%</Text>
+                    </View>
+                  );
+                }
+                const best = bestOffer(offersFor(r.pick.shoe.slug, region));
+                const price = best ? payPrice(best) : r.pick.shoe.msrpGbp;
+                return <Text style={styles.buyLink}>£{price} →</Text>;
+              })()}
             </Pressable>
           </View>
         </Pressable>
@@ -226,6 +240,20 @@ const styles = StyleSheet.create({
   roleRight: { alignItems: 'flex-end', justifyContent: 'space-between' },
   roleMatch: { fontFamily: font.display, fontSize: 22, color: color.volt },
   buyLink: { fontFamily: font.uiMed, fontSize: 13, color: color.cyan },
+  priceStack: { alignItems: 'flex-end' },
+  priceWas: {
+    fontFamily: font.ui,
+    fontSize: 10,
+    color: color.muted,
+    textDecorationLine: 'line-through',
+  },
+  priceDropTag: {
+    fontFamily: font.uiMed,
+    fontSize: 10,
+    color: color.volt,
+    marginTop: 1,
+    letterSpacing: 0.5,
+  },
   notes: {
     marginTop: space(5),
     backgroundColor: color.surface,
