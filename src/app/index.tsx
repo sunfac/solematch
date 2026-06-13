@@ -163,10 +163,11 @@ export default function Landing() {
 
       {/* the trust contract — confident, not apologetic */}
       <View style={styles.trust}>
-        <Text style={styles.trustHead}>We take commission. It never moves your ranking.</Text>
+        <Text style={styles.trustHead}>Independent matching. No brand can buy a ranking.</Text>
         <Text style={styles.trustSub}>
-          The engine is deterministic and blind to what we earn — and we publish the whole thing. A
-          recommendation that visibly isn&apos;t for sale is the entire advantage.
+          The engine is deterministic and published in full — manufacturer specs, peer-reviewed
+          evidence and your answers. A recommendation that visibly isn&apos;t for sale is the entire
+          advantage.
         </Text>
       </View>
 
@@ -176,8 +177,8 @@ export default function Landing() {
 
       <Text style={styles.disclaimer}>
         *Malisoux 2015. SoleMatch optimises performance, comfort and fit — not medical advice, and
-        no shoe is proven to prevent injury. We may earn commission on retailer links. Affiliate
-        disclosure, privacy and terms in the menu.
+        no shoe is proven to prevent injury. Some retailer links are affiliate links, which never
+        affect your ranking. Disclosure, privacy and terms in the menu.
       </Text>
     </Screen>
   );

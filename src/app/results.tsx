@@ -226,7 +226,7 @@ export default function ResultsScreen() {
           }}
         />
       </View>
-      <Text style={styles.disclosure}>We may earn commission on retailer links.</Text>
+      <Text style={styles.disclosure}>Independent matching · some retailer links are affiliate links.</Text>
     </Screen>
   );
 }

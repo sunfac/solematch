@@ -55,7 +55,7 @@ export function NavMenu({ open, onClose }: { open: boolean; onClose: () => void 
             </Pressable>
           ))}
         </View>
-        <Text style={styles.footnote}>Commission never reorders the ranking.</Text>
+        <Text style={styles.footnote}>Independent ranking — no brand can buy placement.</Text>
       </Animated.View>
     </Modal>
   );

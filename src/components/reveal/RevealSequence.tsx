@@ -204,7 +204,7 @@ export function RevealSequence({
             label={index + 1 < total ? 'Next card →' : total > 1 ? 'See my rotation' : 'See my result'}
             onPress={onNext}
           />
-          <Text style={styles.tiltHint}>Drag the card · we may earn commission on retailer links</Text>
+          <Text style={styles.tiltHint}>Drag the card · ranked on the science, never sold</Text>
         </View>
       ) : (
         <Text style={styles.skipHint}>tap anywhere to skip</Text>

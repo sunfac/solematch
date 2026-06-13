@@ -77,7 +77,7 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
   await expect(page.getByText(/Why this shoe/).first()).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText('Where to buy')).toBeVisible();
   await expect(page.getByText('SportsShoes').first()).toBeVisible();
-  await expect(page.getByText('We may earn commission on retailer links.').last()).toBeVisible();
+  await expect(page.getByText(/some retailer links are affiliate links/).last()).toBeVisible();
 });
 
 test('methodology page publishes the full rule set', async ({ page }) => {

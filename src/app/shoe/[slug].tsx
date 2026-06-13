@@ -137,7 +137,7 @@ export default function ShoeDetailScreen() {
         ) : (
           <Text style={styles.muted}>Retailer links coming shortly — RRP £{shoe.msrpGbp}.</Text>
         )}
-        <Text style={styles.disclosure}>We may earn commission on retailer links.</Text>
+        <Text style={styles.disclosure}>Independent matching · some retailer links are affiliate links.</Text>
       </View>
 
       {inResult && inResult.alternates.length > 0 ? (
