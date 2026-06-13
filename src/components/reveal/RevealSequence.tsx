@@ -117,7 +117,7 @@ export function RevealSequence({
   return (
     <Pressable style={styles.stage} onPress={stage !== 'done' ? skip : undefined} testID="reveal-stage">
       <Text style={styles.counter}>
-        CARD {index + 1} OF {total}
+        CARD {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
       </Text>
 
       <Animated.View style={[styles.bannerWrap, bannerStyle]}>
@@ -172,11 +172,14 @@ export function RevealSequence({
 
       {stage === 'done' ? (
         <View style={styles.ctas}>
-          <Animated.View entering={FadeIn.duration(300)} style={styles.whyChip}>
-            <EvidenceBadge level={pick.reasons[0].evidence} />
-            <Text style={styles.whyText} numberOfLines={3}>
-              {pick.reasons[0].text}
-            </Text>
+          <Animated.View entering={FadeIn.duration(300)} style={styles.whyWrap}>
+            <Text style={styles.whyEyebrow}>WHY THIS PICK</Text>
+            <View style={styles.whyChip}>
+              <EvidenceBadge level={pick.reasons[0].evidence} />
+              <Text style={styles.whyText} numberOfLines={3}>
+                {pick.reasons[0].text}
+              </Text>
+            </View>
           </Animated.View>
           <View style={styles.ctaRow}>
             <PillButton
@@ -212,18 +215,20 @@ export function RevealSequence({
 
 const styles = StyleSheet.create({
   stage: { flex: 1, alignItems: 'center', paddingTop: space(4) },
-  counter: { fontFamily: font.display, fontSize: 11, letterSpacing: 3, color: color.cyan },
+  counter: { fontFamily: font.mono, fontSize: 10, letterSpacing: 2, color: color.cyan },
   bannerWrap: { marginTop: space(4) },
   matchZone: { height: 56, justifyContent: 'center', marginTop: space(2) },
-  matchRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  matchBig: { fontFamily: font.display, fontSize: 44, color: color.volt },
-  matchPct: { fontFamily: font.display, fontSize: 13, letterSpacing: 2, color: color.volt },
+  matchRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
+  matchBig: { fontFamily: font.display, fontSize: 44, color: color.volt, letterSpacing: -1 },
+  matchPct: { fontFamily: font.mono, fontSize: 11, letterSpacing: 1, color: color.volt },
   cardZone: { marginTop: space(2), height: 480, alignItems: 'center', justifyContent: 'center' },
   tease: { alignItems: 'center', gap: space(3) },
   teaseBrand: { fontFamily: font.display, fontSize: 15, letterSpacing: 8 },
   flash: { position: 'absolute', top: -60, bottom: -60, left: -600, right: -600, opacity: 0 },
   shine: { position: 'absolute', top: -40, bottom: -40, width: 90 },
   ctas: { width: '100%', maxWidth: 360, gap: space(2.5), marginTop: space(2) },
+  whyWrap: { gap: space(1.5) },
+  whyEyebrow: { fontFamily: font.mono, fontSize: 9, letterSpacing: 1.5, color: color.muted },
   whyChip: {
     flexDirection: 'row',
     alignItems: 'center',
