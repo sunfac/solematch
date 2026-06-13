@@ -83,7 +83,19 @@ const raceDistance: Modifier = (s, p, role) => {
     };
   }
   if (p.raceDistanceTargetKm >= 42 && s.stackHeelMm >= 38) {
-    return { delta: 8, reason: r('foam-energy-return', 'Max-legal stack of race foam protects your legs late in a marathon') };
+    // Marathon: max-legal stack PLUS the best race foam wins — over 42 km the
+    // energy return of a premier supershoe (PEBA, top plate) outweighs a gram
+    // or two. Rewarding foam/plate quality (spd) here, not a flat bonus, lets
+    // the iconic marathon shoes (Alphafly-class) rank where elites actually
+    // race them, instead of losing to a lighter short-course racer.
+    // floor at the old flat +8 so conservative max-stack shoes are unchanged;
+    // only the premier race foams (high spd) earn the extra, lifting the
+    // Alphafly-class to where elites actually race them.
+    const delta = 8 + Math.max(0, 0.2 * (stats(s).spd - 82));
+    return {
+      delta,
+      reason: r('foam-energy-return', 'Max-legal stack of premier race foam — propulsion that holds deep into a marathon'),
+    };
   }
   return null;
 };
@@ -303,11 +315,11 @@ const forefootFit: Modifier = (s, p, role) => {
     }
     return null;
   }
-  // no width ask but you're in a fast slot: the snug performance fit is what
-  // racers expect (kept small — never enough to override an evidence-led signal)
-  if ((role === 'race' || role === 'tempo') && hint === 'narrow') {
-    return { delta: 2 };
-  }
+  // No width preference expressed → forefoot shape is neutral. (A previous
+  // blanket +2 for narrow racers silently re-ranked the supershoe hierarchy by
+  // width — pushing roomier-fitting icons like the Alphafly below narrower
+  // rivals. Race order should be decided by evidence — plate, foam, mass,
+  // distance — not forefoot width nobody asked about.)
   return null;
 };
 
