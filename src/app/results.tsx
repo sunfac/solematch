@@ -3,6 +3,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { consensusBestForSlug } from '@/data/consensusBest';
+import { runMatch } from '@/engine';
+import type { MatchResult } from '@/types/match';
 import { roleDrivers } from '@/scores/formulas';
 import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice } from '@/lib/affiliate';
 import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
@@ -24,14 +26,48 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default function ResultsScreen() {
-  const result = useResultsStore((s) => s.result);
+  const storeResult = useResultsStore((s) => s.result);
   const matchId = useResultsStore((s) => s.matchId);
   const region = useQuizStore((s) => s.region);
+  const toProfile = useQuizStore((s) => s.toProfile);
   const resetQuiz = useQuizStore((s) => s.reset);
   const clearResults = useResultsStore((s) => s.clear);
   const [copied, setCopied] = useState(false);
   const [activeCard, setActiveCard] = useState(0);
+  // "show me another" re-rolls among statistically-tied rotations (engine shuffle
+  // seed); the displayed result is the re-roll if any, else the canonical store one
+  const [shuffled, setShuffled] = useState<MatchResult | null>(null);
+  const [shuffle, setShuffle] = useState(0);
+  const result = shuffled ?? storeResult;
   const CARD_STEP = CARD_W * 0.78 + 14;
+
+  // a rotation only has "another" to show when a slot is a genuine dead heat
+  const hasDeadHeat =
+    !!result &&
+    result.mode === 'rotation' &&
+    result.roles.some((r) => r.alternates.length > 0 && Math.abs(r.alternates[0].match - r.pick.match) <= 2);
+
+  const sig = (r: MatchResult) => r.roles.map((x) => x.pick.shoe.slug).join('|');
+  const showAnother = () => {
+    if (!result) return;
+    const base = toProfile();
+    const current = sig(result);
+    // find the next shuffle that yields a genuinely different (still-tied) rotation
+    for (let s = shuffle + 1; s <= shuffle + 8; s++) {
+      const r = runMatch({ ...base, shuffle: s });
+      if (sig(r) !== current) {
+        track('show_another', { shuffle: s });
+        setShuffle(s);
+        setShuffled(r);
+        setActiveCard(0);
+        return;
+      }
+    }
+    const s = shuffle + 1;
+    setShuffle(s);
+    setShuffled(runMatch({ ...base, shuffle: s }));
+    setActiveCard(0);
+  };
 
   // the direct money path: cheapest offer for a pick, attributed to this match
   const buyNow = (slug: string) => {
@@ -229,6 +265,13 @@ export default function ResultsScreen() {
         </View>
       ) : null}
 
+      {hasDeadHeat ? (
+        <View style={styles.shuffleWrap}>
+          <PillButton testID="show-another" label="↻ Show me another" variant="ghost" onPress={showAnother} />
+          <Text style={styles.shuffleHint}>Among your dead-heat picks — same match quality, a different feel</Text>
+        </View>
+      ) : null}
+
       <View style={styles.actions}>
         <PillButton label={copied ? 'Copied ✓' : 'Copy my result'} variant="ghost" onPress={copySummary} />
         <PillButton
@@ -339,6 +382,8 @@ const styles = StyleSheet.create({
   },
   notesTitle: { fontFamily: font.uiMed, fontSize: 13, color: color.ink },
   note: { fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
+  shuffleWrap: { alignItems: 'center', gap: space(2), marginTop: space(5) },
+  shuffleHint: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted, textAlign: 'center' },
   actions: { flexDirection: 'row', gap: space(3), marginTop: space(5), justifyContent: 'center' },
   disclosure: { fontFamily: font.ui, fontSize: 11, color: color.muted, textAlign: 'center', marginVertical: space(4), opacity: 0.8 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space(4) },

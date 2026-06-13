@@ -37,4 +37,11 @@ export interface Profile {
   priority?: Priority;
   /** optional: where they run — gates trail shoes in and sets the grip target */
   terrain?: Terrain;
+  /**
+   * optional re-roll index for the "show me another" control. It only perturbs
+   * the deterministic dead-heat seed (ctx.seed = JSON.stringify(profile)), so a
+   * different value surfaces a different STATISTICALLY-TIED rotation — never a
+   * worse-fitting one. Omitted (undefined) keeps the canonical result.
+   */
+  shuffle?: number;
 }
