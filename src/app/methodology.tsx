@@ -44,7 +44,9 @@ export default function MethodologyScreen() {
         is ELITE, the next 25% GOLD, the next 40% SILVER, the rest BRONZE. When two shoes are
         statistically tied for your slot (within ±0.8 points), a deterministic, profile-seeded
         tiebreak decides — different runners see different but equally right picks, and the same
-        runner always gets the same answer.
+        runner always gets the same answer. Match percentages cap at 96, never 100: no real
+        shoe is a perfect match for a real runner, so above 90% we apply a soft compression
+        and refuse to claim the last few points.
       </Text>
 
       <Text style={styles.sectionTitle}>What we deliberately do NOT do</Text>

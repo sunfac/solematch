@@ -33,7 +33,16 @@ const bestPlatePath = (f: number): number =>
 const roleCeiling = (role: Role, factor: number): number =>
   role === 'race' ? 70 + bestPlatePath(factor) : THEORETICAL_MAX[role];
 
-const clampMatch = (n: number) => Math.max(40, Math.min(99, Math.round(n)));
+/**
+ * Owner calibration: strong honest picks land 86-96, sub-85 reads weak.
+ * The raw ratio (roleScore/ceiling*100) can exceed 100 for ideally-matched
+ * shoes — but no real shoe is a perfect match for a real runner. So above 90
+ * we apply a soft compression (slope 0.6) and clamp at 96. The strong band
+ * 85-90 passes through untouched; only the over-claimed top end is squeezed.
+ *   raw 100 → 96, raw 95 → 93, raw 90 → 90, raw 85 → 85.
+ */
+const softCapTop = (raw: number): number => (raw > 90 ? 90 + (raw - 90) * 0.6 : raw);
+const clampMatch = (n: number) => Math.max(40, Math.min(96, Math.round(softCapTop(n))));
 
 /** FNV-1a — tiny deterministic hash for the near-tie variety jitter. */
 function fnv(str: string): number {
