@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { ChoiceGrid } from '@/components/quiz/inputs';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
+import { TopBar } from '@/components/ui/TopBar';
 import { useQuizStore } from '@/state/quizStore';
 import { useResultsStore } from '@/state/resultsStore';
 import { color, font, space } from '@/theme/tokens';
@@ -13,9 +14,7 @@ export default function SettingsScreen() {
 
   return (
     <Screen scroll maxWidth={560}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
-        <Text style={styles.back}>← Back</Text>
-      </Pressable>
+      <TopBar />
       <Text style={styles.title}>Settings</Text>
 
       <Text style={styles.label}>Units</Text>
@@ -59,7 +58,6 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  back: { fontFamily: font.ui, fontSize: 14, color: color.muted, marginBottom: space(3) },
   title: { fontFamily: font.display, fontSize: 26, color: color.ink, marginBottom: space(4) },
   label: { fontFamily: font.uiMed, fontSize: 13.5, color: color.ink, marginTop: space(5), marginBottom: space(2.5) },
   dataBox: {

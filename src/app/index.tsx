@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { SHOES } from '@/data/catalogue';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
+import { TopBar } from '@/components/ui/TopBar';
 import { track } from '@/lib/analytics';
 import { useQuizStore } from '@/state/quizStore';
 import { color, font, space } from '@/theme/tokens';
@@ -12,6 +13,7 @@ export default function Landing() {
   const reset = useQuizStore((s) => s.reset);
   return (
     <Screen scroll>
+      <TopBar hideBack />
       <View style={styles.hero}>
         <Image
           source={require('../../assets/hero-shoe.png')}
@@ -73,15 +75,10 @@ export default function Landing() {
         Read the methodology — every rule, every citation
       </Link>
 
-      <View style={styles.footer}>
-        <Link href="/legal/disclosure" style={styles.footerLink}>Affiliate disclosure</Link>
-        <Link href="/legal/privacy" style={styles.footerLink}>Privacy</Link>
-        <Link href="/legal/terms" style={styles.footerLink}>Terms</Link>
-        <Link href="/settings" style={styles.footerLink}>Settings</Link>
-      </View>
       <Text style={styles.disclaimer}>
         SoleMatch optimises performance, comfort and fit. It is not medical advice and no shoe is
-        proven to prevent injury. We may earn commission on retailer links.
+        proven to prevent injury. We may earn commission on retailer links. Affiliate disclosure,
+        privacy and terms in the menu.
       </Text>
     </Screen>
   );
@@ -113,8 +110,6 @@ const styles = StyleSheet.create({
   stripStat: { fontFamily: font.display, fontSize: 26, color: color.volt, minWidth: 76, textAlign: 'center' },
   stripText: { flex: 1, fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
   methodLink: { fontFamily: font.uiMed, fontSize: 13.5, color: color.volt, textAlign: 'center', marginTop: space(4) },
-  footer: { flexDirection: 'row', gap: space(4), justifyContent: 'center', marginTop: space(10), flexWrap: 'wrap' },
-  footerLink: { fontFamily: font.ui, fontSize: 12.5, color: color.muted },
   disclaimer: {
     fontFamily: font.ui,
     fontSize: 11.5,

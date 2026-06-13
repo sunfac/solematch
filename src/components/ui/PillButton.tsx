@@ -22,12 +22,23 @@ export function PillButton({ label, onPress, variant = 'primary', disabled, styl
       style={({ pressed }) => [
         styles.base,
         primary ? styles.primary : styles.ghost,
-        pressed && { transform: [{ scale: 0.98 }] },
-        disabled && { opacity: 0.4 },
+        // disabled primary now reads as a ghost outline with low-key text —
+        // opacity 0.4 on volt-green was hard to distinguish from a fresh button
+        disabled && primary && styles.disabledPrimary,
+        disabled && !primary && { opacity: 0.4 },
+        pressed && !disabled && { transform: [{ scale: 0.98 }] },
         style,
       ]}
     >
-      <Text style={[styles.label, primary ? styles.labelPrimary : styles.labelGhost]}>{label}</Text>
+      <Text
+        style={[
+          styles.label,
+          primary ? styles.labelPrimary : styles.labelGhost,
+          disabled && primary && styles.labelDisabled,
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -42,7 +53,9 @@ const styles = StyleSheet.create({
   },
   primary: { backgroundColor: color.volt },
   ghost: { borderWidth: 1, borderColor: color.line, backgroundColor: 'transparent' },
+  disabledPrimary: { backgroundColor: color.surface2, borderWidth: 1, borderColor: color.line },
   label: { fontFamily: font.uiMed, fontSize: 15 },
   labelPrimary: { color: color.bg },
   labelGhost: { color: color.ink },
+  labelDisabled: { color: color.muted },
 });

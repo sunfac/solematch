@@ -7,6 +7,7 @@ import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
+import { TopBar } from '@/components/ui/TopBar';
 import { track } from '@/lib/analytics';
 import { useQuizStore } from '@/state/quizStore';
 import { useResultsStore } from '@/state/resultsStore';
@@ -68,6 +69,7 @@ export default function ResultsScreen() {
 
   return (
     <Screen scroll maxWidth={560}>
+      <TopBar />
       <Text style={styles.title}>
         {result.mode === 'rotation' ? 'Your rotation' : 'Your match'}
       </Text>

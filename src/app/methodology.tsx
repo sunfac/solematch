@@ -5,6 +5,7 @@ import { ENGINE_VERSION } from '@/engine';
 import { COMMUNITY_BONUS, FORMULA_VERSION } from '@/scores/formulas';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { Screen } from '@/components/ui/Screen';
+import { TopBar } from '@/components/ui/TopBar';
 import { color, font, space, type EvidenceLevel } from '@/theme/tokens';
 
 const GROUPS: EvidenceLevel[] = ['STRONG', 'MODERATE', 'EMERGING', 'FIT & FEEL'];
@@ -21,9 +22,7 @@ const MYTHS = [
 export default function MethodologyScreen() {
   return (
     <Screen scroll maxWidth={560}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
-        <Text style={styles.back}>← Back</Text>
-      </Pressable>
+      <TopBar />
       <Text style={styles.title}>Methodology</Text>
       <Text style={styles.intro}>
         Every recommendation reason cites one of the rules below, each graded by the strength of its

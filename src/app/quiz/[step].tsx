@@ -6,6 +6,7 @@ import { STEPS } from '@/components/quiz/steps';
 import { PillButton } from '@/components/ui/PillButton';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { Screen } from '@/components/ui/Screen';
+import { TopBar } from '@/components/ui/TopBar';
 import { track } from '@/lib/analytics';
 import { useQuizStore } from '@/state/quizStore';
 import { color, font, space } from '@/theme/tokens';
@@ -43,27 +44,20 @@ export default function QuizStepScreen() {
 
   return (
     <Screen scroll>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          onPress={() => (stepNum === 1 ? router.replace('/') : router.back())}
-        >
-          <Text style={styles.back}>←</Text>
-        </Pressable>
-        <ProgressDots current={stepNum} total={STEPS.length} />
-        {step.units ? (
-          <Pressable
-            testID="unit-toggle"
-            accessibilityRole="button"
-            onPress={() => set('units', units === 'metric' ? 'imperial' : 'metric')}
-          >
-            <Text style={styles.unitToggle}>{units === 'metric' ? 'kg · km' : 'lb · mi'}</Text>
-          </Pressable>
-        ) : (
-          <View style={{ width: 52 }} />
-        )}
-      </View>
+      <TopBar
+        centre={<ProgressDots current={stepNum} total={STEPS.length} />}
+        right={
+          step.units ? (
+            <Pressable
+              testID="unit-toggle"
+              accessibilityRole="button"
+              onPress={() => set('units', units === 'metric' ? 'imperial' : 'metric')}
+            >
+              <Text style={styles.unitToggle}>{units === 'metric' ? 'kg · km' : 'lb · mi'}</Text>
+            </Pressable>
+          ) : null
+        }
+      />
 
       <Animated.View entering={FadeInRight.duration(240)}>
         <Text style={styles.title}>{step.title}</Text>
@@ -91,13 +85,6 @@ export default function QuizStepScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: space(6),
-  },
-  back: { color: color.muted, fontSize: 22, width: 52 },
   unitToggle: {
     color: color.cyan,
     fontFamily: font.uiMed,

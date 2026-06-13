@@ -6,6 +6,7 @@ import { ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
+import { TopBar } from '@/components/ui/TopBar';
 import { buildAffiliateUrl, offersFor } from '@/lib/affiliate';
 import { track } from '@/lib/analytics';
 import { useQuizStore } from '@/state/quizStore';
@@ -55,9 +56,7 @@ export default function ShoeDetailScreen() {
 
   return (
     <Screen scroll maxWidth={560}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
-        <Text style={styles.back}>← Back</Text>
-      </Pressable>
+      <TopBar />
 
       <View style={styles.cardWrap}>
         <ShoeCard

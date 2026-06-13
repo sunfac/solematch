@@ -6,6 +6,7 @@ import { SCORED } from '@/scores/formulas';
 import { Chip } from '@/components/quiz/inputs';
 import { TierBadge } from '@/components/ui/Badge';
 import { Screen } from '@/components/ui/Screen';
+import { TopBar } from '@/components/ui/TopBar';
 import { color, font, space, tierColor } from '@/theme/tokens';
 import type { Category } from '@/types/shoe';
 
@@ -31,12 +32,8 @@ export default function BrowseScreen() {
 
   return (
     <Screen scroll maxWidth={560}>
-      <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
-          <Text style={styles.back}>←</Text>
-        </Pressable>
-        <Text style={styles.title}>The catalogue</Text>
-      </View>
+      <TopBar />
+      <Text style={styles.title}>The catalogue</Text>
 
       <View style={styles.filters}>
         {CATS.map((c) => (
@@ -74,9 +71,7 @@ export default function BrowseScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: space(3), marginBottom: space(4) },
-  back: { color: color.muted, fontSize: 22 },
-  title: { fontFamily: font.display, fontSize: 24, color: color.ink },
+  title: { fontFamily: font.display, fontSize: 24, color: color.ink, marginBottom: space(4) },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: space(2), marginBottom: space(4) },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space(3) },
   tile: {
