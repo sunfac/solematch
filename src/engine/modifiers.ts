@@ -148,10 +148,14 @@ const bodyMass: Modifier = (s, p, role) => {
   }
   if (lightLean > 0) {
     const delta = lightLean * 0.12 * (stats(s).csh - 72);
+    // Surface the evidence whenever the pick IS a soft shoe — gating the
+    // reason on a csh-based delta threshold meant lighter runners were
+    // never told why a soft pick was chosen for them unless they landed
+    // on the absolute plushest shoe in the catalogue.
     return {
       delta,
       reason:
-        delta >= 1 && s.softness >= 4
+        s.softness >= 4 && lightLean >= 0.3
           ? r('soft-midsole-light-runners', 'Softer midsoles showed modestly lower injury risk for lighter runners')
           : undefined,
     };

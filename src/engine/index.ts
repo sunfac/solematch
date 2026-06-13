@@ -56,7 +56,12 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
    * more honestly than a sub-60% slot. (Owner cal: sub-mid-80s feels weak.)
    */
   const MIN_MATCH = 80;
-  const FALLBACK_MIN_MATCH = 60;
+  // Owner cal: sub-mid-80s reads weak. A "rotation" whose worst slot is 73%
+  // (e.g. a £65 budget shoe forced into the daily slot at £180) is degenerate
+  // — one strong versatile pick + a roadmap note reads better than two
+  // compromises. Bumped from 60 once the catalogue grew dense enough to keep
+  // surfacing low-quality 2-shoe fits at very tight budgets.
+  const FALLBACK_MIN_MATCH = 75;
   const planCandidates: Role[][] = [roles];
   for (const trim of ['recovery', 'tempo'] as const) {
     const prev = planCandidates[planCandidates.length - 1];
