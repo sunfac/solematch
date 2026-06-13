@@ -65,6 +65,9 @@ describe('mid-budget rotation quality — no starvation, no broken constraints',
         if (r.roles.length >= 2) {
           const foams = new Set(r.roles.map((x) => x.pick.shoe.foamClass));
           expect(foams.size).toBeGreaterThanOrEqual(2);
+          // brand uniqueness — no two same-brand picks in a rotation
+          const brands = new Set(r.roles.map((x) => x.pick.shoe.brand));
+          expect(brands.size).toBe(r.roles.length);
         }
       }
     }

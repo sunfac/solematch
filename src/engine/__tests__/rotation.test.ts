@@ -20,11 +20,21 @@ test('60 km/wk racer on £650 total: 4 distinct shoes, budget respected, diversi
 
   const foams = new Set(result.roles.map((r) => r.pick.shoe.foamClass));
   expect(foams.size).toBeGreaterThanOrEqual(2);
+  // Brand uniqueness — no two Sauconys in a rotation, etc. Different brands
+  // give the runner different lasts/heel hold/forefoot shape across the week,
+  // which IS the Malisoux 2015 load-variation benefit.
+  const brands = new Set(result.roles.map((r) => r.pick.shoe.brand));
+  expect(brands.size).toBe(result.roles.length);
+  // Every pair clears at least two of: ≥2mm drop, different foam, ≥5mm stack
   for (let i = 0; i < result.roles.length; i++) {
     for (let j = i + 1; j < result.roles.length; j++) {
       const a = result.roles[i].pick.shoe;
       const b = result.roles[j].pick.shoe;
-      expect(a.plate !== b.plate || Math.abs(a.dropMm - b.dropMm) >= 2).toBe(true);
+      const diffs =
+        Number(Math.abs(a.dropMm - b.dropMm) >= 2) +
+        Number(a.foamClass !== b.foamClass) +
+        Number(Math.abs(a.stackHeelMm - b.stackHeelMm) >= 5);
+      expect(diffs).toBeGreaterThanOrEqual(2);
     }
   }
 });

@@ -9,18 +9,40 @@ export interface RotationOutcome {
   costGbp: number;
 }
 
-/** Geometry diversity per spec §4.2-5: differing plate status OR ≥2 mm drop separation. */
-function geometriesDiffer(a: Shoe, b: Shoe): boolean {
-  return a.plate !== b.plate || Math.abs(a.dropMm - b.dropMm) >= 2;
+/**
+ * Per-pair "meaningfully different" check. The original (plate OR ≥2mm drop)
+ * passed when both shoes share foam + drop but plate differed — e.g. Saucony
+ * Endorphin Speed 5 (composite) + Endorphin Pro 5 (carbon) at the same 8mm
+ * drop / same PEBA / same 36-39mm stack. That's not a rotation, that's two
+ * versions of the same shoe.
+ *
+ * Tightened: two shoes are meaningfully different ONLY if they satisfy at
+ * least TWO of (different drop ≥2mm, different foam class, different stack
+ * ≥5mm). Plate difference alone no longer qualifies — most modern racers
+ * differ only by plate and would otherwise fly through unchecked.
+ */
+function meaningfullyDifferent(a: Shoe, b: Shoe): boolean {
+  let score = 0;
+  if (Math.abs(a.dropMm - b.dropMm) >= 2) score++;
+  if (a.foamClass !== b.foamClass) score++;
+  if (Math.abs(a.stackHeelMm - b.stackHeelMm) >= 5) score++;
+  return score >= 2;
 }
 
 function diversityOk(picks: ScoredShoe[]): boolean {
   if (picks.length < 2) return true;
+  // Brand uniqueness — Malisoux 2015's load-variation benefit comes from
+  // varied LASTS as much as varied foams; two Sauconys give the runner the
+  // same last, same heel hold, same forefoot shape across the rotation.
+  const brands = new Set(picks.map((p) => p.shoe.brand));
+  if (brands.size < picks.length) return false;
+  // Foam class spread across the rotation as a whole
   const foams = new Set(picks.map((p) => p.shoe.foamClass));
   if (foams.size < 2) return false;
+  // Every pair must clear the two-of-three "meaningfully different" bar
   for (let i = 0; i < picks.length; i++) {
     for (let j = i + 1; j < picks.length; j++) {
-      if (!geometriesDiffer(picks[i].shoe, picks[j].shoe)) return false;
+      if (!meaningfullyDifferent(picks[i].shoe, picks[j].shoe)) return false;
     }
   }
   return true;
