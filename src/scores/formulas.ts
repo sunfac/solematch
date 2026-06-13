@@ -64,8 +64,17 @@ const ROLE_WEIGHTS: Record<Role, Record<keyof Omit<ShoeScores, 'overall' | 'tier
 
 /**
  * Community-consensus darlings (2025-26 reviewer + community convergence — see
- * RULES['community-consensus']). Contributes a flat, published +5 to overall and
- * the same +5 inside the engine's per-user scoring. Never hidden, never dominant.
+ * RULES['community-consensus']).
+ *
+ * Two DIFFERENT weights, deliberately:
+ *  - COMMUNITY_BONUS (+5) ranks the MARKET — applied to catalogue `overall`/
+ *    tier, where "the reviewers and the community converged on this" is exactly
+ *    what a market ranking should reflect. Published on /methodology.
+ *  - COMMUNITY_NUDGE (+2) is all the per-user matcher gets. YOUR match is about
+ *    fit and evidence, not what's trending; consensus is a gentle tiebreak, not
+ *    a decider. At +5 it was deciding near-ties (two darlings won the daily slot
+ *    for almost everyone — the "Novablast hits a lot" effect); +2 lets genuine
+ *    fit signal lead while still rewarding a proven shoe on a true tie.
  */
 export const COMMUNITY_DARLINGS: ReadonlySet<string> = new Set([
   'adidas-adizero-evo-sl',
@@ -76,6 +85,7 @@ export const COMMUNITY_DARLINGS: ReadonlySet<string> = new Set([
   'new-balance-rebel-v5',
 ]);
 export const COMMUNITY_BONUS = 5;
+export const COMMUNITY_NUDGE = 2;
 
 export function computeScores(s: Shoe): ShoeScores {
   const v = { spd: spd(s), csh: csh(s), stb: stb(s), lgt: lgt(s), dur: dur(s), val: val(s) };

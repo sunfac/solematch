@@ -96,15 +96,14 @@ export default function Landing() {
       </View>
 
       <View style={styles.hero}>
-        <Text style={styles.eyebrow}>SCIENCE-BACKED · ZERO GUESSWORK</Text>
+        <Text style={styles.eyebrow}>MEASURED. NOT MARKETED.</Text>
         <Text style={styles.headline}>
           Stop guessing.{'\n'}Your shoe,{' '}
           <Text style={styles.headlineAccent}>revealed.</Text>
         </Text>
         <Text style={styles.sub}>
-          Nine questions about how you actually run. A deterministic engine reads the published
-          science, cuts the shop-floor myths, and deals your match as a card built to be
-          screenshotted — every pick citing the study behind it.
+          Nine questions. The published science picks — myths and house favourites don&apos;t get a
+          vote. Your match, dealt as a card with the study to prove it.
         </Text>
 
         {/* instrument viewport */}
@@ -164,11 +163,10 @@ export default function Landing() {
 
       {/* the trust contract — confident, not apologetic */}
       <View style={styles.trust}>
-        <Text style={styles.trustHead}>Commission never moves your ranking.</Text>
+        <Text style={styles.trustHead}>We take commission. It never moves your ranking.</Text>
         <Text style={styles.trustSub}>
-          We earn on retailer links, but the engine is deterministic and blind to it — published
-          in full on the methodology page. A recommendation that visibly isn&apos;t for sale is the
-          whole point.
+          The engine is deterministic and blind to what we earn — and we publish the whole thing. A
+          recommendation that visibly isn&apos;t for sale is the entire advantage.
         </Text>
       </View>
 

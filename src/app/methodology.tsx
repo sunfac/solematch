@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RULES, RULESET_VERSION } from '@/data/rules';
 import { ENGINE_VERSION } from '@/engine';
-import { COMMUNITY_BONUS, FORMULA_VERSION } from '@/scores/formulas';
+import { COMMUNITY_BONUS, COMMUNITY_NUDGE, FORMULA_VERSION } from '@/scores/formulas';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { Screen } from '@/components/ui/Screen';
 import { TopBar } from '@/components/ui/TopBar';
@@ -38,8 +38,10 @@ export default function MethodologyScreen() {
         (weight, inverted), DUR (foam class durability and outsole), VAL (price against its
         category median, adjusted for durability). A shoe&apos;s overall is its best
         role-weighted expression of those six. Community consensus — when independent reviewers
-        and the running community converge on a shoe — adds a published +{COMMUNITY_BONUS}, never
-        more. Tiers are percentile-based against the current market: the top 10% of the catalogue
+        and the running community converge on a shoe — adds a published +{COMMUNITY_BONUS} to its
+        market ranking, but only a +{COMMUNITY_NUDGE} nudge to YOUR personal match: your shoe is
+        decided by fit and evidence, not by what&apos;s trending. Tiers are percentile-based
+        against the current market: the top 10% of the catalogue
         is ELITE, the next 25% GOLD, the next 40% SILVER, the rest BRONZE. When two shoes are
         statistically tied for your slot (within ±0.8 points), a deterministic, profile-seeded
         tiebreak decides — different runners see different but equally right picks, and the same

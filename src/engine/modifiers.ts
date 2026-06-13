@@ -1,5 +1,5 @@
 import { RULES } from '@/data/rules';
-import { COMMUNITY_BONUS, COMMUNITY_DARLINGS, SCORED } from '@/scores/formulas';
+import { COMMUNITY_DARLINGS, COMMUNITY_NUDGE, SCORED } from '@/scores/formulas';
 import type { Reason } from '@/types/match';
 import type { Profile, Role } from '@/types/profile';
 import type { Shoe } from '@/types/shoe';
@@ -313,10 +313,10 @@ const brandLove: Modifier = (s, p) => {
   return null;
 };
 
-/** Community consensus — visible, capped, never dominant. */
+/** Community consensus — a gentle per-user nudge (+2), never a decider; fit leads. */
 const consensusBoost: Modifier = (s) => {
   if (COMMUNITY_DARLINGS.has(s.slug)) {
-    return { delta: COMMUNITY_BONUS, reason: r('community-consensus', 'Reviewer and community consensus pick of 2025-26') };
+    return { delta: COMMUNITY_NUDGE, reason: r('community-consensus', 'Reviewer and community consensus pick of 2025-26') };
   }
   return null;
 };
