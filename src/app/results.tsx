@@ -55,16 +55,6 @@ export default function ResultsScreen() {
   }
 
   const overBudget = result.totals.costGbp > result.totals.budgetGbp;
-  // when a pick is ALSO the critics' best-in-class, say so — the rare case where
-  // your personal fit and the all-things-considered market pick coincide
-  const criticsNotes = result.roles
-    .map((r) => {
-      const cb = consensusBestForSlug(r.pick.shoe.slug);
-      if (!cb) return null;
-      return `Your ${ROLE_LABEL[r.role].toLowerCase()} pick — the ${r.pick.shoe.brand} ${r.pick.shoe.model} — is also the critics' ${cb.confidence === 'clear' ? '#1' : 'top-tier'} ${cb.label.toLowerCase()}, independent of your match.`;
-    })
-    .filter((n): n is string => n !== null);
-
   const copySummary = async () => {
     const lines = [
       result.mode === 'rotation' ? 'My SoleMatch rotation:' : 'My SoleMatch:',
@@ -157,7 +147,17 @@ export default function ResultsScreen() {
           style={styles.roleRow}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.roleLabel}>{ROLE_LABEL[r.role]}</Text>
+            <View style={styles.roleLabelRow}>
+              <Text style={styles.roleLabel}>{ROLE_LABEL[r.role]}</Text>
+              {(() => {
+                const cb = consensusBestForSlug(r.pick.shoe.slug);
+                return cb ? (
+                  <Text style={styles.criticsChip}>
+                    {cb.confidence === 'clear' ? "CRITICS' #1" : "CRITICS' TOP TIER"}
+                  </Text>
+                ) : null;
+              })()}
+            </View>
             <Text style={styles.roleShoe}>
               {r.pick.shoe.brand} {r.pick.shoe.model} {r.pick.shoe.version}
             </Text>
@@ -218,14 +218,9 @@ export default function ResultsScreen() {
         </Pressable>
       ))}
 
-      {result.notes.length > 0 || criticsNotes.length > 0 ? (
+      {result.notes.length > 0 ? (
         <View style={styles.notes}>
           <Text style={styles.notesTitle}>Worth knowing</Text>
-          {criticsNotes.map((n, i) => (
-            <Text key={`c${i}`} style={[styles.note, styles.noteCritics]}>
-              ★ {n}
-            </Text>
-          ))}
           {result.notes.map((n, i) => (
             <Text key={i} style={styles.note}>
               · {n}
@@ -283,7 +278,20 @@ const styles = StyleSheet.create({
     padding: space(4),
     marginTop: space(3),
   },
+  roleLabelRow: { flexDirection: 'row', alignItems: 'center', gap: space(2), flexWrap: 'wrap' },
   roleLabel: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, color: color.cyan },
+  criticsChip: {
+    fontFamily: font.mono,
+    fontSize: 8.5,
+    letterSpacing: 1,
+    color: color.volt,
+    borderWidth: 1,
+    borderColor: color.volt,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 1.5,
+    overflow: 'hidden',
+  },
   roleShoe: { fontFamily: font.uiMed, fontSize: 16, color: color.ink, marginTop: 4 },
   reasonRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: space(2) },
   reasonText: { flex: 1, fontFamily: font.ui, fontSize: 12, color: color.muted, lineHeight: 16 },
@@ -331,7 +339,6 @@ const styles = StyleSheet.create({
   },
   notesTitle: { fontFamily: font.uiMed, fontSize: 13, color: color.ink },
   note: { fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
-  noteCritics: { color: color.ink },
   actions: { flexDirection: 'row', gap: space(3), marginTop: space(5), justifyContent: 'center' },
   disclosure: { fontFamily: font.ui, fontSize: 11, color: color.muted, textAlign: 'center', marginVertical: space(4), opacity: 0.8 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space(4) },
