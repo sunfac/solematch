@@ -1,5 +1,6 @@
 import { Archivo_600SemiBold } from '@expo-google-fonts/archivo';
 import { Inter_400Regular, Inter_500Medium, useFonts } from '@expo-google-fonts/inter';
+import { MartianMono_500Medium } from '@expo-google-fonts/martian-mono';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -10,6 +11,7 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_500Medium,
     Archivo_600SemiBold,
+    MartianMono_500Medium,
   });
 
   if (!fontsLoaded) return null;

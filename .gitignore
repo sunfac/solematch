@@ -22,3 +22,5 @@ supabase/seed/seed.sql
 mobile-*.png
 dashboard*.png
 browse-*.png
+landing-*.png
+ref-*.png

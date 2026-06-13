@@ -23,6 +23,8 @@ export const font = {
   ui: 'Inter_400Regular',
   uiMed: 'Inter_500Medium',
   display: 'Archivo_600SemiBold',
+  /** Martian Mono — geometric technical monospace for instrument-readout labels */
+  mono: 'MartianMono_500Medium',
 } as const;
 
 export type EvidenceLevel = 'STRONG' | 'MODERATE' | 'EMERGING' | 'FIT & FEEL';

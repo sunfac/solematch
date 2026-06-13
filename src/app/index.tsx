@@ -1,6 +1,15 @@
 import { Link, router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { SHOES } from '@/data/catalogue';
 import { PillButton } from '@/components/ui/PillButton';
 import { Screen } from '@/components/ui/Screen';
@@ -9,30 +18,114 @@ import { track } from '@/lib/analytics';
 import { useQuizStore } from '@/state/quizStore';
 import { color, font, space } from '@/theme/tokens';
 
+/** Recognisable flagship names for the live catalogue ticker. */
+const TICKER = SHOES.filter((s) => s.status === 'current')
+  .slice(0, 22)
+  .map((s) => `${s.brand} ${s.model}`);
+
+/** A continuously scrolling catalogue readout — the app feels alive and current. */
+function Ticker() {
+  const x = useSharedValue(0);
+  const [w, setW] = useState(0);
+  const onLayout = (e: LayoutChangeEvent) => {
+    const measured = e.nativeEvent.layout.width;
+    if (measured && measured !== w) {
+      setW(measured);
+      x.value = 0;
+      x.value = withRepeat(
+        withTiming(-measured, { duration: measured * 22, easing: Easing.linear }),
+        -1,
+      );
+    }
+  };
+  const style = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
+  const row = (
+    <View style={styles.tickerRow} onLayout={onLayout}>
+      {TICKER.map((name, i) => (
+        <View key={`${name}-${i}`} style={styles.tickerItem}>
+          <Text style={styles.tickerDot}>◇</Text>
+          <Text style={styles.tickerText}>{name}</Text>
+        </View>
+      ))}
+    </View>
+  );
+  return (
+    <View style={styles.tickerMask} pointerEvents="none">
+      <Animated.View style={[styles.tickerTrack, style]}>
+        {row}
+        {/* duplicate so the loop is seamless */}
+        <View style={styles.tickerRow}>
+          {TICKER.map((name, i) => (
+            <View key={`dup-${name}-${i}`} style={styles.tickerItem}>
+              <Text style={styles.tickerDot}>◇</Text>
+              <Text style={styles.tickerText}>{name}</Text>
+            </View>
+          ))}
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+/** Technical corner ticks — the "instrument viewport" frame. */
+function CornerTicks() {
+  return (
+    <>
+      <View style={[styles.tick, styles.tickTL]} />
+      <View style={[styles.tick, styles.tickTR]} />
+      <View style={[styles.tick, styles.tickBL]} />
+      <View style={[styles.tick, styles.tickBR]} />
+    </>
+  );
+}
+
 export default function Landing() {
   const reset = useQuizStore((s) => s.reset);
   return (
     <Screen scroll>
       <TopBar hideBack />
-      <View style={styles.hero}>
-        <Image
-          source={require('../../assets/hero-shoe.png')}
-          style={styles.heroImage}
-          contentFit="cover"
-          transition={300}
-          accessibilityLabel="Neon-lit running shoe"
-        />
+
+      {/* brand + console readout */}
+      <View style={styles.brandRow}>
         <Text style={styles.wordmark}>SOLEMATCH</Text>
+        <Text style={styles.consoleText}>MATCH ENGINE · v1.0</Text>
+      </View>
+      <View style={styles.console}>
+        <Text style={styles.consoleText}>SCIENCE IN · SHOE OUT</Text>
+        <Text style={styles.consoleText}>UK · GBP · DETERMINISTIC</Text>
+      </View>
+
+      <View style={styles.hero}>
+        <Text style={styles.eyebrow}>SCIENCE-BACKED · ZERO GUESSWORK</Text>
         <Text style={styles.headline}>
           Stop guessing.{'\n'}Your shoe,{' '}
-          <Text style={{ color: color.volt }}>revealed.</Text>
+          <Text style={styles.headlineAccent}>revealed.</Text>
         </Text>
         <Text style={styles.sub}>
-          Nine questions about how you actually run — pace, miles, body, budget. Our engine reads
-          the published science, cuts through the shop-floor myths, and deals your match as a
-          holographic card built to be screenshotted. Every pick explains itself, with the study
-          to prove it.
+          Nine questions about how you actually run. A deterministic engine reads the published
+          science, cuts the shop-floor myths, and deals your match as a card built to be
+          screenshotted — every pick citing the study behind it.
         </Text>
+
+        {/* instrument viewport */}
+        <View style={styles.viewport}>
+          <LinearGradient
+            colors={[`${color.volt}1A`, 'transparent']}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Image
+            source={require('../../assets/hero-shoe.png')}
+            style={styles.heroImage}
+            contentFit="cover"
+            transition={300}
+            accessibilityLabel="Neon-lit running shoe"
+          />
+          <CornerTicks />
+          <Text style={styles.viewportCaption}>FIG.01 — PEAK-EMOTION CARD REVEAL</Text>
+        </View>
+
         <PillButton
           testID="cta-start"
           label="Reveal my match"
@@ -48,76 +141,142 @@ export default function Landing() {
         </Link>
       </View>
 
-      <View style={styles.strip}>
-        <Text style={styles.stripStat}>25+</Text>
-        <Text style={styles.stripText}>
-          peer-reviewed studies power every pick. Tap any reason and read the actual science —
-          graded honestly, STRONG to EMERGING.
-        </Text>
+      <Text style={styles.tickerLabel}>IN THE ENGINE RIGHT NOW</Text>
+      <Ticker />
+
+      {/* spec readout — mono, hairline dividers */}
+      <View style={styles.specRow}>
+        <View style={styles.specCell}>
+          <Text style={styles.specValue}>{SHOES.length}</Text>
+          <Text style={styles.specKey}>ROAD SHOES{'\n'}SPEC-VERIFIED</Text>
+        </View>
+        <View style={styles.specDivider} />
+        <View style={styles.specCell}>
+          <Text style={[styles.specValue, { color: color.cyan }]}>25+</Text>
+          <Text style={styles.specKey}>PEER-REVIEWED{'\n'}STUDIES CITED</Text>
+        </View>
+        <View style={styles.specDivider} />
+        <View style={styles.specCell}>
+          <Text style={[styles.specValue, { color: color.magenta }]}>−39%</Text>
+          <Text style={styles.specKey}>INJURY HAZARD{'\n'}ROTATING PAIRS*</Text>
+        </View>
       </View>
-      <View style={styles.strip}>
-        <Text style={[styles.stripStat, { color: color.cyan }]}>{SHOES.length}</Text>
-        <Text style={styles.stripText}>
-          current road shoes, spec-verified and tiered against the live market — with prices
-          compared across the retailers runners actually use.
-        </Text>
-      </View>
-      <View style={styles.strip}>
-        <Text style={[styles.stripStat, { color: color.magenta }]}>−39%</Text>
-        <Text style={styles.stripText}>
-          injury hazard associated with rotating differing pairs (Malisoux 2015). It is the
-          single best-evidenced reason to own more than one shoe — our rotation builder is named
-          for it.
+
+      {/* the trust contract — confident, not apologetic */}
+      <View style={styles.trust}>
+        <Text style={styles.trustHead}>Commission never moves your ranking.</Text>
+        <Text style={styles.trustSub}>
+          We earn on retailer links, but the engine is deterministic and blind to it — published
+          in full on the methodology page. A recommendation that visibly isn&apos;t for sale is the
+          whole point.
         </Text>
       </View>
 
       <Link href="/methodology" style={styles.methodLink}>
-        Read the methodology — every rule, every citation
+        Read the methodology — every rule, every citation →
       </Link>
 
       <Text style={styles.disclaimer}>
-        SoleMatch optimises performance, comfort and fit. It is not medical advice and no shoe is
-        proven to prevent injury. We may earn commission on retailer links. Affiliate disclosure,
-        privacy and terms in the menu.
+        *Malisoux 2015. SoleMatch optimises performance, comfort and fit — not medical advice, and
+        no shoe is proven to prevent injury. We may earn commission on retailer links. Affiliate
+        disclosure, privacy and terms in the menu.
       </Text>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { marginTop: space(6), marginBottom: space(8) },
-  heroImage: {
-    width: '100%',
-    height: 230,
-    borderRadius: 20,
-    marginBottom: space(5),
-  },
-  wordmark: { fontFamily: font.display, fontSize: 13, letterSpacing: 6, color: color.muted },
-  headline: { fontFamily: font.display, fontSize: 40, lineHeight: 46, color: color.ink, marginTop: space(3) },
-  sub: { fontFamily: font.ui, fontSize: 15, lineHeight: 22, color: color.muted, marginTop: space(4) },
-  browseLink: { fontFamily: font.uiMed, fontSize: 13.5, color: color.cyan, marginTop: space(4), textAlign: 'center' },
-  strip: {
+  brandRow: {
     flexDirection: 'row',
-    gap: space(4),
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: color.surface,
+    marginTop: space(1),
+  },
+  wordmark: { fontFamily: font.display, fontSize: 15, letterSpacing: 4, color: color.ink },
+  console: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: color.line,
+    paddingVertical: space(2),
+    marginTop: space(2.5),
+  },
+  consoleText: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted },
+
+  hero: { marginTop: space(7), marginBottom: space(8) },
+  eyebrow: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, color: color.volt, marginBottom: space(4) },
+  headline: { fontFamily: font.display, fontSize: 46, lineHeight: 50, color: color.ink, letterSpacing: -1 },
+  headlineAccent: { color: color.volt },
+  sub: { fontFamily: font.ui, fontSize: 15, lineHeight: 23, color: color.muted, marginTop: space(5) },
+
+  viewport: {
+    marginTop: space(6),
+    height: 240,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: color.line,
-    borderRadius: 16,
-    padding: space(4),
-    marginBottom: space(2.5),
+    overflow: 'hidden',
+    backgroundColor: '#06070A',
+    justifyContent: 'center',
   },
-  stripStat: { fontFamily: font.display, fontSize: 26, color: color.volt, minWidth: 76, textAlign: 'center' },
-  stripText: { flex: 1, fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
-  methodLink: { fontFamily: font.uiMed, fontSize: 13.5, color: color.volt, textAlign: 'center', marginTop: space(4) },
+  heroImage: { width: '100%', height: '100%', opacity: 0.96 },
+  viewportCaption: {
+    position: 'absolute',
+    bottom: 12,
+    left: 14,
+    fontFamily: font.mono,
+    fontSize: 9,
+    letterSpacing: 0.5,
+    color: color.ink,
+    opacity: 0.7,
+  },
+  tick: { position: 'absolute', width: 12, height: 12, borderColor: color.volt },
+  tickTL: { top: 10, left: 10, borderTopWidth: 1.5, borderLeftWidth: 1.5 },
+  tickTR: { top: 10, right: 10, borderTopWidth: 1.5, borderRightWidth: 1.5 },
+  tickBL: { bottom: 10, left: 10, borderBottomWidth: 1.5, borderLeftWidth: 1.5 },
+  tickBR: { bottom: 10, right: 10, borderBottomWidth: 1.5, borderRightWidth: 1.5 },
+
+  browseLink: { fontFamily: font.uiMed, fontSize: 13.5, color: color.cyan, marginTop: space(4), textAlign: 'center' },
+
+  tickerLabel: { fontFamily: font.mono, fontSize: 9, letterSpacing: 1, color: color.muted, marginBottom: space(2.5) },
+  tickerMask: { height: 26, overflow: 'hidden', marginBottom: space(7) },
+  tickerTrack: { flexDirection: 'row' },
+  tickerRow: { flexDirection: 'row' },
+  tickerItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: space(5) },
+  tickerDot: { color: color.volt, fontSize: 10 },
+  tickerText: { fontFamily: font.mono, fontSize: 11, color: color.muted, letterSpacing: 0.3 },
+
+  specRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: color.line,
+    paddingVertical: space(4),
+  },
+  specCell: { flex: 1, gap: 6 },
+  specDivider: { width: 1, backgroundColor: color.line, marginHorizontal: space(3) },
+  specValue: { fontFamily: font.display, fontSize: 30, color: color.volt, letterSpacing: -0.5 },
+  specKey: { fontFamily: font.mono, fontSize: 8.5, letterSpacing: 0.5, lineHeight: 13, color: color.muted },
+
+  trust: {
+    marginTop: space(7),
+    borderLeftWidth: 2,
+    borderLeftColor: color.volt,
+    paddingLeft: space(4),
+  },
+  trustHead: { fontFamily: font.display, fontSize: 18, color: color.ink, lineHeight: 24 },
+  trustSub: { fontFamily: font.ui, fontSize: 13, lineHeight: 20, color: color.muted, marginTop: space(2) },
+
+  methodLink: { fontFamily: font.uiMed, fontSize: 13.5, color: color.volt, marginTop: space(7) },
   disclaimer: {
     fontFamily: font.ui,
-    fontSize: 11.5,
+    fontSize: 11,
     lineHeight: 16,
     color: color.muted,
-    textAlign: 'center',
-    marginTop: space(4),
+    marginTop: space(5),
     marginBottom: space(6),
-    opacity: 0.8,
+    opacity: 0.75,
   },
 });

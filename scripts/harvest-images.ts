@@ -21,40 +21,63 @@ interface Target {
   brandHosts: string[];
 }
 
+interface Shoe {
+  slug: string;
+  brand: string;
+  model: string;
+  version: string;
+  status: string;
+}
+
+/** Official brand storefront hosts per brand — a PDP URL must match one. */
+const BRAND_HOSTS: Record<string, string[]> = {
+  Nike: ['nike.com'],
+  Adidas: ['adidas.co.uk', 'adidas.com'],
+  Asics: ['asics.com'],
+  Saucony: ['saucony.com'],
+  Hoka: ['hoka.com'],
+  'New Balance': ['newbalance.co.uk', 'newbalance.com', 'newbalance.eu'],
+  Puma: ['puma.com', 'uk.puma.com'],
+  On: ['on.com', 'on-running.com'],
+  Brooks: ['brooksrunning.com'],
+  Mizuno: ['mizuno.com', 'emea.mizuno.com', 'mizunousa.com'],
+  'Under Armour': ['underarmour.com', 'underarmour.co.uk'],
+  Kiprun: ['decathlon.co.uk', 'decathlon.com'],
+  Anta: ['anta.com'],
+  'Li-Ning': ['lining.com', 'l-ning.com'],
+  '361 Degrees': ['361sport.com', '361usa.com', '361europe.com'],
+  Skechers: ['skechers.com', 'skechers.co.uk'],
+  Altra: ['altrarunning.com'],
+  Topo: ['topoathletic.com'],
+  Salomon: ['salomon.com'],
+  Reebok: ['reebok.com', 'reebok.eu'],
+  Diadora: ['diadora.com'],
+};
+
 /**
- * Searches use plain product names (no `site:` filter — firecrawl over-filters
- * with that and returns nothing; no inline quotes either — under cmd.exe
- * shell:true those split into multiple argv tokens, which firecrawl rejects).
- * Brand-host post-filter on the result list catches resellers/reviews while
- * keeping the brand PDP.
+ * Targets are derived from the catalogue: every CURRENT shoe missing an image
+ * gets a harvest job. Searches use plain product names (no `site:` filter —
+ * firecrawl over-filters; no inline quotes — cmd.exe shell:true splits them).
+ * Brand-host post-filter keeps the brand PDP, drops resellers/reviews.
  */
-const HARVEST_TARGETS: Target[] = [
-  { slug: 'brooks-launch-12', query: 'Brooks Launch 12 mens running shoes', brandHosts: ['brooksrunning.com'] },
-  { slug: 'brooks-ghost-17', query: 'Brooks Ghost 17 mens running shoes', brandHosts: ['brooksrunning.com'] },
-  { slug: 'brooks-ghost-max-3', query: 'Brooks Ghost Max 3 mens running shoes', brandHosts: ['brooksrunning.com'] },
-  { slug: 'brooks-glycerin-23', query: 'Brooks Glycerin 23 mens running shoes', brandHosts: ['brooksrunning.com'] },
-  { slug: 'new-balance-rebel-v5', query: 'FuelCell Rebel v5 mens New Balance', brandHosts: ['newbalance.co.uk', 'newbalance.com', 'newbalance.eu'] },
-  { slug: 'new-balance-880v15', query: 'New Balance 880v15 mens road running', brandHosts: ['newbalance.co.uk', 'newbalance.com', 'newbalance.eu'] },
-  { slug: 'new-balance-1080v15', query: 'Fresh Foam X 1080v15 mens road running', brandHosts: ['newbalance.co.uk', 'newbalance.com', 'newbalance.eu'] },
-  { slug: 'new-balance-more-v6', query: 'Fresh Foam X More v6 mens New Balance', brandHosts: ['newbalance.co.uk', 'newbalance.com', 'newbalance.eu'] },
-  { slug: 'nike-streakfly-2', query: 'Nike Streakfly 2 mens road racing', brandHosts: ['nike.com'] },
-  { slug: 'nike-pegasus-premium', query: 'Nike Pegasus Premium mens road running', brandHosts: ['nike.com'] },
-  { slug: 'nike-vomero-18', query: 'Nike Vomero 18 mens road running', brandHosts: ['nike.com'] },
-  { slug: 'hoka-cielo-x1-3', query: 'Hoka Cielo X1 3.0 mens racing', brandHosts: ['hoka.com'] },
-  { slug: 'hoka-clifton-10', query: 'Hoka Clifton 10 mens running shoes', brandHosts: ['hoka.com'] },
-  { slug: 'hoka-mach-7', query: 'Hoka Mach 7 mens running shoes', brandHosts: ['hoka.com'] },
-  { slug: 'hoka-skyflow', query: 'Hoka Skyflow mens running shoes', brandHosts: ['hoka.com'] },
-  { slug: 'on-cloudmonster-3', query: 'On Cloudmonster 3 mens running shoes', brandHosts: ['on.com', 'on-running.com'] },
-  { slug: 'on-cloudsurfer-2', query: 'On Cloudsurfer 2 mens running shoes', brandHosts: ['on.com', 'on-running.com'] },
-  { slug: 'saucony-triumph-24', query: 'Saucony Triumph 24 mens running shoes', brandHosts: ['saucony.com'] },
-  { slug: 'saucony-endorphin-pro-5', query: 'Saucony Endorphin Pro 5 mens racing', brandHosts: ['saucony.com'] },
-  { slug: 'saucony-ride-19', query: 'Saucony Ride 19 mens running shoes', brandHosts: ['saucony.com'] },
-  { slug: 'asics-superblast-3', query: 'Asics Superblast 3 mens running shoes', brandHosts: ['asics.com'] },
-  { slug: 'asics-magic-speed-5', query: 'Asics Magic Speed 5 mens running shoes', brandHosts: ['asics.com'] },
-  { slug: 'asics-gel-nimbus-28', query: 'Asics Gel-Nimbus 28 mens running shoes', brandHosts: ['asics.com'] },
-  { slug: 'puma-velocity-nitro-4', query: 'Puma Velocity Nitro 4 mens running shoes', brandHosts: ['puma.com', 'uk.puma.com'] },
-  { slug: 'puma-deviate-nitro-elite-4', query: 'Puma Deviate Nitro Elite 4 racing', brandHosts: ['puma.com', 'uk.puma.com'] },
-];
+function buildTargets(devImages: Record<string, unknown>): Target[] {
+  const shoesPath = join(__dirname, '..', 'src', 'data', 'shoes.json');
+  const shoes = JSON.parse(readFileSync(shoesPath, 'utf8')) as Shoe[];
+  const targets: Target[] = [];
+  for (const s of shoes) {
+    if (s.status !== 'current') continue;
+    if (devImages[s.slug]) continue;
+    const brandHosts = BRAND_HOSTS[s.brand];
+    if (!brandHosts) continue; // no known official storefront → silhouette fallback
+    const version = s.version && s.version !== '1' ? ` ${s.version}` : '';
+    targets.push({
+      slug: s.slug,
+      query: `${s.brand} ${s.model}${version} mens running shoes`,
+      brandHosts,
+    });
+  }
+  return targets;
+}
 
 const ROOT = join(__dirname, '..');
 const IMG = join(ROOT, '.firecrawl', 'images');
@@ -132,11 +155,12 @@ const devImages: Record<string, { url: string; cut: boolean }> = JSON.parse(
   readFileSync(DEV_PATH, 'utf8'),
 );
 
-const targets = HARVEST_TARGETS.filter((t) => (only ? only.has(t.slug) : true))
-  .filter((t) => !devImages[t.slug])
+const allTargets = buildTargets(devImages);
+const targets = allTargets
+  .filter((t) => (only ? only.has(t.slug) : true))
   .slice(0, limit === Infinity ? Infinity : limit);
 
-console.log(`harvesting ${targets.length} shoes (skipping ${HARVEST_TARGETS.length - targets.length} already done or filtered)`);
+console.log(`harvesting ${targets.length} shoes (${allTargets.length} missing images, ${Object.keys(devImages).length} already have them)`);
 
 let added = 0;
 async function main() {
