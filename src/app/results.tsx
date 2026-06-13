@@ -2,6 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { consensusBestForSlug } from '@/data/consensusBest';
 import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice } from '@/lib/affiliate';
 import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
@@ -52,6 +53,15 @@ export default function ResultsScreen() {
   }
 
   const overBudget = result.totals.costGbp > result.totals.budgetGbp;
+  // when a pick is ALSO the critics' best-in-class, say so — the rare case where
+  // your personal fit and the all-things-considered market pick coincide
+  const criticsNotes = result.roles
+    .map((r) => {
+      const cb = consensusBestForSlug(r.pick.shoe.slug);
+      if (!cb) return null;
+      return `Your ${ROLE_LABEL[r.role].toLowerCase()} pick — the ${r.pick.shoe.brand} ${r.pick.shoe.model} — is also the critics' ${cb.confidence === 'clear' ? '#1' : 'top-tier'} ${cb.label.toLowerCase()}, independent of your match.`;
+    })
+    .filter((n): n is string => n !== null);
 
   const copySummary = async () => {
     const lines = [
@@ -203,9 +213,14 @@ export default function ResultsScreen() {
         </Pressable>
       ))}
 
-      {result.notes.length > 0 ? (
+      {result.notes.length > 0 || criticsNotes.length > 0 ? (
         <View style={styles.notes}>
           <Text style={styles.notesTitle}>Worth knowing</Text>
+          {criticsNotes.map((n, i) => (
+            <Text key={`c${i}`} style={[styles.note, styles.noteCritics]}>
+              ★ {n}
+            </Text>
+          ))}
           {result.notes.map((n, i) => (
             <Text key={i} style={styles.note}>
               · {n}
@@ -310,6 +325,7 @@ const styles = StyleSheet.create({
   },
   notesTitle: { fontFamily: font.uiMed, fontSize: 13, color: color.ink },
   note: { fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
+  noteCritics: { color: color.ink },
   actions: { flexDirection: 'row', gap: space(3), marginTop: space(5), justifyContent: 'center' },
   disclosure: { fontFamily: font.ui, fontSize: 11, color: color.muted, textAlign: 'center', marginVertical: space(4), opacity: 0.8 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space(4) },

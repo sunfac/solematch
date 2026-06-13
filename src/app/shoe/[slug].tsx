@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { bySlug } from '@/data/catalogue';
+import { consensusBestForSlug, consensusRunnerUpForSlug } from '@/data/consensusBest';
 import { SCORED, roleDrivers } from '@/scores/formulas';
 import { ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
@@ -13,6 +14,11 @@ import { useQuizStore } from '@/state/quizStore';
 import { useResultsStore } from '@/state/resultsStore';
 import { RULES } from '@/data/rules';
 import { color, font, space } from '@/theme/tokens';
+
+const sourceHost = (url: string) => {
+  const m = url.match(/^https?:\/\/(?:www\.)?([^/]+)/);
+  return m ? m[1] : 'source';
+};
 
 function SpecRow({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -47,6 +53,10 @@ export default function ShoeDetailScreen() {
   const scores = SCORED.get(shoe.slug)!;
   const inResult = result?.roles.find((r) => r.pick.shoe.slug === shoe.slug);
   const offers = offersFor(shoe.slug, region);
+  // critics' consensus best-in-class (market merit, separate from your match)
+  const criticsBest = consensusBestForSlug(shoe.slug);
+  const criticsRunnerUp = criticsBest ? undefined : consensusRunnerUpForSlug(shoe.slug);
+  const rivalShoe = criticsBest?.runnerUpSlug ? bySlug.get(criticsBest.runnerUpSlug) : undefined;
 
   const openOffer = (offer: (typeof offers)[number]) => {
     const subId = `${matchId ?? 'browse'}:${shoe.slug}:detail`;
@@ -91,6 +101,45 @@ export default function ShoeDetailScreen() {
             . The six card stats above, scored from verified specs.
           </Text>
         </View>
+      ) : null}
+
+      {criticsBest ? (
+        <View style={styles.critics}>
+          <View style={styles.criticsHead}>
+            <Text style={styles.criticsBadge}>
+              {criticsBest.confidence === 'clear' ? "CRITICS' #1" : "CRITICS' TOP TIER"}
+            </Text>
+            <Text style={styles.criticsClass}>{criticsBest.label}</Text>
+          </View>
+          <Text style={styles.criticsWhy}>{criticsBest.why}</Text>
+          <Text style={styles.criticsTech}>{criticsBest.keyTech}</Text>
+          {rivalShoe ? (
+            <Pressable onPress={() => router.push(`/shoe/${rivalShoe.slug}`)}>
+              <Text style={styles.criticsRival}>
+                {criticsBest.confidence === 'near-tie' ? 'Co-leads with' : 'Runner-up:'}{' '}
+                {rivalShoe.brand} {rivalShoe.model} →
+              </Text>
+            </Pressable>
+          ) : null}
+          <View style={styles.criticsSources}>
+            {criticsBest.sources.map((s) => (
+              <Pressable key={s} onPress={() => Linking.openURL(s).catch(() => {})}>
+                <Text style={styles.criticsSource}>{sourceHost(s)} ↗</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text style={styles.criticsFoot}>
+            Independent reviewer + lab consensus, price no object — separate from your personal match.
+          </Text>
+        </View>
+      ) : criticsRunnerUp ? (
+        <Pressable style={styles.critics} onPress={() => router.push(`/shoe/${criticsRunnerUp.slug}`)}>
+          <Text style={styles.criticsBadge}>CRITICS&apos; RUNNER-UP · {criticsRunnerUp.label}</Text>
+          <Text style={styles.criticsWhy}>
+            Co-leads the class with the critics&apos; #1, the {bySlug.get(criticsRunnerUp.slug)?.brand}{' '}
+            {bySlug.get(criticsRunnerUp.slug)?.model}. →
+          </Text>
+        </Pressable>
       ) : null}
 
       <View style={styles.section}>
@@ -201,6 +250,24 @@ const styles = StyleSheet.create({
   specNote: { fontFamily: font.ui, fontSize: 11, color: color.muted, opacity: 0.8 },
   consensus: { fontFamily: font.ui, fontSize: 14, lineHeight: 21, color: color.ink },
   athlete: { fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
+  critics: {
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.volt,
+    borderRadius: 16,
+    padding: space(4),
+    marginBottom: space(6),
+    gap: space(2),
+  },
+  criticsHead: { flexDirection: 'row', alignItems: 'baseline', gap: space(2.5), flexWrap: 'wrap' },
+  criticsBadge: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1.5, color: color.volt },
+  criticsClass: { fontFamily: font.uiMed, fontSize: 14, color: color.ink },
+  criticsWhy: { fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
+  criticsTech: { fontFamily: font.mono, fontSize: 10.5, letterSpacing: 0.3, color: color.cyan },
+  criticsRival: { fontFamily: font.uiMed, fontSize: 12, color: color.cyan },
+  criticsSources: { flexDirection: 'row', flexWrap: 'wrap', gap: space(3) },
+  criticsSource: { fontFamily: font.ui, fontSize: 11, color: color.cyan },
+  criticsFoot: { fontFamily: font.ui, fontSize: 10.5, lineHeight: 15, color: color.muted, opacity: 0.8 },
   offerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

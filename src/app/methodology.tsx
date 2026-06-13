@@ -66,6 +66,20 @@ export default function MethodologyScreen() {
         back. If you love your gait analysis, use it for fit. We&apos;ll handle the rest.
       </Text>
 
+      <Text style={styles.sectionTitle}>Critics&apos; consensus best-in-class</Text>
+      <Text style={styles.body}>
+        Separately from your personal match, some shoes carry a &ldquo;critics&apos; #1&rdquo; or
+        &ldquo;top tier&rdquo; badge for their class. That is a market-merit signal — the
+        independent reviewer and lab consensus (RunRepeat, iRunFar, Believe in the Run, The Run
+        Testers and others), judged on the merits with price no object: peer reviews, lab data,
+        technology and race pedigree. It is never paid placement — a brand cannot buy it. Where the
+        top of a class is a genuine toss-up we say &ldquo;top tier&rdquo; and name the co-leader
+        rather than fake a single winner. A scheduled job re-checks each incumbent against new
+        releases, so the crown moves when the market does. Your match still comes from the
+        deterministic engine and your answers — the badge tells you when your fit also happens to be
+        the shoe the critics crown all-round.
+      </Text>
+
       <Text style={styles.sectionTitle}>What we deliberately do NOT do</Text>
       <View style={{ gap: space(2) }}>
         {MYTHS.map((m, i) => (
