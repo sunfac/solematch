@@ -122,20 +122,41 @@ async function firecrawl(argv: string[]): Promise<boolean> {
   });
 }
 
-/** Pick the first hit whose URL host substring matches the brand. */
-function firstBrandUrl(json: string, brandHosts: string[]): string | null {
+/**
+ * Known UK/US retailer PDP hosts that reliably carry a clean product og:image
+ * — the fallback when the brand site bot-walls firecrawl (Nike, Adidas, Asics
+ * et al). As affiliates we link these retailers anyway, so their product shots
+ * are the most defensible source.
+ */
+const RETAILER_HOSTS = [
+  'sportsshoes.com',
+  'runningwarehouse.com',
+  'roadrunnersports.com',
+  'runnersneed.com',
+  'fleetfeet.com',
+  'holabirdsports.com',
+];
+
+/** Ordered candidate PDP URLs from the search hits: brand official first, then retailers. */
+function candidateUrls(json: string, brandHosts: string[]): string[] {
   try {
     const j = JSON.parse(json);
     const hits = (j?.data?.web ?? []) as Array<{ url?: string }>;
-    for (const h of hits) {
-      if (!h.url) continue;
-      const u = h.url.toLowerCase();
-      if (brandHosts.some((host) => u.includes(host))) return h.url;
-    }
-    return null;
+    const urls = hits.map((h) => h.url).filter((u): u is string => Boolean(u));
+    const brand = urls.filter((u) => brandHosts.some((h) => u.toLowerCase().includes(h)));
+    const retail = urls.filter((u) => RETAILER_HOSTS.some((h) => u.toLowerCase().includes(h)));
+    return [...new Set([...brand, ...retail])];
   } catch {
-    return null;
+    return [];
   }
+}
+
+/** Reject obvious non-product og:images (logos, placeholders, social cards, sprites). */
+function looksLikeProduct(img: string): boolean {
+  const u = img.toLowerCase();
+  if (!/^https?:\/\//.test(u)) return false;
+  if (u.endsWith('.svg')) return false;
+  return !/logo|placeholder|default-|sprite|favicon|og-?default|social|share-image|opengraph-default/.test(u);
 }
 
 /** og:image extraction (covers single- and double-quoted attributes, any order). */
@@ -162,46 +183,46 @@ const targets = allTargets
 
 console.log(`harvesting ${targets.length} shoes (${allTargets.length} missing images, ${Object.keys(devImages).length} already have them)`);
 
+/** Max PDP candidates scraped per shoe before giving up (brand + retailers). */
+const MAX_CANDIDATES = 4;
+
 let added = 0;
 async function main() {
   for (const t of targets) {
     const searchOut = join(SEARCH, `${t.slug}.json`);
-    const urlOut = join(IMG, `url-${t.slug}.txt`);
-    const htmlOut = join(IMG, `h-${t.slug}.html`);
+    if (!existsSync(searchOut)) {
+      await firecrawl(['search', t.query, '--limit', '10', '--json', '-o', searchOut]);
+    }
+    const cands = existsSync(searchOut)
+      ? candidateUrls(readFileSync(searchOut, 'utf8'), t.brandHosts).slice(0, MAX_CANDIDATES)
+      : [];
+    if (cands.length === 0) {
+      console.log(`  -  ${t.slug.padEnd(34)} no brand/retailer PDP in results`);
+      continue;
+    }
 
-    let url: string | null = null;
-    if (existsSync(urlOut)) {
-      url = readFileSync(urlOut, 'utf8').trim();
-    }
-    if (!url) {
-      if (!existsSync(searchOut)) {
-        await firecrawl(['search', t.query, '--limit', '8', '--json', '-o', searchOut]);
+    let img: string | null = null;
+    let from = '';
+    for (let i = 0; i < cands.length; i++) {
+      const htmlOut = join(IMG, `h-${t.slug}-${i}.html`);
+      if (!existsSync(htmlOut)) {
+        await firecrawl(['scrape', cands[i], '--format', 'rawHtml', '-o', htmlOut]);
       }
-      if (existsSync(searchOut)) {
-        url = firstBrandUrl(readFileSync(searchOut, 'utf8'), t.brandHosts);
-        if (url) writeFileSync(urlOut, url);
+      if (!existsSync(htmlOut)) continue;
+      const candImg = extractOgImage(readFileSync(htmlOut, 'utf8'));
+      if (candImg && looksLikeProduct(candImg)) {
+        img = candImg;
+        from = new URL(cands[i]).host.replace(/^www\./, '');
+        break;
       }
     }
-    if (!url) {
-      console.log(`  -  ${t.slug.padEnd(34)} no PDP url`);
-      continue;
-    }
-    if (!existsSync(htmlOut)) {
-      await firecrawl(['scrape', url, '--format', 'rawHtml', '-o', htmlOut]);
-    }
-    if (!existsSync(htmlOut)) {
-      console.log(`  -  ${t.slug.padEnd(34)} scrape failed`);
-      continue;
-    }
-    const html = readFileSync(htmlOut, 'utf8');
-    const img = extractOgImage(html);
     if (!img) {
-      console.log(`  -  ${t.slug.padEnd(34)} no og:image`);
+      console.log(`  -  ${t.slug.padEnd(34)} no product og:image across ${cands.length} sources`);
       continue;
     }
     devImages[t.slug] = { url: img, cut: false };
     added++;
-    console.log(`  +  ${t.slug.padEnd(34)} ${img.slice(0, 80)}${img.length > 80 ? '…' : ''}`);
+    console.log(`  +  ${t.slug.padEnd(34)} [${from}] ${img.slice(0, 60)}${img.length > 60 ? '…' : ''}`);
   }
 
   if (added > 0) {
