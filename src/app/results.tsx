@@ -73,6 +73,11 @@ export default function ResultsScreen() {
       <Text style={styles.title}>
         {result.mode === 'rotation' ? 'Your rotation' : 'Your match'}
       </Text>
+      <Text style={styles.console}>
+        {result.mode === 'rotation' ? `${result.roles.length} SHOES` : 'SINGLE PICK'} · £
+        {result.totals.costGbp} / £{result.totals.budgetGbp}
+        {overBudget ? ' · OVER BUDGET' : ' · IN BUDGET'}
+      </Text>
 
       <ScrollView
         horizontal
@@ -135,7 +140,11 @@ export default function ResultsScreen() {
             ) : null}
             {r.alternates.length > 0 ? (
               <View style={styles.altRow}>
-                <Text style={styles.altLabel}>Also strong:</Text>
+                <Text style={styles.altLabel}>
+                  {Math.abs(r.alternates[0].match - r.pick.match) <= 2
+                    ? 'DEAD HEAT · SWAP ON FIT & FEEL'
+                    : 'ALSO STRONG'}
+                </Text>
                 {r.alternates.map((alt) => (
                   <Pressable key={alt.shoe.slug} onPress={() => router.push(`/shoe/${alt.shoe.slug}`)}>
                     <Text style={styles.altChip}>
@@ -147,7 +156,10 @@ export default function ResultsScreen() {
             ) : null}
           </View>
           <View style={styles.roleRight}>
-            <Text style={styles.roleMatch}>{r.pick.match}%</Text>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={styles.roleMatch}>{r.pick.match}%</Text>
+              <Text style={styles.roleMatchLabel}>MATCH</Text>
+            </View>
             <Pressable onPress={() => buyNow(r.pick.shoe.slug)} accessibilityRole="button">
               {(() => {
                 const drop = dropFor(offersFor(r.pick.shoe.slug, region));
@@ -198,7 +210,8 @@ export default function ResultsScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: font.display, fontSize: 26, color: color.ink, marginBottom: space(4) },
+  title: { fontFamily: font.display, fontSize: 26, letterSpacing: -0.5, color: color.ink },
+  console: { fontFamily: font.mono, fontSize: 10, letterSpacing: 0.5, color: color.muted, marginTop: space(1.5), marginBottom: space(4) },
   fan: { gap: 14, paddingBottom: space(2), paddingRight: space(8) },
   fanCard: { width: CARD_W * 0.78, height: CARD_H * 0.78, overflow: 'visible' },
   fanScale: {
@@ -221,13 +234,13 @@ const styles = StyleSheet.create({
     padding: space(4),
     marginTop: space(3),
   },
-  roleLabel: { fontFamily: font.display, fontSize: 11, letterSpacing: 2, color: color.cyan },
-  roleShoe: { fontFamily: font.uiMed, fontSize: 16, color: color.ink, marginTop: 3 },
+  roleLabel: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, color: color.cyan },
+  roleShoe: { fontFamily: font.uiMed, fontSize: 16, color: color.ink, marginTop: 4 },
   reasonRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: space(2) },
   reasonText: { flex: 1, fontFamily: font.ui, fontSize: 12, color: color.muted, lineHeight: 16 },
   edge: { fontFamily: font.ui, fontSize: 11.5, color: color.cyan, marginTop: space(1.5), lineHeight: 15 },
   altRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space(2), marginTop: space(2.5) },
-  altLabel: { fontFamily: font.uiMed, fontSize: 11, color: color.muted },
+  altLabel: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted, width: '100%' },
   altChip: {
     fontFamily: font.uiMed,
     fontSize: 11,
@@ -240,6 +253,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   roleRight: { alignItems: 'flex-end', justifyContent: 'space-between' },
+  roleMatchLabel: { fontFamily: font.mono, fontSize: 8, letterSpacing: 1, color: color.muted, marginTop: -2 },
   roleMatch: { fontFamily: font.display, fontSize: 22, color: color.volt },
   buyLink: { fontFamily: font.uiMed, fontSize: 13, color: color.cyan },
   priceStack: { alignItems: 'flex-end' },
