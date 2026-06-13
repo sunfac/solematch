@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { TierBadge } from '@/components/ui/Badge';
+import { isLegacy } from '@/data/catalogue';
 import { fallbackArt } from './fallbackArt';
 import { HoloFoil } from './HoloFoil';
 import { ShoeSilhouette } from './ShoeSilhouette';
@@ -141,6 +142,7 @@ export function ShoeCard({
         </Animated.View>
 
         <View style={styles.identity}>
+          {isLegacy(shoe.slug) ? <Text style={styles.prevGen}>◇ PREV GEN · VALUE</Text> : null}
           <Text style={styles.name} numberOfLines={1}>
             {shoe.brand} {shoe.model} {shoe.version}
           </Text>
@@ -225,6 +227,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   identity: { marginTop: 6, marginBottom: 12 },
+  prevGen: { fontFamily: font.mono, fontSize: 8.5, letterSpacing: 1.5, color: color.cyan, marginBottom: 2 },
   name: { fontFamily: font.uiMed, fontSize: 16.5, color: color.ink },
   meta: { fontFamily: font.ui, fontSize: 11.5, color: color.muted, marginTop: 2 },
   athlete: { fontFamily: font.ui, fontSize: 10.5, color: color.cyan, marginTop: 4, fontStyle: 'italic' },

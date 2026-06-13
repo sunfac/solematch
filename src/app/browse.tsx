@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
-import { SHOES } from '@/data/catalogue';
+import { SHOES, isLegacy } from '@/data/catalogue';
 import { SCORED } from '@/scores/formulas';
 import { Chip } from '@/components/quiz/inputs';
 import { fallbackArt } from '@/components/card/fallbackArt';
@@ -29,7 +29,9 @@ export default function BrowseScreen() {
   const [cat, setCat] = useState<Category | 'all'>('all');
   const shoes = useMemo(
     () =>
-      SHOES.filter((s) => s.status === 'current' && (cat === 'all' || s.category === cat)).sort(
+      SHOES.filter(
+        (s) => (s.status === 'current' || isLegacy(s.slug)) && (cat === 'all' || s.category === cat),
+      ).sort(
         (a, b) => SCORED.get(b.slug)!.overall - SCORED.get(a.slug)!.overall,
       ),
     [cat],
@@ -88,6 +90,7 @@ export default function BrowseScreen() {
               <Text style={styles.tileMeta}>
                 {s.weightG} g · {s.dropMm} mm · £{s.msrpGbp}
               </Text>
+              {isLegacy(s.slug) ? <Text style={styles.tilePrevGen}>◇ PREV GEN</Text> : null}
             </Pressable>
           );
         })}
@@ -115,4 +118,5 @@ const styles = StyleSheet.create({
   tileImg: { width: '100%', height: '100%' },
   tileName: { fontFamily: font.uiMed, fontSize: 13.5, color: color.ink, lineHeight: 18 },
   tileMeta: { fontFamily: font.ui, fontSize: 11.5, color: color.muted, marginTop: 3 },
+  tilePrevGen: { fontFamily: font.mono, fontSize: 8, letterSpacing: 1, color: color.cyan, marginTop: 3 },
 });

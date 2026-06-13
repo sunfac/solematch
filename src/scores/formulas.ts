@@ -1,4 +1,4 @@
-import { SHOES, categoryMedianGbp } from '@/data/catalogue';
+import { SHOES, categoryMedianGbp, isLegacy } from '@/data/catalogue';
 import type { Shoe, ShoeScores, Tier } from '@/types/shoe';
 import type { Role } from '@/types/profile';
 
@@ -52,7 +52,12 @@ export function dur(s: Shoe): number {
 
 export function val(s: Shoe): number {
   const med = categoryMedianGbp(s.category);
-  return clamp(70 + ((med - s.msrpGbp) / med) * 55 + (dur(s) - 60) * 0.25);
+  // previous-gen models reliably sell below RRP — value them at a conservative
+  // ~15% prev-gen discount so a still-great predecessor reads as the value play
+  // it usually is (an honest market fact, applied only to VALUE, not a blanket
+  // score nudge that would distort every slot).
+  const effective = isLegacy(s.slug) ? s.msrpGbp * 0.85 : s.msrpGbp;
+  return clamp(70 + ((med - effective) / med) * 55 + (dur(s) - 60) * 0.25);
 }
 
 type StatKey = keyof Omit<ShoeScores, 'overall' | 'tier' | 'formulaVersion'>;

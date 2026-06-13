@@ -1,3 +1,4 @@
+import { isLegacy } from '@/data/catalogue';
 import type { Profile } from '@/types/profile';
 import type { Shoe } from '@/types/shoe';
 
@@ -20,7 +21,8 @@ export function hardFilter(shoes: Shoe[], p: Profile): FilterResult {
   const offRoad = p.terrain === 'road-trail' || p.terrain === 'trail' || p.terrain === 'technical';
 
   const base = shoes.filter((s) => {
-    if (s.status !== 'current') return false;
+    // current shoes, plus one superseded version back (previous-gen value pick)
+    if (s.status !== 'current' && !isLegacy(s.slug)) return false;
     if (p.brandBlocks.some((b) => b.toLowerCase() === s.brand.toLowerCase())) return false;
     if (p.fit.wide && s.widths.length < 2) return false;
     if (s.category === 'trail' && !offRoad) return false;

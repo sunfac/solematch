@@ -45,6 +45,41 @@ export const SHOES: Shoe[] = z.array(shoeSchema).parse(raw) as Shoe[];
 
 export const bySlug = new Map(SHOES.map((s) => [s.slug, s]));
 
+/**
+ * Previous-generation policy. A still-sold model keeps exactly ONE superseded
+ * version back — the immediate predecessor — eligible as a value / community
+ * option (it's usually discounted and often still beloved), while anything
+ * older than one back is dropped. Computed per brand+model line off releaseYear
+ * (then version number), so it self-maintains as the freshness job supersedes
+ * shoes. Lines with no current shoe (fully discontinued) are left excluded.
+ */
+const lineKey = (s: Shoe) => `${s.brand}|${s.model}`.toLowerCase();
+const verNum = (v: string) => {
+  const m = v.match(/\d+/);
+  return m ? parseInt(m[0], 10) : 0;
+};
+function computeLegacy(shoes: Shoe[]): Set<string> {
+  const lines = new Map<string, Shoe[]>();
+  for (const s of shoes) {
+    const g = lines.get(lineKey(s));
+    if (g) g.push(s);
+    else lines.set(lineKey(s), [s]);
+  }
+  const legacy = new Set<string>();
+  for (const group of lines.values()) {
+    if (!group.some((s) => s.status === 'current')) continue; // discontinued line
+    const superseded = group
+      .filter((s) => s.status === 'superseded')
+      .sort((a, b) => b.releaseYear - a.releaseYear || verNum(b.version) - verNum(a.version));
+    if (superseded[0]) legacy.add(superseded[0].slug); // newest superseded = one back
+  }
+  return legacy;
+}
+
+/** Slugs of immediate-predecessor shoes kept eligible as previous-gen value. */
+export const LEGACY_SLUGS = computeLegacy(SHOES);
+export const isLegacy = (slug: string): boolean => LEGACY_SLUGS.has(slug);
+
 export const BRANDS = [...new Set(SHOES.map((s) => s.brand))].sort();
 
 export function categoryMedianGbp(cat: Category): number {

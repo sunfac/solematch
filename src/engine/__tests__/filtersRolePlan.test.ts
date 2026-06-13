@@ -1,4 +1,4 @@
-import { SHOES } from '@/data/catalogue';
+import { SHOES, isLegacy } from '@/data/catalogue';
 import type { Profile, Role } from '@/types/profile';
 import { hardFilter } from '../filters';
 import { isVersatilityMode, planRoles } from '../rolePlan';
@@ -26,11 +26,17 @@ export function baseProfile(over: Partial<Profile> = {}): Profile {
 }
 
 describe('hardFilter', () => {
-  test('excludes superseded shoes and blocked brands', () => {
+  test('excludes blocked brands and keeps only current + the one-back predecessor', () => {
     const { eligible } = hardFilter(SHOES, baseProfile({ brandBlocks: ['Nike'] }));
-    expect(eligible.some((s) => s.slug === 'nike-alphafly-3')).toBe(false);
-    expect(eligible.some((s) => s.brand === 'Nike')).toBe(false);
+    expect(eligible.some((s) => s.brand === 'Nike')).toBe(false); // brand block (also drops the legacy Alphafly 3)
+    // nothing non-current survives unless it's a kept previous-gen predecessor
+    expect(eligible.every((s) => s.status === 'current' || isLegacy(s.slug))).toBe(true);
     expect(eligible.length).toBeGreaterThan(30);
+  });
+
+  test('the immediate predecessor (legacy) is kept eligible when its brand is not blocked', () => {
+    const { eligible } = hardFilter(SHOES, baseProfile());
+    expect(eligible.some((s) => s.slug === 'saucony-triumph-23')).toBe(true);
   });
 
   test('wide fit requires multiple widths', () => {
