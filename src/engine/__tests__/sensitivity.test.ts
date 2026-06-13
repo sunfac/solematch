@@ -86,3 +86,26 @@ describe('mid-budget rotation quality — no starvation, no broken constraints',
     }
   });
 });
+
+describe('stated priority personalises the pick', () => {
+  const dailyPick = (priority: Profile['priority']) =>
+    runMatch(
+      baseProfile({
+        mode: 'single',
+        primaryIntent: 'daily',
+        race: undefined,
+        raceDistanceTargetKm: undefined,
+        budget: { type: 'perShoe', amountGbp: 220, stretch: false },
+        priority,
+      }),
+    ).roles[0].pick.shoe.slug;
+
+  test('different priorities land on different daily shoes (≥2 distinct of 4)', () => {
+    const picks = (['speed', 'comfort', 'value', 'durability'] as const).map(dailyPick);
+    expect(new Set(picks).size).toBeGreaterThanOrEqual(2);
+  });
+
+  test('priority is deterministic — same priority twice gives the same shoe', () => {
+    expect(dailyPick('comfort')).toBe(dailyPick('comfort'));
+  });
+});

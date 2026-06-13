@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Experience, InjuryFlag, Profile, Role, Sex, Units } from '@/types/profile';
+import type { Experience, InjuryFlag, Priority, Profile, Role, Sex, Units } from '@/types/profile';
 
 /**
  * Quiz draft state. In-memory only in MVP (no persistence): settings changes
@@ -22,6 +22,7 @@ export interface QuizDraft {
   targetingRace?: boolean;
   raceDistanceTargetKm?: 5 | 10 | 21.1 | 42.2;
   experience?: Experience;
+  priority?: Priority;
   currentShoeSlug?: string;
   currentShoeVerdict?: 'love' | 'meh' | 'hate';
   wide: boolean;
@@ -108,6 +109,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       injuryFlags: s.injuryConsent ? s.injuryFlags : [],
       currentShoeSlug: s.currentShoeSlug,
       currentShoeVerdict: s.currentShoeVerdict,
+      priority: s.priority,
     };
   },
 }));

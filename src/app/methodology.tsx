@@ -47,7 +47,10 @@ export default function MethodologyScreen() {
         tiebreak decides — different runners see different but equally right picks, and the same
         runner always gets the same answer. Match percentages cap at 96, never 100: no real
         shoe is a perfect match for a real runner, so above 90% we apply a soft compression
-        and refuse to claim the last few points.
+        and refuse to claim the last few points. And if you tell us what matters most — speed,
+        comfort, value or durability — we lean your match toward it: a stated preference, bounded
+        so it can decide a close call but never overrides the evidence, your budget, or a safety
+        signal.
       </Text>
 
       <Text style={styles.sectionTitle}>What about gait analysis?</Text>

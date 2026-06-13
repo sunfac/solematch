@@ -42,10 +42,12 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
   await next();
   // 7 fit (optional)
   await next();
-  // 8 budget 400
+  // 8 priority (optional) — select comfort, auto-advances
+  await page.getByTestId('choice-comfort').click();
+  // 9 budget 400
   await page.getByTestId('budget-input').last().fill('400');
   await next();
-  // 9 injury (optional) → reveal
+  // 10 injury (optional) → reveal
   await next();
 
   // reveal: walk every card until the advance button text becomes "See my

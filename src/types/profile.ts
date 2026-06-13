@@ -1,5 +1,7 @@
 export type Sex = 'M' | 'F' | 'NA';
 export type Experience = 'new' | 'regular' | 'high';
+/** What the runner cares about most — reweights the match toward that dimension. */
+export type Priority = 'speed' | 'comfort' | 'value' | 'durability';
 export type Role = 'race' | 'tempo' | 'daily' | 'recovery';
 export type InjuryFlag = 'bone_stress' | 'achilles_calf' | 'knee' | 'plantar';
 export type Units = 'metric' | 'imperial';
@@ -25,4 +27,6 @@ export interface Profile {
   injuryFlags: InjuryFlag[];
   currentShoeSlug?: string;
   currentShoeVerdict?: 'love' | 'meh' | 'hate';
+  /** optional: what matters most to this runner — biases the pick toward it */
+  priority?: Priority;
 }

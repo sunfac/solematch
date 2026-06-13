@@ -323,6 +323,38 @@ const forefootFit: Modifier = (s, p, role) => {
   return null;
 };
 
+/**
+ * Stated priority — what the runner told us matters most. A differential around
+ * 70 on the chosen dimension: shoes that excel at your priority rise, weak ones
+ * sink, so two runners with the same body/pace but different priorities get
+ * genuinely different (personalised, not random) picks. Bounded ~±4 — enough to
+ * decide a dead heat, never enough to override an evidence-led or budget signal.
+ */
+const PRIORITY_STAT: Record<NonNullable<Profile['priority']>, keyof ReturnType<typeof stats>> = {
+  speed: 'spd',
+  comfort: 'csh',
+  value: 'val',
+  durability: 'dur',
+};
+const PRIORITY_LABEL: Record<NonNullable<Profile['priority']>, string> = {
+  speed: 'speed',
+  comfort: 'cushioning',
+  value: 'value',
+  durability: 'durability',
+};
+const priorityBoost: Modifier = (s, p) => {
+  if (!p.priority) return null;
+  const dim = stats(s)[PRIORITY_STAT[p.priority]] as number;
+  const delta = 0.13 * (dim - 70);
+  return {
+    delta,
+    reason:
+      delta >= 2
+        ? r('comfort-tiebreak', `Leans into the ${PRIORITY_LABEL[p.priority]} you told us matters most`)
+        : undefined,
+  };
+};
+
 /** Brand preference (FIT & FEEL). */
 const brandLove: Modifier = (s, p) => {
   if (p.brandLoves.some((b) => b.toLowerCase() === s.brand.toLowerCase())) {
@@ -363,6 +395,7 @@ export const MODIFIERS: Modifier[] = [
   womensFit,
   currentShoeAffinity,
   forefootFit,
+  priorityBoost,
   brandLove,
   consensusBoost,
   versatility,

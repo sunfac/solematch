@@ -358,6 +358,25 @@ function StepInjury(_: StepProps) {
   );
 }
 
+function StepPriority({ onAutoNext }: StepProps) {
+  const { priority, set } = useQuizStore();
+  return (
+    <ChoiceGrid
+      value={priority}
+      onSelect={(k) => {
+        set('priority', k);
+        onAutoNext();
+      }}
+      options={[
+        { key: 'comfort', label: 'Comfort', hint: 'Plush, protective cushioning leads the pick' },
+        { key: 'speed', label: 'Speed', hint: 'Light, fast, responsive — pace over plush' },
+        { key: 'value', label: 'Value', hint: 'The strongest shoe for the money' },
+        { key: 'durability', label: 'Durability', hint: 'Holds its ride over high mileage' },
+      ]}
+    />
+  );
+}
+
 export const STEPS: QuizStep[] = [
   { id: 'mode', title: 'What are we matching today?', valid: (d) => !!d.mode, Component: StepMode },
   {
@@ -387,6 +406,14 @@ export const STEPS: QuizStep[] = [
   },
   { id: 'experience', title: 'Your running background', valid: (d) => !!d.experience, Component: StepExperience },
   { id: 'fit', title: 'Fit & preferences', optional: true, valid: () => true, Component: StepFit },
+  {
+    id: 'priority',
+    title: 'What matters most to you?',
+    subtitle: "We'll lean your pick toward it. Skip for a balanced match.",
+    optional: true,
+    valid: () => true,
+    Component: StepPriority,
+  },
   { id: 'budget', title: 'Your budget', valid: (d) => d.budgetAmountGbp >= 50, Component: StepBudget },
   { id: 'injury', title: 'Personalise further', optional: true, valid: () => true, Component: StepInjury },
 ];
