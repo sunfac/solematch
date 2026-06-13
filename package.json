@@ -47,7 +47,8 @@
     "web": "expo start --web",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "export:web": "expo export --platform web",
+    "export:web": "expo export --platform web && tsx scripts/seo-postbuild.ts",
+    "export:web:raw": "expo export --platform web",
     "e2e": "playwright test",
     "e2e:serve": "npx serve dist -s -l 4173",
     "e2e:serve:full": "expo export --platform web && npx serve dist -s -l 4173"

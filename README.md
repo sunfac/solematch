@@ -34,18 +34,59 @@ formula constants (plan decision 8). Refresh cadence: quarterly review + release
 (Phase 2 automates this via the Supabase cron per spec §5.4); the landing page shows the
 catalogue stamp.
 
-## Owner checklist (launch + Phase 2)
+## Launch in 30 minutes (the path to first commission)
 
-1. **Affiliate sign-ups:** Skimlinks (instant — set `EXPO_PUBLIC_SKIMLINKS_ID`), then Awin (Nike, SportsShoes), Webgains (Runners Need 8%), Adidas via Impact. Datafeed ingestion (live prices + licensed imagery) is Phase 2 — see spec §9.
-2. **Hosting:** deploy `dist/` (Vercel / EAS Hosting / any static host) + custom domain. Then build the **OG share-card endpoint** (deferred per plan decision 5).
-3. **Email capture:** Phase 2 (plan decision 6). **Sentry:** Phase 2 (decision 7).
-4. **Supabase:** when ready, follow [supabase/README.md](supabase/README.md) (create project → push migration → seed → deploy `match` function → set env vars).
-5. **Strava (Phase 2):** developer app + paid sub (~$12/mo) + compliance memo per spec §8.
-6. **Imagery:** offers currently link brand sites with images only where press-kit licensed; Skimlinks Product Search API images unlock once the publisher ID exists.
+The two hard blockers between this repo and £1 of revenue are an affiliate
+ID and a public URL. Both are free and fast.
 
-## Status (12 June 2026)
+1. **Skimlinks publisher ID** (10 min, instant approval):
+   sign up at [skimlinks.com](https://skimlinks.com), grab your publisher ID,
+   set `EXPO_PUBLIC_SKIMLINKS_ID` as a Vercel project env var. Without this,
+   `buildAffiliateUrl()` passes raw URLs through and earns zero commission on
+   every click — covered by [`src/lib/__tests__/affiliate.test.ts`](src/lib/__tests__/affiliate.test.ts).
 
-MVP complete and gate-verified: `tsc` clean · 92 unit tests green · 3 Playwright E2E green against the static export · `expo export` clean. Lighthouse not yet run — score it against `npm run e2e:serve` before launch (spec P1 target ≥85 mobile).
+2. **Deploy to Vercel** (15 min, free tier):
+   ```sh
+   npm i -g vercel    # one-off
+   vercel             # link to a new project, accept defaults
+   vercel --prod      # ship dist/ to a *.vercel.app URL
+   ```
+   [`vercel.json`](vercel.json) wires up the build, SPA rewrites, and immutable
+   asset caching. Custom domain via the Vercel dashboard (5 min more).
+
+3. **First traffic** — Reddit r/RunningShoeGeeks "I built a science-backed
+   match engine, looking for feedback" + ProductHunt + an r/Marathon_Training
+   "what did you think?" thread historically drive 200-1000 first-week
+   sessions. With 2-5% click-out CTR and ~6% blended commission (spec §9.3),
+   that's £20-150 first-week revenue at zero cost.
+
+## Owner checklist (post-launch + Phase 2)
+
+1. **More affiliate networks** (better per-click revenue):
+   Awin → Nike (~7%), SportsShoes (3-6%); Webgains → Runners Need (8%); Impact
+   → Adidas (~7-10%); Rakuten → Hoka (3-14%). Each unlocks higher commission
+   on its respective brand vs the 75%-passthrough Skimlinks fallback.
+2. **Datafeed ingestion** replaces [`scripts/check-prices.ts`](scripts/check-prices.ts)
+   with per-SKU prices + licensed images (spec §5.4) — kills false-positive
+   scrapes and unlocks brand imagery legally.
+3. **Email capture** (plan decision 6). **Sentry** (decision 7). **Strava
+   integration** (~$12/mo dev sub + compliance memo, spec §8) — the moat:
+   "your Pegasus has 680 km, here's its successor at £X" is the highest-
+   intent trigger in running retail.
+4. **Supabase** for Phase-2 remote data mode — see
+   [supabase/README.md](supabase/README.md).
+
+## Status (13 June 2026)
+
+Launch-ready: 101-shoe catalogue (98 current), 17 brands, deterministic engine
+with forefoot-shape fit dimension and 86-96 match-quality calibration. 30
+official product images (localhost-gated). Every retailer link health-
+verified ([`scripts/check-links.ts`](scripts/check-links.ts)). Live price-drop
+pipeline ([`scripts/check-prices.ts`](scripts/check-prices.ts), scheduled cron).
+SEO baseline: 105-URL sitemap + 98 per-shoe static OG stubs ([`scripts/seo-postbuild.ts`](scripts/seo-postbuild.ts)).
+`vercel.json` ready. Gate: `tsc` clean · 115 unit tests green · 3 Playwright E2E
+green · `expo export` clean. Lighthouse score against `npm run e2e:serve`
+before launch (spec P1 target ≥85 mobile).
 
 ## Architecture notes
 

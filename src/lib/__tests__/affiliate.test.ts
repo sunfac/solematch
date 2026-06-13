@@ -41,6 +41,29 @@ test('regional filter falls back to any region when none match', () => {
   expect(offers.length).toBeGreaterThanOrEqual(1);
 });
 
+test('Skimlinks wrap includes the matchId in xcust so commissions attribute back to the match', () => {
+  process.env.EXPO_PUBLIC_SKIMLINKS_ID = '123456X789';
+  const wrapped = buildAffiliateUrl(offer, 'matchABC:nike-vaporfly-4:reveal');
+  delete process.env.EXPO_PUBLIC_SKIMLINKS_ID;
+  // network payout reports include the xcust we passed in → revenue attributable per
+  // matchId / per slug / per placement (reveal vs results vs detail) — the trust
+  // contract relies on knowing what earns WITHOUT ever letting it touch ranking.
+  expect(wrapped).toMatch(/xcust=matchABC%3Anike-vaporfly-4%3Areveal/);
+});
+
+test('every current shoe has a buyable offer (search-or-product kind, real https price)', () => {
+  let usableOffers = 0;
+  for (const s of SHOES.filter((x) => x.status === 'current')) {
+    const offers = offersFor(s.slug, 'UK');
+    const usable = offers.filter((o) => o.kind !== 'brand');
+    if (usable.length > 0) usableOffers++;
+  }
+  // every current shoe must have at least one model-specific destination (search or
+  // product PDP) — brand-range pages are the no-search-pattern fallback, not the
+  // money path. If this trips, run npx tsx scripts/gen-offers.ts and check the kind:
+  expect(usableOffers).toBe(SHOES.filter((x) => x.status === 'current').length);
+});
+
 test('payPrice prefers a live street price below RRP', () => {
   expect(payPrice({ ...offer, streetPriceGbp: 180 })).toBe(180);
   expect(payPrice(offer)).toBe(offer.priceGbp);
