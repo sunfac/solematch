@@ -60,6 +60,10 @@ export default function QuizStepScreen() {
       />
 
       <Animated.View entering={FadeInRight.duration(240)}>
+        <Text style={styles.stepTag}>
+          STEP {String(stepNum).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')}
+          {step.optional ? ' · OPTIONAL' : ''}
+        </Text>
         <Text style={styles.title}>{step.title}</Text>
         {step.subtitle ? <Text style={styles.subtitle}>{step.subtitle}</Text> : null}
 
@@ -96,7 +100,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     overflow: 'hidden',
   },
-  title: { fontFamily: font.display, fontSize: 24, color: color.ink, marginBottom: space(2) },
+  stepTag: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, color: color.volt, marginBottom: space(2) },
+  title: { fontFamily: font.display, fontSize: 27, lineHeight: 31, letterSpacing: -0.5, color: color.ink, marginBottom: space(2) },
   subtitle: { fontFamily: font.ui, fontSize: 14, color: color.muted, marginBottom: space(2) },
   body: { marginTop: space(4), gap: space(3) },
   footer: { flexDirection: 'row', gap: space(3), marginTop: space(8), marginBottom: space(6) },

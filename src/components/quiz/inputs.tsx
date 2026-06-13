@@ -39,7 +39,7 @@ export function ChoiceGrid<T extends string>({
 }) {
   return (
     <View style={styles.grid}>
-      {options.map((o) => {
+      {options.map((o, i) => {
         const selected = value === o.key;
         return (
           <Pressable
@@ -48,10 +48,23 @@ export function ChoiceGrid<T extends string>({
             accessibilityRole="button"
             accessibilityState={{ selected }}
             onPress={() => onSelect(o.key)}
-            style={[styles.card, selected && styles.cardSelected]}
+            style={({ pressed }) => [
+              styles.card,
+              selected && styles.cardSelected,
+              pressed && { transform: [{ scale: 0.99 }] },
+            ]}
           >
-            <Text style={[styles.cardLabel, selected && { color: color.volt }]}>{o.label}</Text>
-            {o.hint ? <Text style={styles.cardHint}>{o.hint}</Text> : null}
+            {selected ? <View style={styles.cardAccent} /> : null}
+            <Text style={[styles.cardIndex, selected && { color: color.volt }]}>
+              {String(i + 1).padStart(2, '0')}
+            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardLabel, selected && { color: color.volt }]}>{o.label}</Text>
+              {o.hint ? <Text style={styles.cardHint}>{o.hint}</Text> : null}
+            </View>
+            <View style={[styles.cardMark, selected && styles.cardMarkOn]}>
+              {selected ? <View style={styles.cardMarkDot} /> : null}
+            </View>
           </Pressable>
         );
       })}
@@ -219,15 +232,32 @@ const styles = StyleSheet.create({
   chipText: { fontFamily: font.uiMed, fontSize: 13, color: color.muted },
   grid: { gap: space(2.5) },
   card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space(3),
     borderWidth: 1,
     borderColor: color.line,
     backgroundColor: color.surface,
     borderRadius: radius.input,
     padding: space(4),
+    overflow: 'hidden',
   },
   cardSelected: { borderColor: color.volt, backgroundColor: color.surface2 },
+  cardAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: color.volt },
+  cardIndex: { fontFamily: font.mono, fontSize: 11, color: color.muted, letterSpacing: 0.5, marginTop: 1 },
   cardLabel: { fontFamily: font.uiMed, fontSize: 16, color: color.ink },
   cardHint: { fontFamily: font.ui, fontSize: 12.5, color: color.muted, marginTop: 3, lineHeight: 17 },
+  cardMark: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: color.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardMarkOn: { borderColor: color.volt },
+  cardMarkDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: color.volt },
   numberRow: { flexDirection: 'row', alignItems: 'center', gap: space(3), justifyContent: 'center', alignSelf: 'center' },
   stepBtn: {
     width: 44,
