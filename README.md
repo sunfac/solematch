@@ -35,14 +35,30 @@ network approves you — the wire activates without code changes.
 | `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Phase-2 remote data mode | — | — |
 | (no flag — hostname-gated) | Official brand product images render on **localhost only**; deployed domains show tier-coloured silhouettes until licensed feed imagery | — | — |
 
-## Data freshness
+## Data freshness — what's automated, what isn't
 
-The market cycles ~12 months, so the catalogue is built to refresh: `src/data/shoes.json` is the
-single source (validated by tests), `scripts/gen-offers.ts` regenerates offers, and
-`scripts/calibrate.ts` re-ranks tiers after any change — test invariants are authoritative over
-formula constants (plan decision 8). Refresh cadence: quarterly review + release-watch
-(Phase 2 automates this via the Supabase cron per spec §5.4); the landing page shows the
-catalogue stamp.
+`src/data/shoes.json` is the single source of truth (zod-validated by the
+test suite), `scripts/gen-offers.ts` regenerates offers, `scripts/calibrate.ts`
+re-ranks tiers. Test invariants are authoritative over formula constants
+(plan decision 8).
+
+The infrastructure below exists and is wired; the trigger frequency is
+honest about what's actually live:
+
+| Script | What it does | Triggered by |
+|---|---|---|
+| [`scripts/check-prices.ts`](scripts/check-prices.ts) | Live retailer price scrape → `streetPriceGbp` + `priceDropped` | **GitHub Actions weekly** ([`.github/workflows/freshness.yml`](.github/workflows/freshness.yml)) — opens a PR if anything changed. Manual: `npx tsx scripts/check-prices.ts`. |
+| [`scripts/check-links.ts`](scripts/check-links.ts) | HTTP + "no results" health check across every offer URL | Same weekly job (diagnostic artifact attached to the workflow run). |
+| [`scripts/harvest-images.ts`](scripts/harvest-images.ts) | Discover & register brand-site og:images | Manual on catalogue expansion. |
+| [`scripts/ingest-research.ts`](scripts/ingest-research.ts) | Validated pipe-row ingester (ADD / AUDIT / SIGHT) | Manual when a research pass produces rows. |
+
+Catalogue churn (new releases, retired models) is still manual research —
+the same dispatch pattern the catalogue-expansion brief documents. The
+weekly cron PRs prices + link health; it does NOT auto-merge — owner
+reviews before the snapshot goes live.
+
+Required GitHub Actions secrets: `FIRECRAWL_API_KEY` (free tier covers the
+weekly run).
 
 ## Launch in 30 minutes (the path to first commission)
 

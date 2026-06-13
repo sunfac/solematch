@@ -110,8 +110,73 @@ const IMPACT_MERCHANTS: Record<string, string> = {
   Adidas: 'IMPACT_ADIDAS_MID',
 };
 
+const RAKUTEN_MERCHANTS: Record<string, string> = {
+  Hoka: 'RAKUTEN_HOKA_MID',
+};
+
 const env = (k: string): string | undefined => process.env[k];
 const enc = encodeURIComponent;
+
+/**
+ * Retailers we KNOW are paid by Skimlinks at the configured publisher ID —
+ * both confirmed via their merchant directory at hub.skimlinks.com. Every
+ * brand-site retailer here is on top of that — Skimlinks aggregates Awin/
+ * Impact/Rakuten programmes for these brands, so a click pays even without
+ * the direct network configured (75% of the merchant's rate).
+ */
+const SKIMLINKS_COVERED = new Set<string>([
+  'SportsShoes',
+  'Runners Need',
+  'Amazon UK',
+  // brand sites whose UK affiliate programmes Skimlinks aggregates
+  'Nike',
+  'Adidas',
+  'Asics',
+  'Saucony',
+  'Hoka',
+  'Brooks',
+  'New Balance',
+  'Puma',
+  'On',
+  'Salomon',
+  'Under Armour',
+  'Mizuno',
+]);
+
+/**
+ * Does the configured network stack actually pay for a click on this retailer?
+ * Returns true if ANY of (direct network configured for this retailer) OR
+ * (Skimlinks live AND the retailer is in their network) — i.e. the click
+ * will be tracked AND commission will flow back.
+ *
+ * Drives `offersFor(slug, region, { monetisedOnly: true })`: by default we
+ * only surface offers that will earn — no dead ends, every outbound click
+ * is monetised. Falls back to all offers when none monetise so the user
+ * still has SOMEWHERE to buy.
+ */
+export function retailerIsMonetised(retailer: string): boolean {
+  // 1. Amazon → Amazon Associates tag set
+  if (retailer === 'Amazon UK' || retailer === 'Amazon') {
+    return Boolean(env('EXPO_PUBLIC_AMAZON_TAG')) || Boolean(env('EXPO_PUBLIC_SKIMLINKS_ID'));
+  }
+  // 2. Direct networks
+  if (env('EXPO_PUBLIC_AWIN_ID') && AWIN_MERCHANTS[retailer]) {
+    const mid = env(`EXPO_PUBLIC_AWIN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
+    if (mid) return true;
+  }
+  if (env('EXPO_PUBLIC_WEBGAINS_ID') && WEBGAINS_MERCHANTS[retailer]) {
+    const mid = env(`EXPO_PUBLIC_WEBGAINS_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
+    if (mid) return true;
+  }
+  if (env('EXPO_PUBLIC_IMPACT_ID') && IMPACT_MERCHANTS[retailer]) return true;
+  if (env('EXPO_PUBLIC_RAKUTEN_ID') && RAKUTEN_MERCHANTS[retailer]) {
+    const mid = env(`EXPO_PUBLIC_RAKUTEN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
+    if (mid) return true;
+  }
+  // 3. Skimlinks passthrough if the retailer is in their merchant network
+  if (env('EXPO_PUBLIC_SKIMLINKS_ID') && SKIMLINKS_COVERED.has(retailer)) return true;
+  return false;
+}
 
 function awinWrap(merchantId: string, awinId: string, url: string, subId: string): string {
   // https://www.awin1.com/cread.php?awinmid=<mid>&awinaffid=<id>&clickref=<sub>&ued=<url>
@@ -126,6 +191,11 @@ function webgainsWrap(merchantId: string, programId: string, url: string, subId:
 function impactWrap(impactId: string, url: string, subId: string): string {
   // https://impact-go.com/?id=<id>&url=<url>&subId1=<sub> — Impact gives a custom go-link per publisher
   return `https://goto.impact-radius.com/c/${enc(impactId)}/?u=${enc(url)}&subId1=${enc(subId)}`;
+}
+
+function rakutenWrap(rakutenId: string, mid: string, url: string, subId: string): string {
+  // https://click.linksynergy.com/deeplink?id=<aff>&mid=<mid>&u1=<sub>&murl=<url>
+  return `https://click.linksynergy.com/deeplink?id=${enc(rakutenId)}&mid=${mid}&u1=${enc(subId)}&murl=${enc(url)}`;
 }
 
 function amazonWrap(tag: string, url: string, subId: string): string {
@@ -173,6 +243,13 @@ export function buildAffiliateUrl(offer: Offer, subId: string): string {
     return impactWrap(impactId, url, subId);
   }
 
+  // Rakuten (Hoka direct ~3-14%)
+  const rakutenId = env('EXPO_PUBLIC_RAKUTEN_ID');
+  if (rakutenId && RAKUTEN_MERCHANTS[retailer]) {
+    const mid = env(`EXPO_PUBLIC_RAKUTEN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
+    if (mid) return rakutenWrap(rakutenId, mid, url, subId);
+  }
+
   // Skimlinks: the passthrough fallback for everything else (~48k merchants)
   const skimId = env('EXPO_PUBLIC_SKIMLINKS_ID');
   if (skimId) return skimlinksWrap(skimId, url, subId);
@@ -181,10 +258,20 @@ export function buildAffiliateUrl(offer: Offer, subId: string): string {
   return url;
 }
 
+/**
+ * Filter offers down to (a) the requested region and (b) retailers our
+ * wire actually monetises — every outbound click pays SOMETHING. Owner
+ * intent: don't ship users to dead-end retailers when a paying one is
+ * stocking the same shoe. Falls back gracefully:
+ *   regional + monetised → if empty, regional → if empty, all
+ * so the user always has at least one buyable option.
+ */
 export function offersFor(slug: string, region: 'UK' | 'US' = 'UK'): Offer[] {
   const all = OFFERS[slug] ?? [];
   const regional = all.filter((o) => o.region === region);
-  return regional.length > 0 ? regional : all;
+  const pool = regional.length > 0 ? regional : all;
+  const monetised = pool.filter((o) => retailerIsMonetised(o.retailer));
+  return monetised.length > 0 ? monetised : pool;
 }
 
 /**

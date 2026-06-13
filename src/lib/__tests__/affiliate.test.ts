@@ -1,5 +1,5 @@
 import { SHOES } from '@/data/catalogue';
-import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice, type Offer } from '../affiliate';
+import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice, retailerIsMonetised, type Offer } from '../affiliate';
 
 const offer: Offer = {
   retailer: 'SportsShoes',
@@ -161,5 +161,57 @@ describe('per-network affiliate dispatch', () => {
 
   test('raw URL passthrough when nothing is configured (zero commission, link still works)', () => {
     expect(buildAffiliateUrl(offer, 'm:s:p')).toBe(offer.url);
+  });
+
+  test('Rakuten wraps Hoka when both IDs set (3-14%)', () => {
+    process.env.EXPO_PUBLIC_RAKUTEN_ID = 'RAK';
+    process.env.EXPO_PUBLIC_RAKUTEN_MID_HOKA = '54321';
+    const hoka: Offer = { ...offer, retailer: 'Hoka', url: 'https://www.hoka.com/en/gb/search?q=clifton' };
+    const wrapped = buildAffiliateUrl(hoka, 'm:s:p');
+    expect(wrapped).toContain('click.linksynergy.com');
+    expect(wrapped).toContain('mid=54321');
+    expect(wrapped).toContain('u1=m%3As%3Ap');
+    delete process.env.EXPO_PUBLIC_RAKUTEN_ID;
+    delete process.env.EXPO_PUBLIC_RAKUTEN_MID_HOKA;
+  });
+});
+
+describe('monetised-only filter — never ship traffic to dead-end retailers', () => {
+  afterEach(() => {
+    delete process.env.EXPO_PUBLIC_SKIMLINKS_ID;
+    delete process.env.EXPO_PUBLIC_AMAZON_TAG;
+  });
+
+  test('retailerIsMonetised respects which networks are configured', () => {
+    expect(retailerIsMonetised('SportsShoes')).toBe(false);
+    process.env.EXPO_PUBLIC_SKIMLINKS_ID = 'SKIM';
+    // Skimlinks live → covers its merchant set (SportsShoes, Runners Need, major brand sites)
+    expect(retailerIsMonetised('SportsShoes')).toBe(true);
+    expect(retailerIsMonetised('Runners Need')).toBe(true);
+    expect(retailerIsMonetised('Nike')).toBe(true);
+    // Niche retailers Skimlinks doesn't cover stay dead-end until directly wired
+    expect(retailerIsMonetised('Kiprun')).toBe(false);
+  });
+
+  test('Amazon UK monetises when EITHER Amazon tag OR Skimlinks is set', () => {
+    expect(retailerIsMonetised('Amazon UK')).toBe(false);
+    process.env.EXPO_PUBLIC_AMAZON_TAG = 'tag-21';
+    expect(retailerIsMonetised('Amazon UK')).toBe(true);
+    delete process.env.EXPO_PUBLIC_AMAZON_TAG;
+    process.env.EXPO_PUBLIC_SKIMLINKS_ID = 'SKIM';
+    expect(retailerIsMonetised('Amazon UK')).toBe(true);
+  });
+
+  test('offersFor() filters to monetised when at least one offer pays', () => {
+    process.env.EXPO_PUBLIC_SKIMLINKS_ID = 'SKIM';
+    // every catalogue offer for vaporfly-4 should pay (SportsShoes + brand + Runners Need + Amazon)
+    const offers = offersFor('nike-vaporfly-4', 'UK');
+    for (const o of offers) expect(retailerIsMonetised(o.retailer)).toBe(true);
+  });
+
+  test('offersFor() falls back to ALL offers when nothing pays — no shoe ends up unbuyable', () => {
+    // nothing configured → retailerIsMonetised returns false for all → fallback to all
+    const offers = offersFor('nike-vaporfly-4', 'UK');
+    expect(offers.length).toBeGreaterThan(0);
   });
 });
