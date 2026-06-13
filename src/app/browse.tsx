@@ -37,10 +37,16 @@ export default function BrowseScreen() {
     [cat],
   );
 
+  const catLabel = CATS.find((c) => c.key === cat)!.label;
+
   return (
     <Screen scroll maxWidth={560}>
       <TopBar />
+      <Text style={styles.eyebrow}>MEASURED. NOT MARKETED.</Text>
       <Text style={styles.title}>The catalogue</Text>
+      <Text style={styles.console}>
+        {shoes.length} SHOES · SORTED BY RATING{cat === 'all' ? '' : ` · ${catLabel.toUpperCase()}`}
+      </Text>
 
       <View style={styles.filters}>
         {CATS.map((c) => (
@@ -100,7 +106,9 @@ export default function BrowseScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: font.display, fontSize: 24, color: color.ink, marginBottom: space(4) },
+  eyebrow: { fontFamily: font.mono, fontSize: 10, letterSpacing: 2, color: color.volt, marginBottom: 6 },
+  title: { fontFamily: font.display, fontSize: 26, letterSpacing: -0.5, color: color.ink },
+  console: { fontFamily: font.mono, fontSize: 10, letterSpacing: 0.5, color: color.muted, marginTop: space(1.5), marginBottom: space(4) },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: space(2), marginBottom: space(4) },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space(3) },
   tile: {
