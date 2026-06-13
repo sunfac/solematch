@@ -50,6 +50,19 @@ export default function MethodologyScreen() {
         and refuse to claim the last few points.
       </Text>
 
+      <Text style={styles.sectionTitle}>What about gait analysis?</Text>
+      <Text style={styles.body}>
+        It&apos;s the ritual in every run shop — hop on a treadmill, film your stride, get sorted
+        into &ldquo;neutral&rdquo; or &ldquo;overpronator&rdquo;. And for one thing it&apos;s
+        genuinely useful: checking a shoe actually fits and feels right on your foot. What the
+        evidence doesn&apos;t support is the step it&apos;s usually used for — prescribing a shoe by
+        your pronation &ldquo;type&rdquo; to prevent injury. A 927-runner randomised trial
+        (Nielsen 2014) and a review of 21 studies found no injury benefit from matching shoes to
+        foot type. So we ask the fit questions that actually matter — width, what you&apos;ve worn,
+        what&apos;s worked, any injury history — and skip the prescription the science doesn&apos;t
+        back. If you love your gait analysis, use it for fit. We&apos;ll handle the rest.
+      </Text>
+
       <Text style={styles.sectionTitle}>What we deliberately do NOT do</Text>
       <View style={{ gap: space(2) }}>
         {MYTHS.map((m, i) => (

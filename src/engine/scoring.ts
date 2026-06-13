@@ -44,7 +44,7 @@ const roleCeiling = (role: Role, factor: number): number =>
 const softCapTop = (raw: number): number => (raw > 90 ? 90 + (raw - 90) * 0.6 : raw);
 const clampMatch = (n: number) => Math.max(40, Math.min(96, Math.round(softCapTop(n))));
 
-/** FNV-1a — tiny deterministic hash for the near-tie variety jitter. */
+/** FNV-1a — tiny deterministic hash for the dead-heat rotation. */
 function fnv(str: string): number {
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) {
@@ -55,21 +55,30 @@ function fnv(str: string): number {
 }
 
 /**
- * Near-tie variety (published on /methodology): a deterministic, profile-seeded
- * jitter of at most ±0.8 points. Far below any meaningful score difference, so
- * it can only reorder shoes that are statistically tied — different runners see
- * different (equally right) picks instead of one shoe for everyone, and the
- * same runner always sees the same result.
+ * Dead-heat rotation (published on /methodology). A deterministic engine would
+ * otherwise crown the single highest-scoring shoe for every runner with the
+ * same answers — so a neutral runner with no strong fit signal always gets ONE
+ * shoe, and the rest of a deep catalogue never surfaces. But the top of a slot
+ * is usually a statistical DEAD HEAT: on a 40-99 scale, two shoes within ~2.5
+ * points are indistinguishable given curated-stat noise.
+ *
+ * So: shoes within DEAD_HEAT of the slot leader are treated as tied, and a
+ * profile-seeded uniform nudge in [0, DEAD_HEAT) rotates among them. Because
+ * the seed is the whole profile, two runners who differ in ANY answer can see
+ * different (equally-right) picks, while the same runner always sees the same.
+ * The nudge is one-sided and bounded, so a shoe more than DEAD_HEAT below the
+ * leader can never win, and a clearly-better shoe is never demoted — the win
+ * probability simply decays with the gap to the leader.
  */
-export const TIE_JITTER = 0.8;
-const jitterFor = (seed: string, slug: string): number =>
-  ((fnv(`${seed}|${slug}`) % 2000) / 1000 - 1) * TIE_JITTER;
+export const DEAD_HEAT = 2.5;
+/** Deterministic uniform [0,1) from a profile seed + key — drives every dead-heat rotation. */
+export const seededUnit = (seed: string, key: string): number => (fnv(`${seed}|${key}`) % 100000) / 100000;
 
 export function scoreShoeForRole(s: Shoe, p: Profile, role: Role, ctx: ScoreCtx): ScoredShoe {
   const scores = SCORED.get(s.slug);
   if (!scores) throw new Error(`no scores for ${s.slug}`);
 
-  let roleScore = 0.55 * CATEGORY_FIT[role][s.category] + jitterFor(ctx.seed, s.slug);
+  let roleScore = 0.55 * CATEGORY_FIT[role][s.category];
   const contributions: Array<{ delta: number; reason?: Reason }> = [];
 
   for (const mod of MODIFIERS) {
@@ -102,9 +111,26 @@ export function scoreShoeForRole(s: Shoe, p: Profile, role: Role, ctx: ScoreCtx)
   };
 }
 
-/** Score and rank a candidate pool for one role (descending; deterministic tiebreak by slug). */
+/**
+ * Score and rank a candidate pool for one role. Pure fit by default (a single-
+ * shoe recommendation gets the precise best). In a rotation (ctx.rotate) a
+ * profile-seeded dead-heat rotation is applied to shoes within DEAD_HEAT of the
+ * leader, so the optimiser's pool varies between runners — different equally-
+ * right picks instead of one shoe for everyone. A clearly-better shoe is never
+ * demoted (the nudge is one-sided and bounded), and the winner's displayed match
+ * tracks its nudged score so the #1 pick never shows below an alternate.
+ */
 export function scoreRole(cands: Shoe[], p: Profile, role: Role, ctx: ScoreCtx): ScoredShoe[] {
-  return cands
-    .map((s) => scoreShoeForRole(s, p, role, ctx))
-    .sort((a, b) => b.roleScore - a.roleScore || a.shoe.slug.localeCompare(b.shoe.slug));
+  const scored = cands.map((s) => scoreShoeForRole(s, p, role, ctx));
+  if (ctx.rotate && scored.length > 0) {
+    const leader = Math.max(...scored.map((x) => x.roleScore));
+    const ceiling = roleCeiling(role, ctx.factor);
+    for (const x of scored) {
+      if (leader - x.roleScore <= DEAD_HEAT) {
+        x.roleScore += seededUnit(ctx.seed, x.shoe.slug) * DEAD_HEAT;
+        x.match = clampMatch((x.roleScore / ceiling) * 100);
+      }
+    }
+  }
+  return scored.sort((a, b) => b.roleScore - a.roleScore || a.shoe.slug.localeCompare(b.shoe.slug));
 }

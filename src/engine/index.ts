@@ -23,6 +23,9 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
     factor: plateFactor(mp),
     versatility: isVersatilityMode(profile),
     seed: JSON.stringify(profile),
+    // a true multi-shoe rotation rotates among tied picks for variety; a single
+    // "one for everything" shoe gets the precise best fit (rotate left false)
+    rotate: profile.mode === 'rotation' && !isVersatilityMode(profile),
   };
 
   const { eligible, stretch } = hardFilter(shoes, profile);
@@ -102,7 +105,8 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
 
   // No feasible combination under the budget → collapse to best versatile single + roadmap
   if (roleResults.length === 0) {
-    const versatileCtx = { ...ctx, versatility: true };
+    // one shoe → precise best fit, not a rotation pick
+    const versatileCtx = { ...ctx, versatility: true, rotate: false };
     const affordable = eligible.filter((s) => s.msrpGbp <= profile.budget.amountGbp);
     const pool = affordable.length > 0 ? affordable : eligible;
     const single = scoreRole(pool, profile, 'daily', versatileCtx);

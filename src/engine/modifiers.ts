@@ -12,8 +12,14 @@ export interface ScoreCtx {
   factor: number;
   /** single-shoe "one for everything" mode */
   versatility: boolean;
-  /** profile-derived seed for the published near-tie variety jitter */
+  /** profile-derived seed for the published dead-heat rotation */
   seed: string;
+  /**
+   * Multi-shoe rotation context. When true, scoreRole applies the dead-heat
+   * rotation to the ranking pool so different runners see different tied picks;
+   * a single-shoe recommendation leaves it false and gets the precise best fit.
+   */
+  rotate?: boolean;
 }
 
 export interface Contribution {

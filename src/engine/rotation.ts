@@ -1,6 +1,7 @@
 import type { RoleResult, ScoredShoe } from '@/types/match';
 import type { Profile, Role } from '@/types/profile';
 import type { Shoe } from '@/types/shoe';
+import { DEAD_HEAT, seededUnit } from './scoring';
 
 export interface RotationOutcome {
   /** empty = no feasible combination under the budget (caller collapses to single) */
@@ -86,21 +87,36 @@ export function assembleRotation(
     minCostFrom[i] = minCostFrom[i + 1] + Math.min(...pools[i].map((c) => c.shoe.msrpGbp));
   }
 
-  let best: ScoredShoe[] | null = null;
-  let bestScore = -Infinity;
-  let bestKey = '';
+  /**
+   * Keep the top-K feasible rotations, not just the single best — so we can
+   * apply the published dead-heat rotation at the COMBO level. A deterministic
+   * optimiser would otherwise hand every runner the exact same rotation (and,
+   * at tight budgets, always economise the daily slot to the same cheapest
+   * dead-heat shoe — the "same shoe for everyone" effect). Among rotations
+   * within DEAD_HEAT of the best total — a statistical tie — a profile-seeded
+   * pick rotates between them, so different runners see different equally-good
+   * rotations while the same runner always sees the same, and a meaningfully
+   * better rotation is never demoted.
+   */
+  const RESERVOIR = 24;
+  const top: Array<{ picks: ScoredShoe[]; score: number; key: string }> = [];
   const combo: ScoredShoe[] = [];
+
+  const consider = (score: number, key: string) => {
+    if (top.length < RESERVOIR) {
+      top.push({ picks: [...combo], score, key });
+      return;
+    }
+    let wi = 0;
+    for (let i = 1; i < top.length; i++) if (top[i].score < top[wi].score) wi = i;
+    if (score > top[wi].score) top[wi] = { picks: [...combo], score, key };
+  };
 
   const dfs = (i: number, cost: number, score: number) => {
     if (cost + minCostFrom[i] > cap) return;
     if (i === roles.length) {
       if (!diversityOk(combo)) return;
-      const key = combo.map((c) => c.shoe.slug).join('+');
-      if (score > bestScore + 1e-9 || (Math.abs(score - bestScore) <= 1e-9 && key < bestKey)) {
-        best = [...combo];
-        bestScore = score;
-        bestKey = key;
-      }
+      consider(score, combo.map((c) => c.shoe.slug).join('+'));
       return;
     }
     for (const cand of pools[i]) {
@@ -112,14 +128,28 @@ export function assembleRotation(
   };
   dfs(0, 0, 0);
 
-  if (!best) {
+  if (top.length === 0) {
     notes.push(
       `Your budget could not cover a full ${roles.length}-shoe rotation — see the single-shoe roadmap below.`,
     );
     return { roles: [], notes, costGbp: 0 };
   }
 
-  const picks: ScoredShoe[] = best;
+  const bestScore = Math.max(...top.map((r) => r.score));
+  // Single-shoe recommendation → give the precise best fit (deterministic key
+  // tiebreak). A multi-shoe rotation → rotate among rotations within a dead
+  // heat of the best total, seeded by profile, for population variety.
+  let chosen: { picks: ScoredShoe[]; score: number; key: string };
+  if (roles.length >= 2) {
+    const seed = JSON.stringify(p);
+    const tied = top.filter((r) => bestScore - r.score <= DEAD_HEAT);
+    chosen = tied.reduce((a, b) => (seededUnit(seed, b.key) > seededUnit(seed, a.key) ? b : a));
+  } else {
+    chosen = top.reduce((a, b) =>
+      b.score > a.score + 1e-9 || (Math.abs(b.score - a.score) <= 1e-9 && b.key < a.key) ? b : a,
+    );
+  }
+  const picks: ScoredShoe[] = chosen.picks;
   const cost = picks.reduce((t, c) => t + c.shoe.msrpGbp, 0);
   if (p.budget.stretch && capRaw !== Infinity && cost > capRaw && cost <= cap) {
     notes.push('Includes a stretch pick within 10% of your budget.');
