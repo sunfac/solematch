@@ -1,5 +1,6 @@
 import { Asset } from 'expo-asset';
 import devImagesRaw from '@/data/devImages.json';
+import feedImagesRaw from '@/data/feedImages.json';
 import { LOCAL_SHOE_IMAGES } from '@/data/localShoeImages';
 import offersRaw from '@/data/offers.json';
 
@@ -14,6 +15,25 @@ const DEV_IMAGES: Record<string, { url: string; cut: boolean }> = devImagesRaw a
   string,
   { url: string; cut: boolean }
 >;
+
+/**
+ * Licensed retailer product-feed data (scripts/import-datafeed.ts → a Skimlinks
+ * Product API / Awin Create-a-Feed product feed). Because these images come from
+ * the affiliate feed we monetise, they are CLEARED for production — unlike the
+ * localhost-only devImages — so imageFor returns them ungated. Also carries a
+ * live price + the deep link for future price/offer surfacing.
+ */
+export interface FeedEntry {
+  imageUrl: string;
+  priceGbp?: number;
+  url?: string;
+  merchant?: string;
+  checkedAt: string;
+}
+const FEED_IMAGES: Record<string, FeedEntry> = feedImagesRaw as Record<string, FeedEntry>;
+
+/** Licensed feed entry for a shoe (prod-safe image + live price + deep link), if any. */
+export const feedEntryFor = (slug: string): FeedEntry | undefined => FEED_IMAGES[slug];
 
 export interface Offer {
   retailer: string;
@@ -286,6 +306,9 @@ const isLocalPreview =
   /^(localhost|127\.|0\.0\.0\.0)/.test(window.location?.hostname ?? '');
 
 export function imageFor(slug: string): ImageRef | undefined {
+  // licensed retailer-feed image — cleared for production, so never gated
+  const feed = FEED_IMAGES[slug]?.imageUrl;
+  if (feed) return { source: feed, cut: false };
   const licensed = (OFFERS[slug] ?? []).find((o) => o.imageUrl)?.imageUrl;
   if (licensed) return { source: licensed, cut: false };
   if (!isLocalPreview) return undefined;
