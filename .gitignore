@@ -28,3 +28,6 @@ quiz-*.png
 reveal-*.png
 results-*.png
 detail-*.png
+browse-*.png
+# AI fallback art: ship the optimised .webp, not the heavy PNG intermediates
+assets/fallback/*.png

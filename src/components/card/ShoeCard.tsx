@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { TierBadge } from '@/components/ui/Badge';
+import { fallbackArt } from './fallbackArt';
 import { HoloFoil } from './HoloFoil';
 import { ShoeSilhouette } from './ShoeSilhouette';
 import { StatPanel } from './StatPanel';
@@ -55,6 +56,9 @@ export function ShoeCard({
   const band = personal ? matchBand(match) : undefined;
   const frame = band ? band.colour : tierColor[tier];
   const image = imageFor(shoe.slug);
+  // no real product photo → original brand-free category art (representative),
+  // and only if even that is missing do we drop to the line-art silhouette
+  const art = !image ? fallbackArt(shoe.category) : undefined;
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [
@@ -108,6 +112,17 @@ export function ShoeCard({
                 transition={200}
                 accessibilityLabel={`${shoe.brand} ${shoe.model}`}
               />
+            </View>
+          ) : art ? (
+            <View style={styles.imageFloat}>
+              <Image
+                source={art}
+                style={styles.imageCut}
+                contentFit="contain"
+                transition={200}
+                accessibilityLabel={`Representative ${shoe.category.replace('_', ' ')} shoe illustration`}
+              />
+              <Text style={styles.repTag}>REPRESENTATIVE</Text>
             </View>
           ) : (
             <View style={styles.monogram}>
@@ -171,6 +186,17 @@ const styles = StyleSheet.create({
   // background-free product shots float straight on the card, rendered large
   imageFloat: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   imageCut: { width: '100%', height: '100%' },
+  // honest micro-label: the category art is representative, not the exact model
+  repTag: {
+    position: 'absolute',
+    right: 2,
+    bottom: 0,
+    fontFamily: font.mono,
+    fontSize: 7,
+    letterSpacing: 1,
+    color: color.muted,
+    opacity: 0.6,
+  },
   // Nike-PDP-style light tile for sources with baked backgrounds
   imageTile: {
     width: '96%',
