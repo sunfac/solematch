@@ -20,3 +20,4 @@ supabase/seed/seed.sql
 .firecrawl/
 .playwright-mcp/
 mobile-*.png
+dashboard*.png
