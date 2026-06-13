@@ -66,6 +66,17 @@ export default function MethodologyScreen() {
         back. If you love your gait analysis, use it for fit. We&apos;ll handle the rest.
       </Text>
 
+      <Text style={styles.sectionTitle}>Road, trail &amp; terrain</Text>
+      <Text style={styles.body}>
+        Tell us where you run and we match the shoe to the ground. Road runners never see trail
+        shoes; off-road runners get a trail slot where the biggest factor is grip — outsole lug depth
+        and rubber compound matched to your terrain. Deep aggressive lugs and soft sticky rubber grip
+        and shed mud on soft, wet or technical ground but feel like cleats and wear fast on hardpack,
+        so we lean shallow for door-to-trail and deep for the mountains, penalising a mismatch in
+        both directions. Carbon plates, which earn their keep on the road, are not rewarded off-road —
+        most of the best trail shoes don&apos;t have one.
+      </Text>
+
       <Text style={styles.sectionTitle}>Critics&apos; consensus best-in-class</Text>
       <Text style={styles.body}>
         Separately from your personal match, some shoes carry a &ldquo;critics&apos; #1&rdquo; or

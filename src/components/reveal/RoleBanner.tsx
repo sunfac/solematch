@@ -9,6 +9,7 @@ const LABELS: Record<Role, string> = {
   tempo: 'TEMPO',
   daily: 'DAILY TRAINER',
   recovery: 'RECOVERY · ZONE 2',
+  trail: 'TRAIL',
 };
 
 /** The FUT position-flag moment: banner drops in and gently waves. */

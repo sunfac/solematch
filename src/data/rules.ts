@@ -42,6 +42,14 @@ export const RULES: Record<string, EvidenceRule> = {
     url: 'https://pubmed.ncbi.nlm.nih.gov/27327023/',
     confidence: 'STRONG',
   },
+  'trail-traction': {
+    id: 'trail-traction',
+    statement:
+      'On trail, outsole lug depth and rubber compound matched to the ground is the dominant fit factor: deep aggressive lugs and soft sticky rubber grip and shed mud on soft, wet or technical terrain but feel like cleats and wear quickly on hardpack and road, while shallow lugs run fast on firm ground but slip in mud.',
+    citation: 'iRunFar and RunRepeat trail-shoe testing guides (lug depth / rubber compound vs terrain)',
+    url: 'https://www.irunfar.com/best-trail-running-shoes',
+    confidence: 'FIT & FEEL',
+  },
   'drop-experience': {
     id: 'drop-experience',
     statement:

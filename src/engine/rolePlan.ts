@@ -8,13 +8,37 @@ import type { Profile, Role } from '@/types/profile';
  * with versatility weighting applied in scoring.
  */
 export function planRoles(p: Profile): Role[] {
+  const offRoad = p.terrain === 'trail' || p.terrain === 'technical';
+  const someTrail = p.terrain === 'road-trail';
+
   if (p.mode === 'single') {
+    // an off-road runner wanting one shoe gets a trail shoe; a road-trail runner
+    // (mostly road) keeps their road intent; pure road is unchanged
+    if (offRoad) return ['trail'];
     return [p.primaryIntent === 'everything' ? 'daily' : p.primaryIntent];
   }
+
+  // off-road primary: lead with the trail slot, keep a road daily for road days
+  if (offRoad) {
+    return p.weeklyKm > 50 ? ['trail', 'daily', 'tempo'] : ['trail', 'daily'];
+  }
+
   const wantsRace = p.raceDistanceTargetKm !== undefined;
-  if (p.weeklyKm < 25) return wantsRace ? ['daily', 'race'] : ['daily'];
-  if (p.weeklyKm <= 50) return wantsRace ? ['daily', 'tempo', 'race'] : ['daily', 'tempo'];
-  return wantsRace ? ['daily', 'recovery', 'tempo', 'race'] : ['daily', 'recovery', 'tempo'];
+  const base: Role[] =
+    p.weeklyKm < 25
+      ? wantsRace
+        ? ['daily', 'race']
+        : ['daily']
+      : p.weeklyKm <= 50
+        ? wantsRace
+          ? ['daily', 'tempo', 'race']
+          : ['daily', 'tempo']
+        : wantsRace
+          ? ['daily', 'recovery', 'tempo', 'race']
+          : ['daily', 'recovery', 'tempo'];
+
+  // road-primary but some off-road: add a single trail slot to the rotation
+  return someTrail ? [...base, 'trail'] : base;
 }
 
 /** Single+everything needs versatility weighting in the scorer. */

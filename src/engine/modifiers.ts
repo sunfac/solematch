@@ -144,6 +144,43 @@ const tempoFit: Modifier = (s, _p, role) => {
 };
 
 /**
+ * Trail grip-to-terrain fit — the dominant trail signal (trail-traction).
+ * Lug depth is matched to the ground the runner chose: door-to-trail wants
+ * shallow lugs, all-round moderate, technical/mountain deep + sticky rubber +
+ * rock protection. The penalty is ASYMMETRIC — deep aggressive lugs on
+ * hardpack feel like cleats and wear fast — so a mismatch costs in both
+ * directions, unlike road where the outsole is a durability footnote. Carbon
+ * plates earn NOTHING here (plateByPace is race-only), per the research.
+ */
+const TERRAIN_LUG: Record<'road-trail' | 'trail' | 'technical', number> = {
+  'road-trail': 3,
+  trail: 4.2,
+  technical: 5.5,
+};
+const trailGrip: Modifier = (s, p, role) => {
+  if (role !== 'trail' || !p.terrain || p.terrain === 'road') return null;
+  const target = TERRAIN_LUG[p.terrain];
+  const lug = s.lugDepthMm ?? 3;
+  let delta = 14 - Math.abs(lug - target) * 3.2; // ~+14 perfect match, negative on a big miss
+  const sticky = /vibram|frixion|contagrip|megagrip|sticky/i.test(s.outsoleRubber ?? '');
+  if (sticky && (p.terrain === 'trail' || p.terrain === 'technical')) delta += 4;
+  if (p.terrain === 'technical' && s.rockPlate) delta += 5;
+  if (p.terrain === 'road-trail' && lug >= 5) delta -= 6; // cleats on hardpack
+  return {
+    delta,
+    reason:
+      delta >= 6
+        ? r(
+            'trail-traction',
+            `${lug} mm lugs${sticky ? ' on sticky rubber' : ''}${
+              p.terrain === 'technical' && s.rockPlate ? ' with rock protection' : ''
+            } — matched to your terrain`,
+          )
+        : undefined,
+  };
+};
+
+/**
  * Body mass: CONTINUOUS durability lean for heavier runners (durability/feel,
  * never injury) and softness lean for lighter runners — no dead zones, so a
  * changed answer always registers (the old thresholds ignored 61-85 kg entirely).
@@ -406,6 +443,7 @@ export const MODIFIERS: Modifier[] = [
   dailyDurability,
   recoverySoftness,
   tempoFit,
+  trailGrip,
   bodyMass,
   experienceDrop,
   age,

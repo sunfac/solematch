@@ -14,10 +14,16 @@ export interface FilterResult {
  * enforces the overall cap instead.
  */
 export function hardFilter(shoes: Shoe[], p: Profile): FilterResult {
+  // terrain gate: trail shoes only surface for off-road runners; a pure-road
+  // (or unspecified) runner never sees them, and a trail runner still keeps road
+  // shoes available for their road slot.
+  const offRoad = p.terrain === 'road-trail' || p.terrain === 'trail' || p.terrain === 'technical';
+
   const base = shoes.filter((s) => {
     if (s.status !== 'current') return false;
     if (p.brandBlocks.some((b) => b.toLowerCase() === s.brand.toLowerCase())) return false;
     if (p.fit.wide && s.widths.length < 2) return false;
+    if (s.category === 'trail' && !offRoad) return false;
     return true;
   });
 

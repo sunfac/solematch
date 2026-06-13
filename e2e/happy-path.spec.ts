@@ -44,7 +44,9 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
   await next();
   // 8 priority (optional) — select comfort, auto-advances
   await page.getByTestId('choice-comfort').click();
-  // 9 budget 400
+  // 9 terrain — pick road (auto-advances), keeping the road rotation
+  await page.getByTestId('choice-road').click();
+  // 10 budget 400
   await page.getByTestId('budget-input').last().fill('400');
   await next();
   // 10 injury (optional) → reveal

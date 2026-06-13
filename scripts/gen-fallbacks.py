@@ -70,6 +70,7 @@ CATEGORY = {
     "max_cushion": "A maximal-cushion cruiser: very TALL, THICK, chunky high-stack midsole, plush oversized foam, dramatic height.",
     "stability": "A supportive stability trainer: wide planted base, structured medium-high stack, a steady solid stance.",
     "budget": "A clean simple everyday running shoe: modest stack, honest no-frills profile.",
+    "trail": "A rugged off-road trail running shoe: aggressive DEEP LUGS on a burly grippy outsole, protective reinforced toe, technical mountain-ready build, secure trail upper.",
 }
 
 OUT_DIR = os.path.join(ROOT, "assets", "fallback")

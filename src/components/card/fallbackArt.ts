@@ -21,6 +21,7 @@ const ART: Partial<Record<Category, number>> = {
   max_cushion: require('../../../assets/fallback/max_cushion.webp'),
   stability: require('../../../assets/fallback/stability.webp'),
   budget: require('../../../assets/fallback/budget.webp'),
+  trail: require('../../../assets/fallback/trail.webp'),
 };
 
 export function fallbackArt(category: Category): number | undefined {

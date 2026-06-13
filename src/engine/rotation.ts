@@ -54,7 +54,7 @@ function diversityOk(picks: ScoredShoe[]): boolean {
 const POOL_DEPTH = 18;
 const CHEAP_EXTRAS = 6;
 /** The race slot degrades last for racers (spec §4.2-3) — via weighting, not absolute protection. */
-const ROLE_WEIGHT: Record<Role, number> = { race: 1.15, daily: 1, tempo: 1, recovery: 1 };
+const ROLE_WEIGHT: Record<Role, number> = { race: 1.15, daily: 1, tempo: 1, recovery: 1, trail: 1.15 };
 
 /**
  * Globally optimise the rotation: exhaustive search (pruned) over per-role

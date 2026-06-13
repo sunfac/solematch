@@ -61,6 +61,9 @@ const ROLE_WEIGHTS: Record<Role, Record<StatKey, number>> = {
   tempo: { spd: 0.35, lgt: 0.15, csh: 0.15, stb: 0.1, dur: 0.15, val: 0.1 },
   daily: { spd: 0.18, lgt: 0.12, csh: 0.22, stb: 0.12, dur: 0.21, val: 0.15 },
   recovery: { spd: 0.05, lgt: 0.05, csh: 0.32, stb: 0.2, dur: 0.18, val: 0.2 },
+  // trail: durability (trail abuse) and footing-security (stb) lead; the grip /
+  // lug-to-terrain signal isn't a card stat — it's the trailGrip modifier.
+  trail: { spd: 0.08, lgt: 0.1, csh: 0.2, stb: 0.22, dur: 0.25, val: 0.15 },
 };
 
 const STAT_LABEL: Record<StatKey, string> = {

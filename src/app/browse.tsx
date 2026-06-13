@@ -1,9 +1,12 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { SHOES } from '@/data/catalogue';
 import { SCORED } from '@/scores/formulas';
 import { Chip } from '@/components/quiz/inputs';
+import { fallbackArt } from '@/components/card/fallbackArt';
+import { imageFor } from '@/lib/affiliate';
 import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
 import { TierBadge } from '@/components/ui/Badge';
 import { Screen } from '@/components/ui/Screen';
@@ -18,6 +21,7 @@ const CATS: Array<{ key: Category | 'all'; label: string }> = [
   { key: 'daily', label: 'Daily' },
   { key: 'max_cushion', label: 'Max cushion' },
   { key: 'stability', label: 'Stability' },
+  { key: 'trail', label: 'Trail' },
   { key: 'budget', label: 'Budget' },
 ];
 
@@ -57,15 +61,26 @@ export default function BrowseScreen() {
                 <TierBadge tier={sc.tier} />
               </View>
               <View style={styles.tileArt}>
-                <ShoeSilhouette
-                  width={150}
-                  height={62}
-                  accent={tierColor[sc.tier]}
-                  secondary={color.cyan}
-                  detail={color.muted}
-                  stackHeelMm={s.stackHeelMm}
-                  stackFfMm={s.stackFfMm}
-                />
+                {(() => {
+                  // photoreal cascade: real product photo → brand-free category
+                  // art → line-art silhouette (last resort), so browse reads like
+                  // the cards, not a wall of line drawings
+                  const img = imageFor(s.slug);
+                  const art = img ? undefined : fallbackArt(s.category);
+                  if (img) return <Image source={{ uri: img.source }} style={styles.tileImg} contentFit="contain" />;
+                  if (art) return <Image source={art} style={styles.tileImg} contentFit="contain" />;
+                  return (
+                    <ShoeSilhouette
+                      width={150}
+                      height={62}
+                      accent={tierColor[sc.tier]}
+                      secondary={color.cyan}
+                      detail={color.muted}
+                      stackHeelMm={s.stackHeelMm}
+                      stackFfMm={s.stackFfMm}
+                    />
+                  );
+                })()}
               </View>
               <Text style={styles.tileName} numberOfLines={2}>
                 {s.brand} {s.model} {s.version}
@@ -96,7 +111,8 @@ const styles = StyleSheet.create({
   },
   tileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tileOverall: { fontFamily: font.display, fontSize: 20 },
-  tileArt: { alignItems: 'center', justifyContent: 'center', marginVertical: space(2), height: 62 },
+  tileArt: { alignItems: 'center', justifyContent: 'center', marginVertical: space(2), height: 84 },
+  tileImg: { width: '100%', height: '100%' },
   tileName: { fontFamily: font.uiMed, fontSize: 13.5, color: color.ink, lineHeight: 18 },
   tileMeta: { fontFamily: font.ui, fontSize: 11.5, color: color.muted, marginTop: 3 },
 });

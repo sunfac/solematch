@@ -1,6 +1,6 @@
 export type FoamClass = 'PEBA' | 'TPEE' | 'TPU' | 'EVA' | 'BLEND';
 export type Plate = 'carbon' | 'composite' | 'none';
-export type Category = 'race' | 'tempo' | 'daily' | 'max_cushion' | 'stability' | 'budget';
+export type Category = 'race' | 'tempo' | 'daily' | 'max_cushion' | 'stability' | 'budget' | 'trail';
 export type Tier = 'ELITE' | 'GOLD' | 'SILVER' | 'BRONZE';
 
 export interface Shoe {
@@ -45,6 +45,12 @@ export interface Shoe {
    * Absent = standard (back-compat with existing data).
    */
   forefootShape?: 'narrow' | 'standard' | 'roomy';
+  /** Trail only — outsole lug depth in mm (grip vs terrain; the biggest trail signal). */
+  lugDepthMm?: number;
+  /** Trail only — outsole rubber compound, e.g. "Vibram Megagrip", "Contagrip TA". */
+  outsoleRubber?: string;
+  /** Trail only — dedicated rock shield / plate underfoot for protection. */
+  rockPlate?: boolean;
 }
 
 export interface ShoeScores {

@@ -377,6 +377,25 @@ function StepPriority({ onAutoNext }: StepProps) {
   );
 }
 
+function StepTerrain({ onAutoNext }: StepProps) {
+  const { terrain, set } = useQuizStore();
+  return (
+    <ChoiceGrid
+      value={terrain}
+      onSelect={(k) => {
+        set('terrain', k);
+        onAutoNext();
+      }}
+      options={[
+        { key: 'road', label: 'Roads & pavement', hint: 'Tarmac, treadmill, park paths' },
+        { key: 'road-trail', label: 'Mostly road, some trail', hint: 'Door-to-trail — light gravel & dirt' },
+        { key: 'trail', label: 'Regular trail', hint: 'Off-road: dirt, roots, moderate terrain' },
+        { key: 'technical', label: 'Technical / mountain', hint: 'Rock, mud, steep, fell — grip is everything' },
+      ]}
+    />
+  );
+}
+
 export const STEPS: QuizStep[] = [
   { id: 'mode', title: 'What are we matching today?', valid: (d) => !!d.mode, Component: StepMode },
   {
@@ -413,6 +432,14 @@ export const STEPS: QuizStep[] = [
     optional: true,
     valid: () => true,
     Component: StepPriority,
+  },
+  {
+    id: 'terrain',
+    title: 'Where do you run?',
+    subtitle: 'Off-road brings in trail shoes, matched to your ground. Skip if you run roads.',
+    optional: true,
+    valid: () => true,
+    Component: StepTerrain,
   },
   { id: 'budget', title: 'Your budget', valid: (d) => d.budgetAmountGbp >= 50, Component: StepBudget },
   { id: 'injury', title: 'Personalise further', optional: true, valid: () => true, Component: StepInjury },

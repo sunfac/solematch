@@ -10,13 +10,14 @@ const shoeSchema = z.object({
   model: z.string().min(1),
   version: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
-  category: z.enum(['race', 'tempo', 'daily', 'max_cushion', 'stability', 'budget']),
+  category: z.enum(['race', 'tempo', 'daily', 'max_cushion', 'stability', 'budget', 'trail']),
   msrpUsd: z.number().positive(),
   msrpGbp: z.number().positive(),
   priceApprox: z.boolean().optional(),
   weightG: z.number().min(90).max(400),
   dropMm: z.number().min(0).max(14),
-  stackHeelMm: z.number().min(20).max(60),
+  // min 15 admits minimal fell shoes (Inov-8 Mudtalon 19 mm); road shoes sit higher
+  stackHeelMm: z.number().min(15).max(60),
   stackFfMm: z.number().min(10).max(50),
   foamName: z.string().min(1),
   foamClass: z.enum(['PEBA', 'TPEE', 'TPU', 'EVA', 'BLEND']),
@@ -30,9 +31,14 @@ const shoeSchema = z.object({
   athleteNotes: z.string().optional(),
   sources: z.array(z.string().url()).min(1),
   status: z.enum(['current', 'superseded', 'upcoming']),
-  releaseYear: z.number().int().min(2023).max(2027),
+  // min 2022 admits still-current staples like the Salomon Speedcross 6 (2022)
+  releaseYear: z.number().int().min(2022).max(2027),
   specEstimated: z.boolean().optional(),
   forefootShape: z.enum(['narrow', 'standard', 'roomy']).optional(),
+  // trail-only outsole fields
+  lugDepthMm: z.number().min(0).max(12).optional(),
+  outsoleRubber: z.string().optional(),
+  rockPlate: z.boolean().optional(),
 });
 
 export const SHOES: Shoe[] = z.array(shoeSchema).parse(raw) as Shoe[];

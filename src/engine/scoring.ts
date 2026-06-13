@@ -6,10 +6,13 @@ import type { Category, Shoe } from '@/types/shoe';
 import { MODIFIERS, priorityAffinity, type ScoreCtx } from './modifiers';
 
 const CATEGORY_FIT: Record<Role, Record<Category, number>> = {
-  race: { race: 100, tempo: 72, daily: 40, max_cushion: 15, stability: 20, budget: 25 },
-  tempo: { race: 60, tempo: 100, daily: 70, max_cushion: 30, stability: 45, budget: 45 },
-  daily: { race: 15, tempo: 65, daily: 100, max_cushion: 80, stability: 80, budget: 80 },
-  recovery: { race: 5, tempo: 30, daily: 75, max_cushion: 100, stability: 70, budget: 60 },
+  race: { race: 100, tempo: 72, daily: 40, max_cushion: 15, stability: 20, budget: 25, trail: 10 },
+  tempo: { race: 60, tempo: 100, daily: 70, max_cushion: 30, stability: 45, budget: 45, trail: 15 },
+  daily: { race: 15, tempo: 65, daily: 100, max_cushion: 80, stability: 80, budget: 80, trail: 30 },
+  recovery: { race: 5, tempo: 30, daily: 75, max_cushion: 100, stability: 70, budget: 60, trail: 25 },
+  // trail role: only real trail shoes belong; road shoes score low so they never
+  // win the off-road slot (grip/protection live in the trailGrip modifier).
+  trail: { race: 12, tempo: 18, daily: 35, max_cushion: 30, stability: 35, budget: 28, trail: 100 },
 };
 
 /**
@@ -19,7 +22,7 @@ const CATEGORY_FIT: Record<Role, Record<Category, number>> = {
  * does not exist, so the ceiling shrinks with it and a well-matched non-plated pick
  * still reads as a strong match.
  */
-const THEORETICAL_MAX: Record<Exclude<Role, 'race'>, number> = { tempo: 88, daily: 90, recovery: 92 };
+const THEORETICAL_MAX: Record<Exclude<Role, 'race'>, number> = { tempo: 88, daily: 90, recovery: 92, trail: 90 };
 
 /**
  * Best NET plate-path contribution available at a given pace factor — must mirror

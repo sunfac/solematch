@@ -113,6 +113,30 @@ export const CONSENSUS_BEST: ConsensusPick[] = [
       'https://runrepeat.com/guides/best-cheap-running-shoes',
     ],
   },
+  {
+    label: 'Trail · all-round',
+    slug: 'hoka-speedgoat-7',
+    confidence: 'clear',
+    why: "iRunFar's best all-around trail shoe of 2026 — the single-quiver 'if you buy one trail shoe this year, buy this' pick — balancing deep cushioning, full Vibram Megagrip traction and durability from daily trails to ultras. The Prodigio Pro is the credible runner-up.",
+    keyTech: 'Supercritical foam on 5 mm Vibram Megagrip lugs, protective rockered geometry',
+    runnerUpSlug: 'la-sportiva-prodigio-pro',
+    sources: [
+      'https://www.irunfar.com/best-trail-running-shoes',
+      'https://www.treelinereview.com/gearreviews/hoka-speedgoat-7-trail-running-shoes-review',
+    ],
+  },
+  {
+    label: 'Trail · technical / mountain',
+    slug: 'la-sportiva-prodigio-pro',
+    confidence: 'clear',
+    why: "iRunFar's pick for technical / mountain terrain in 2026 — 'one of the best all-around outsole designs', with FriXion rubber that grips wet rock better than Vibram and a precise, agile, protective ride the Speedgoat can't match on the hardest ground.",
+    keyTech: 'Sticky FriXion full-coverage outsole, lively nitrogen-EVA, precise mountain fit',
+    runnerUpSlug: 'merrell-agility-peak-5',
+    sources: [
+      'https://www.irunfar.com/best-trail-running-shoes',
+      'https://runrepeat.com/guides/best-trail-running-shoes',
+    ],
+  },
 ];
 
 const BEST_BY_SLUG = new Map(CONSENSUS_BEST.map((p) => [p.slug, p]));

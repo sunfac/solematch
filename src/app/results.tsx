@@ -19,6 +19,7 @@ const ROLE_LABEL: Record<string, string> = {
   tempo: 'Tempo',
   daily: 'Daily',
   recovery: 'Recovery / zone 2',
+  trail: 'Trail',
 };
 
 export default function ResultsScreen() {
