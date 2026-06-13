@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { consensusBestForSlug } from '@/data/consensusBest';
+import { roleDrivers } from '@/scores/formulas';
 import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice } from '@/lib/affiliate';
 import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
@@ -171,6 +172,9 @@ export default function ResultsScreen() {
                 {r.edge}
               </Text>
             ) : null}
+            <Text style={styles.drivers} numberOfLines={1}>
+              WEIGHTS · {roleDrivers(r.role).map((d) => `${d.code} ${d.pct}%`).join(' · ')}
+            </Text>
             {r.alternates.length > 0 ? (
               <View style={styles.altRow}>
                 <Text style={styles.altLabel}>
@@ -284,6 +288,7 @@ const styles = StyleSheet.create({
   reasonRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: space(2) },
   reasonText: { flex: 1, fontFamily: font.ui, fontSize: 12, color: color.muted, lineHeight: 16 },
   edge: { fontFamily: font.ui, fontSize: 11.5, color: color.cyan, marginTop: space(1.5), lineHeight: 15 },
+  drivers: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted, marginTop: space(1.5) },
   altRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space(2), marginTop: space(2.5) },
   altLabel: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted, width: '100%' },
   altChip: {

@@ -85,11 +85,11 @@ const STAT_LABEL: Record<StatKey, string> = {
  * your %" answer for the detail screen. Returns the top-N stat labels with
  * their weight as a percentage, descending.
  */
-export function roleDrivers(role: Role, n = 3): Array<{ label: string; pct: number }> {
+export function roleDrivers(role: Role, n = 3): Array<{ label: string; code: string; pct: number }> {
   return (Object.entries(ROLE_WEIGHTS[role]) as Array<[StatKey, number]>)
     .sort((a, b) => b[1] - a[1])
     .slice(0, n)
-    .map(([k, w]) => ({ label: STAT_LABEL[k], pct: Math.round(w * 100) }));
+    .map(([k, w]) => ({ label: STAT_LABEL[k], code: k.toUpperCase(), pct: Math.round(w * 100) }));
 }
 
 /**
