@@ -3,7 +3,7 @@ import { SCORED } from '@/scores/formulas';
 import type { Reason, ScoredShoe } from '@/types/match';
 import type { Profile, Role } from '@/types/profile';
 import type { Category, Shoe } from '@/types/shoe';
-import { MODIFIERS, type ScoreCtx } from './modifiers';
+import { MODIFIERS, priorityAffinity, type ScoreCtx } from './modifiers';
 
 const CATEGORY_FIT: Record<Role, Record<Category, number>> = {
   race: { race: 100, tempo: 72, daily: 40, max_cushion: 15, stability: 20, budget: 25 },
@@ -127,7 +127,15 @@ export function scoreRole(cands: Shoe[], p: Profile, role: Role, ctx: ScoreCtx):
     const ceiling = roleCeiling(role, ctx.factor);
     for (const x of scored) {
       if (leader - x.roleScore <= DEAD_HEAT) {
-        x.roleScore += seededUnit(ctx.seed, x.shoe.slug) * DEAD_HEAT;
+        // A stated priority turns the random dead-heat rotation into a DIRECTED
+        // tiebreak: among statistically-tied shoes the one that best expresses
+        // the runner's priority earns the larger nudge (deterministic, mapping
+        // the ~55-99 stat band onto [0,1)). With no priority, the profile-seeded
+        // rotation still gives population variety.
+        const unit = p.priority
+          ? Math.max(0, Math.min(1, (priorityAffinity(x.shoe.slug, p.priority) - 55) / 44))
+          : seededUnit(ctx.seed, x.shoe.slug);
+        x.roleScore += unit * DEAD_HEAT;
         x.match = clampMatch((x.roleScore / ceiling) * 100);
       }
     }

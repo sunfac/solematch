@@ -1,6 +1,7 @@
 import type { RoleResult, ScoredShoe } from '@/types/match';
 import type { Profile, Role } from '@/types/profile';
 import type { Shoe } from '@/types/shoe';
+import { PRIORITY_LABEL, priorityAffinity } from './modifiers';
 import { DEAD_HEAT, seededUnit } from './scoring';
 
 export interface RotationOutcome {
@@ -141,9 +142,24 @@ export function assembleRotation(
   // heat of the best total, seeded by profile, for population variety.
   let chosen: { picks: ScoredShoe[]; score: number; key: string };
   if (roles.length >= 2) {
-    const seed = JSON.stringify(p);
     const tied = top.filter((r) => bestScore - r.score <= DEAD_HEAT);
-    chosen = tied.reduce((a, b) => (seededUnit(seed, b.key) > seededUnit(seed, a.key) ? b : a));
+    if (p.priority) {
+      // Directed dead-heat tiebreak: among statistically-tied rotations, choose
+      // the one that best expresses the stated priority — the most total speed /
+      // cushioning / value / durability across its slots — deterministically, so
+      // "speed matters most" actually surfaces the faster rotation (incl. a
+      // faster daily) instead of a blind seed landing on the same shoe for all.
+      const aff = (rot: { picks: ScoredShoe[] }) =>
+        rot.picks.reduce((t, c) => t + priorityAffinity(c.shoe.slug, p.priority), 0);
+      chosen = tied.reduce((a, b) => {
+        const da = aff(a);
+        const db = aff(b);
+        return db > da + 1e-9 || (Math.abs(db - da) <= 1e-9 && b.key < a.key) ? b : a;
+      });
+    } else {
+      const seed = JSON.stringify(p);
+      chosen = tied.reduce((a, b) => (seededUnit(seed, b.key) > seededUnit(seed, a.key) ? b : a));
+    }
   } else {
     chosen = top.reduce((a, b) =>
       b.score > a.score + 1e-9 || (Math.abs(b.score - a.score) <= 1e-9 && b.key < a.key) ? b : a,
@@ -153,6 +169,11 @@ export function assembleRotation(
   const cost = picks.reduce((t, c) => t + c.shoe.msrpGbp, 0);
   if (p.budget.stretch && capRaw !== Infinity && cost > capRaw && cost <= cap) {
     notes.push('Includes a stretch pick within 10% of your budget.');
+  }
+  if (p.priority && roles.length >= 2) {
+    notes.push(
+      `Tuned to what matters most to you — ${PRIORITY_LABEL[p.priority]}: where shoes were otherwise a dead heat, we leaned each slot toward it.`,
+    );
   }
 
   const STAT_LABEL: Record<string, string> = {

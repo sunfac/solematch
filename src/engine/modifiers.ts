@@ -330,26 +330,45 @@ const forefootFit: Modifier = (s, p, role) => {
  * genuinely different (personalised, not random) picks. Bounded ~±4 — enough to
  * decide a dead heat, never enough to override an evidence-led or budget signal.
  */
-const PRIORITY_STAT: Record<NonNullable<Profile['priority']>, keyof ReturnType<typeof stats>> = {
+export const PRIORITY_STAT: Record<NonNullable<Profile['priority']>, 'spd' | 'csh' | 'val' | 'dur'> = {
   speed: 'spd',
   comfort: 'csh',
   value: 'val',
   durability: 'dur',
 };
-const PRIORITY_LABEL: Record<NonNullable<Profile['priority']>, string> = {
+export const PRIORITY_LABEL: Record<NonNullable<Profile['priority']>, string> = {
   speed: 'speed',
   comfort: 'cushioning',
   value: 'value',
   durability: 'durability',
 };
+
+/**
+ * The runner's stated-priority stat for a shoe (0 when no priority). Shared by
+ * the slot-level and combo-level dead-heat tiebreaks (scoring.ts / rotation.ts)
+ * so a stated preference breaks statistical ties deterministically toward what
+ * the runner actually cares about, instead of a blind profile-seeded shuffle.
+ */
+export function priorityAffinity(slug: string, priority: Profile['priority']): number {
+  if (!priority) return 0;
+  const sc = SCORED.get(slug);
+  return sc ? (sc[PRIORITY_STAT[priority]] as number) : 0;
+}
+
 const priorityBoost: Modifier = (s, p) => {
   if (!p.priority) return null;
   const dim = stats(s)[PRIORITY_STAT[p.priority]] as number;
-  const delta = 0.13 * (dim - 70);
+  // Differential around 68, capped at ±4.5: strong enough to pull a priority-
+  // leaning shoe INTO the dead-heat band (where the directed tiebreaks then
+  // surface it), never enough to close an evidence- or role-fit gap on its own.
+  const delta = Math.max(-4.5, Math.min(4.5, 0.18 * (dim - 68)));
   return {
     delta,
+    // Surface the lean whenever the shoe genuinely excels at the chosen
+    // dimension — not only when the (deliberately small) delta clears a bar —
+    // so the runner is actually told their pick leans toward what they picked.
     reason:
-      delta >= 2
+      dim >= 70
         ? r('comfort-tiebreak', `Leans into the ${PRIORITY_LABEL[p.priority]} you told us matters most`)
         : undefined,
   };

@@ -4,6 +4,7 @@
  * (3) constraint violations after the budget pass, (4) rotation/collapse cliff.
  */
 import { runMatch } from '../index';
+import { SCORED } from '@/scores/formulas';
 import type { Profile } from '@/types/profile';
 import { baseProfile } from './filtersRolePlan.test';
 
@@ -107,5 +108,42 @@ describe('stated priority personalises the pick', () => {
 
   test('priority is deterministic — same priority twice gives the same shoe', () => {
     expect(dailyPick('comfort')).toBe(dailyPick('comfort'));
+  });
+});
+
+describe('stated priority personalises the ROTATION daily slot (reported bug)', () => {
+  // The owner picked "speed" for a daily trainer in a rotation and got the same
+  // shoe as every other priority — the random dead-heat tiebreaks were burying
+  // the stated preference. Priority must now DIRECT both tiebreaks.
+  const STAT = { speed: 'spd', comfort: 'csh', value: 'val', durability: 'dur' } as const;
+  const rotProfile = (priority: Profile['priority']) =>
+    baseProfile({
+      mode: 'rotation',
+      weeklyKm: 40,
+      raceDistanceTargetKm: 42.2,
+      budget: { type: 'total', amountGbp: 600, stretch: false },
+      priority,
+    });
+  const dailyOf = (priority: Profile['priority']) =>
+    runMatch(rotProfile(priority)).roles.find((x) => x.role === 'daily')!.pick.shoe;
+
+  test('the daily slot responds to priority (≥2 distinct picks across the four)', () => {
+    const slugs = (['speed', 'comfort', 'value', 'durability'] as const).map((p) => dailyOf(p).slug);
+    expect(new Set(slugs).size).toBeGreaterThanOrEqual(2);
+  });
+
+  test('each priority makes the daily at least as strong on its OWN dimension as the neutral pick', () => {
+    const neutral = SCORED.get(dailyOf(undefined).slug)!;
+    for (const p of ['speed', 'comfort', 'value', 'durability'] as const) {
+      expect(SCORED.get(dailyOf(p).slug)![STAT[p]]).toBeGreaterThanOrEqual(neutral[STAT[p]]);
+    }
+  });
+
+  test('speed priority yields a strictly faster daily than the neutral pick', () => {
+    expect(SCORED.get(dailyOf('speed').slug)!.spd).toBeGreaterThan(SCORED.get(dailyOf(undefined).slug)!.spd);
+  });
+
+  test('rotation priority is deterministic — same priority twice gives the same daily', () => {
+    expect(dailyOf('speed').slug).toBe(dailyOf('speed').slug);
   });
 });

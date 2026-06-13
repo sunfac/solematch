@@ -27,17 +27,26 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 
 def load_key() -> str:
     k = os.environ.get("OPENAI_API_KEY")
-    if k:
+    if k and k.strip():
         return k.strip()
-    envfile = os.path.join(ROOT, ".env.local")
-    if os.path.exists(envfile):
-        for line in open(envfile, encoding="utf-8"):
-            line = line.strip()
+    # Tolerate the usual Windows gotchas: a UTF-8 BOM (utf-8-sig), an
+    # `export ` prefix, surrounding quotes, and the file being named .env.
+    for name in (".env.local", ".env"):
+        envfile = os.path.join(ROOT, name)
+        if not os.path.exists(envfile):
+            continue
+        for raw in open(envfile, encoding="utf-8-sig"):
+            line = raw.strip()
+            if line.startswith("export "):
+                line = line[len("export "):].strip()
             if line.startswith("OPENAI_API_KEY="):
-                return line.split("=", 1)[1].strip().strip('"').strip("'")
+                val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                if val:
+                    return val
     raise SystemExit(
-        "OPENAI_API_KEY not found. Set it as an env var, or put "
-        "OPENAI_API_KEY=sk-... in a gitignored .env.local at the repo root."
+        "OPENAI_API_KEY not found. Looked in: the OPENAI_API_KEY env var, "
+        f"{os.path.join(ROOT, '.env.local')}, and {os.path.join(ROOT, '.env')}. "
+        "Put a line  OPENAI_API_KEY=sk-...  in a gitignored .env.local at the repo root."
     )
 
 
