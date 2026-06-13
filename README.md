@@ -1,6 +1,8 @@
 # SoleMatch
 
-Science-backed running shoe matching with FIFA-style card reveals. An Expo (React Native Web) app: an 11-step quiz feeds a deterministic, evidence-cited matching engine over a curated catalogue of ~60 current road shoes, recommending a single shoe or a budget-aware rotation (race / tempo / daily / recovery), revealed as neon holographic cards. Every recommendation reason carries a peer-reviewed citation and a confidence badge. Monetised by affiliate links (UK-first).
+**Live: [solematch-production.up.railway.app](https://solematch-production.up.railway.app)**
+
+Science-backed running shoe matching with FIFA-style card reveals. An Expo (React Native Web) app: an 11-step quiz feeds a deterministic, evidence-cited matching engine over a curated catalogue of 100+ current road shoes, recommending a single shoe or a budget-aware rotation (race / tempo / daily / recovery), revealed as neon holographic cards. Every recommendation reason carries a peer-reviewed citation and a confidence badge. Monetised by affiliate links (UK-first).
 
 - **Spec:** [docs/superpowers/specs/2026-06-11-shoe-matcher-design.md](docs/superpowers/specs/2026-06-11-shoe-matcher-design.md)
 - **Plan:** [docs/superpowers/plans/2026-06-12-solematch-mvp.md](docs/superpowers/plans/2026-06-12-solematch-mvp.md)

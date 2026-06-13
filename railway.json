@@ -5,7 +5,7 @@
     "buildCommand": "npm run export:web"
   },
   "deploy": {
-    "startCommand": "cp serve.json dist/serve.json && npx serve dist -l $PORT",
+    "startCommand": "node scripts/static-server.mjs",
     "healthcheckPath": "/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
