@@ -33,6 +33,16 @@ const SITE_URL = process.env.SOLEMATCH_SITE_URL ?? 'https://solematch.app';
 const SITE_NAME = 'SoleMatch';
 const SITE_DESC =
   'Science-backed running-shoe matching. An 11-step quiz feeds a deterministic, evidence-cited engine over 100+ road shoes — every recommendation cites peer-reviewed research, commission never reorders the ranking.';
+const SKIMLINKS_ID = process.env.EXPO_PUBLIC_SKIMLINKS_ID;
+/**
+ * Skimlinks client-side auto-wrap: belt and braces for the server-side wrap in
+ * `lib/affiliate.ts`. The JS rewrites any merchant link on the page at click
+ * time — covers cases where the server wrap might miss (legacy URLs, links
+ * in markdown content, etc.). Only injected when the publisher ID is set.
+ */
+const skimlinksTag = SKIMLINKS_ID
+  ? `<script type="text/javascript" src="https://s.skimresources.com/js/${SKIMLINKS_ID}.skimlinks.js" defer></script>`
+  : '';
 
 const ROOT = join(__dirname, '..');
 const DIST = join(ROOT, 'dist');
@@ -72,6 +82,7 @@ function metaBlock(opts: {
       `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`,
     );
   }
+  if (skimlinksTag) tags.push(skimlinksTag);
   return tags.join('\n    ');
 }
 
