@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SHOES } from '@/data/catalogue';
 import { SCORED } from '@/scores/formulas';
 import { Chip } from '@/components/quiz/inputs';
+import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
 import { TierBadge } from '@/components/ui/Badge';
 import { Screen } from '@/components/ui/Screen';
 import { TopBar } from '@/components/ui/TopBar';
@@ -55,7 +56,17 @@ export default function BrowseScreen() {
                 <Text style={[styles.tileOverall, { color: tierColor[sc.tier] }]}>{sc.overall}</Text>
                 <TierBadge tier={sc.tier} />
               </View>
-              <Text style={[styles.tileMonogram, { color: tierColor[sc.tier] }]}>{s.brand.slice(0, 1)}</Text>
+              <View style={styles.tileArt}>
+                <ShoeSilhouette
+                  width={150}
+                  height={62}
+                  accent={tierColor[sc.tier]}
+                  secondary={color.cyan}
+                  detail={color.muted}
+                  stackHeelMm={s.stackHeelMm}
+                  stackFfMm={s.stackFfMm}
+                />
+              </View>
               <Text style={styles.tileName} numberOfLines={2}>
                 {s.brand} {s.model} {s.version}
               </Text>
@@ -85,7 +96,7 @@ const styles = StyleSheet.create({
   },
   tileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tileOverall: { fontFamily: font.display, fontSize: 20 },
-  tileMonogram: { fontFamily: font.display, fontSize: 44, textAlign: 'center', marginVertical: space(2), opacity: 0.85 },
+  tileArt: { alignItems: 'center', justifyContent: 'center', marginVertical: space(2), height: 62 },
   tileName: { fontFamily: font.uiMed, fontSize: 13.5, color: color.ink, lineHeight: 18 },
   tileMeta: { fontFamily: font.ui, fontSize: 11.5, color: color.muted, marginTop: 3 },
 });

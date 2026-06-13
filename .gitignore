@@ -21,3 +21,4 @@ supabase/seed/seed.sql
 .playwright-mcp/
 mobile-*.png
 dashboard*.png
+browse-*.png

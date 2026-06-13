@@ -111,7 +111,13 @@ export function ShoeCard({
             </View>
           ) : (
             <View style={styles.monogram}>
-              <ShoeSilhouette accent={frame} secondary={color.cyan} detail={color.muted} />
+              <ShoeSilhouette
+                accent={frame}
+                secondary={color.cyan}
+                detail={color.muted}
+                stackHeelMm={shoe.stackHeelMm}
+                stackFfMm={shoe.stackFfMm}
+              />
               <Text style={styles.monogramModel}>
                 {shoe.brand.toUpperCase()} {shoe.model.toUpperCase()}
               </Text>
