@@ -50,9 +50,13 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
    * weak slot (every match ≥ MIN_MATCH) — two excellent shoes beat three
    * compromised ones, and any two differing pairs keep the rotation benefit.
    * If no plan clears the bar, keep the feasible plan with the strongest
-   * weakest slot; if nothing is feasible at all, collapse to a single.
+   * weakest slot — but only down to FALLBACK_MIN_MATCH; below that the
+   * "rotation" is degenerate (e.g. a £90 daily-disguised-as-race forced into
+   * the race slot at 40% match) and a single versatile shoe + roadmap reads
+   * more honestly than a sub-60% slot. (Owner cal: sub-mid-80s feels weak.)
    */
   const MIN_MATCH = 80;
+  const FALLBACK_MIN_MATCH = 60;
   const planCandidates: Role[][] = [roles];
   for (const trim of ['recovery', 'tempo'] as const) {
     const prev = planCandidates[planCandidates.length - 1];
@@ -82,7 +86,10 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
       fallback = { roles: outcome.roles, notes: [...outcome.notes, ...trimmedNote], minMatch };
     }
   }
-  const assembled = chosen ?? fallback ?? { roles: [] as RoleResult[], notes: [] as string[] };
+  const assembled =
+    chosen ??
+    (fallback && fallback.minMatch >= FALLBACK_MIN_MATCH ? fallback : null) ??
+    { roles: [] as RoleResult[], notes: [] as string[] };
 
   const roleResults = assembled.roles;
   let finalRoles: RoleResult[] = roleResults;

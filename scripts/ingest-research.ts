@@ -8,6 +8,8 @@
  *               outsole|consensus|sources|status|releaseYear|specEstimated   (23 fields)
  *   ADD|<23 fields>                          — same as plain row
  *   AUDIT|<slug>|<y/n>|<source-url>          — womensLast correction for an existing shoe
+ *   SIGHT|<slug>|<note ≤160ch>|<source-url>  — sourced athlete/celebrity sighting; fills
+ *                                              athleteNotes only where missing (never overwrites)
  *
  * Usage: npx tsx scripts/ingest-research.ts [--dry] <rows.txt> [more.txt ...]
  * After a real run: npx tsx scripts/gen-offers.ts && npx tsx scripts/calibrate.ts && npx jest
@@ -42,6 +44,7 @@ const errs: string[] = [];
 const warns: string[] = [];
 const added: Shoe[] = [];
 const audits: Array<{ slug: string; womensLast: boolean; source: string }> = [];
+const sightings: Array<{ slug: string; note: string; source: string }> = [];
 
 function bad(line: number, file: string, msg: string): void {
   errs.push(`${file}:${line}  ${msg}`);
@@ -150,6 +153,16 @@ for (const file of files) {
       audits.push({ slug, womensLast: ynRaw === 'y', source });
       return;
     }
+    if (f[0] === 'SIGHT') {
+      const [, slug, note, source] = f.map((x) => x.trim());
+      if (!existingSlugs.has(slug)) return bad(n, file, `SIGHT unknown slug '${slug}'`);
+      if (!note || note.length < 15 || note.length > 160) return bad(n, file, `SIGHT note length ${note?.length ?? 0}`);
+      if (/endorse|recommends|loves|favourite|favorite/i.test(note))
+        return bad(n, file, `SIGHT endorsement-style wording rejected: '${note}'`);
+      if (!/^https?:\/\/[^ ]+$/.test(source ?? '')) return bad(n, file, `SIGHT bad source '${source}'`);
+      sightings.push({ slug, note, source });
+      return;
+    }
     const fields = f[0] === 'ADD' ? f.slice(1) : f;
     if (fields.length !== 23) return bad(n, file, `expected 23 fields, got ${fields.length}`);
     const shoe = parseShoeRow(fields, n, file);
@@ -166,6 +179,15 @@ for (const a of audits) {
     if (!s.sources.includes(a.source)) s.sources.push(a.source);
     flipped++;
   }
+}
+
+let noted = 0;
+for (const g of sightings) {
+  const s = existing.find((x) => x.slug === g.slug)!;
+  if (s.athleteNotes) continue; // curated notes win — sightings only fill gaps
+  s.athleteNotes = g.note;
+  if (!s.sources.includes(g.source)) s.sources.push(g.source);
+  noted++;
 }
 
 const catOrder = new Map(CATEGORIES.map((c, i) => [c, i] as const));
@@ -186,7 +208,10 @@ for (const c of CATEGORIES) {
 }
 
 // ---- report ----------------------------------------------------------------
-console.log(`parsed: ${added.length} new shoes, ${audits.length} audits (${flipped} womensLast flips)`);
+console.log(
+  `parsed: ${added.length} new shoes, ${audits.length} audits (${flipped} womensLast flips), ` +
+    `${sightings.length} sightings (${noted} notes filled)`,
+);
 for (const s of added) {
   console.log(
     `  + ${s.slug.padEnd(34)} ${s.category.padEnd(12)} £${String(s.msrpGbp).padStart(3)} ${s.weightG}g ` +
