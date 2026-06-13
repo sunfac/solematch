@@ -55,12 +55,34 @@ export function val(s: Shoe): number {
   return clamp(70 + ((med - s.msrpGbp) / med) * 55 + (dur(s) - 60) * 0.25);
 }
 
-const ROLE_WEIGHTS: Record<Role, Record<keyof Omit<ShoeScores, 'overall' | 'tier' | 'formulaVersion'>, number>> = {
+type StatKey = keyof Omit<ShoeScores, 'overall' | 'tier' | 'formulaVersion'>;
+const ROLE_WEIGHTS: Record<Role, Record<StatKey, number>> = {
   race: { spd: 0.56, lgt: 0.24, csh: 0.12, stb: 0.02, dur: 0.03, val: 0.03 },
   tempo: { spd: 0.35, lgt: 0.15, csh: 0.15, stb: 0.1, dur: 0.15, val: 0.1 },
   daily: { spd: 0.18, lgt: 0.12, csh: 0.22, stb: 0.12, dur: 0.21, val: 0.15 },
   recovery: { spd: 0.05, lgt: 0.05, csh: 0.32, stb: 0.2, dur: 0.18, val: 0.2 },
 };
+
+const STAT_LABEL: Record<StatKey, string> = {
+  spd: 'speed',
+  lgt: 'lightness',
+  csh: 'cushioning',
+  stb: 'stability',
+  dur: 'durability',
+  val: 'value',
+};
+
+/**
+ * The stats that most drive a role's match — the published "what's weighting
+ * your %" answer for the detail screen. Returns the top-N stat labels with
+ * their weight as a percentage, descending.
+ */
+export function roleDrivers(role: Role, n = 3): Array<{ label: string; pct: number }> {
+  return (Object.entries(ROLE_WEIGHTS[role]) as Array<[StatKey, number]>)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([k, w]) => ({ label: STAT_LABEL[k], pct: Math.round(w * 100) }));
+}
 
 /**
  * Community-consensus darlings (2025-26 reviewer + community convergence — see

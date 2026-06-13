@@ -72,7 +72,7 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
 
   // detail: offers with disclosure + cited reasons
   await page.getByTestId('role-row-race').click();
-  await expect(page.getByText('Why this shoe, for you')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/Why this shoe/).first()).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText('Where to buy')).toBeVisible();
   await expect(page.getByText('SportsShoes').first()).toBeVisible();
   await expect(page.getByText('We may earn commission on retailer links.').last()).toBeVisible();

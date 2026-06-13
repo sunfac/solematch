@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { bySlug } from '@/data/catalogue';
-import { SCORED } from '@/scores/formulas';
+import { SCORED, roleDrivers } from '@/scores/formulas';
 import { ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
@@ -69,7 +69,9 @@ export default function ShoeDetailScreen() {
 
       {inResult ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Why this shoe, for you</Text>
+          <Text style={styles.sectionTitle}>
+            Why this shoe · {inResult.pick.match}% {inResult.role} match
+          </Text>
           {inResult.pick.reasons.map((reason, i) => (
             <Pressable
               key={i}
@@ -81,6 +83,13 @@ export default function ShoeDetailScreen() {
               <Text style={styles.citation}>{RULES[reason.ruleId].citation} ↗</Text>
             </Pressable>
           ))}
+          <Text style={styles.driverLine}>
+            What weights your {inResult.role} match:{' '}
+            {roleDrivers(inResult.role)
+              .map((d) => `${d.label} ${d.pct}%`)
+              .join(' · ')}
+            . The six card stats above, scored from verified specs.
+          </Text>
         </View>
       ) : null}
 
@@ -160,7 +169,15 @@ const styles = StyleSheet.create({
   back: { fontFamily: font.ui, fontSize: 14, color: color.muted, marginBottom: space(3) },
   cardWrap: { alignItems: 'center', marginBottom: space(5) },
   section: { marginBottom: space(6), gap: space(2.5) },
-  sectionTitle: { fontFamily: font.display, fontSize: 16, color: color.ink, letterSpacing: 0.5 },
+  sectionTitle: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    letterSpacing: 1,
+    color: color.muted,
+    textTransform: 'uppercase',
+    marginBottom: space(1),
+  },
+  driverLine: { fontFamily: font.mono, fontSize: 10, lineHeight: 16, color: color.cyan, letterSpacing: 0.3, marginTop: space(1) },
   reasonCard: {
     backgroundColor: color.surface,
     borderWidth: 1,
