@@ -24,6 +24,10 @@ const variants: Array<[string, Partial<Profile>]> = [
   ['sex F', { sex: 'F' }],
   ['experience new', { experience: 'new' }],
   ['55y + 95kg + F', { age: 55, weightKg: 95, sex: 'F' }],
+  ['wide foot', { fit: { wide: true, roomyToe: true } }],
+  ['roomy-toe lover', { fit: { wide: false, roomyToe: true } }],
+  ['narrow racer fan', { fit: { wide: false, roomyToe: false }, raceDistanceTargetKm: 10 }],
+  ['masters + roomy', { age: 55, fit: { wide: false, roomyToe: true } }],
 ];
 
 const baselineOut = picksOf(base);

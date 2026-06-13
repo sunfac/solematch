@@ -32,6 +32,7 @@ const shoeSchema = z.object({
   status: z.enum(['current', 'superseded', 'upcoming']),
   releaseYear: z.number().int().min(2023).max(2027),
   specEstimated: z.boolean().optional(),
+  forefootShape: z.enum(['narrow', 'standard', 'roomy']).optional(),
 });
 
 export const SHOES: Shoe[] = z.array(shoeSchema).parse(raw) as Shoe[];

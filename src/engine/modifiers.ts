@@ -260,13 +260,45 @@ const currentShoeAffinity: Modifier = (s, p) => {
   };
 };
 
-/** Roomy-toe-box expertise: foot-shaped lasts and models reviewers flag as roomy. */
-const toeBoxFit: Modifier = (s, p) => {
-  if (!p.fit.roomyToe) return null;
-  const roomy =
-    s.brand === 'Altra' || s.brand === 'Topo' || /toe box|foot-shaped|roomy/i.test(s.consensus);
-  if (!roomy) return null;
-  return { delta: 6, reason: r('fit-continuity', 'Known roomy toe box for a wide-forefoot fit') };
+/**
+ * Forefoot-shape match — the fit dimension US widths don't capture.
+ * Three signals stack:
+ *  - roomy-seeker on a roomy shoe = strong positive (Altra/Topo/Hoka wide
+ *    cruisers, Brooks Ghost Max, NB More — the actual foot-shape lasts)
+ *  - roomy-seeker on a narrow shoe = strong negative (Adizero, Asics race,
+ *    Streakfly — won't fit a wide forefoot honestly)
+ *  - no roomy ask + narrow shoe in race/tempo slot = small positive (the
+ *    performance-fit preference of users not signalling foot-width issues)
+ * Falls back to brand+consensus heuristics when explicit shape data absent.
+ */
+const forefootFit: Modifier = (s, p, role) => {
+  const explicit = s.forefootShape;
+  const hint =
+    explicit ??
+    (s.brand === 'Altra' || s.brand === 'Topo' || /toe box|foot-shaped|roomy/i.test(s.consensus)
+      ? 'roomy'
+      : undefined);
+  if (p.fit.roomyToe) {
+    if (hint === 'roomy') {
+      return {
+        delta: 6,
+        reason: r('fit-continuity', 'Known roomy forefoot for a wide-foot fit'),
+      };
+    }
+    if (hint === 'narrow') {
+      return {
+        delta: -8,
+        reason: r('fit-continuity', 'Narrow racer last — likely too snug for a wide-foot fit'),
+      };
+    }
+    return null;
+  }
+  // no width ask but you're in a fast slot: the snug performance fit is what
+  // racers expect (kept small — never enough to override an evidence-led signal)
+  if ((role === 'race' || role === 'tempo') && hint === 'narrow') {
+    return { delta: 2 };
+  }
+  return null;
 };
 
 /** Brand preference (FIT & FEEL). */
@@ -308,7 +340,7 @@ export const MODIFIERS: Modifier[] = [
   stabilityPref,
   womensFit,
   currentShoeAffinity,
-  toeBoxFit,
+  forefootFit,
   brandLove,
   consensusBoost,
   versatility,

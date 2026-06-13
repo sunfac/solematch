@@ -35,6 +35,16 @@ export interface Shoe {
   releaseYear: number;
   /** true where stack/etc. estimated pending brand-site verification */
   specEstimated?: boolean;
+  /**
+   * Curated forefoot shape (the fit dimension US widths don't capture):
+   * 'narrow' — snug, racer-style last (Adidas Adizero, Asics race, Mizuno race,
+   *   Nike Streakfly). Performance pickers love this; wide-foot runners suffer.
+   * 'roomy' — explicitly wide forefoot (Altra/Topo foot-shaped lasts,
+   *   Hoka Gaviota-class wide-fit cruisers, Brooks Ghost Max wide platform).
+   * undefined / 'standard' — middle of the road.
+   * Absent = standard (back-compat with existing data).
+   */
+  forefootShape?: 'narrow' | 'standard' | 'roomy';
 }
 
 export interface ShoeScores {
