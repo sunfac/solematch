@@ -27,6 +27,8 @@ export default function ResultsScreen() {
   const resetQuiz = useQuizStore((s) => s.reset);
   const clearResults = useResultsStore((s) => s.clear);
   const [copied, setCopied] = useState(false);
+  const [activeCard, setActiveCard] = useState(0);
+  const CARD_STEP = CARD_W * 0.78 + 14;
 
   // the direct money path: cheapest offer for a pick, attributed to this match
   const buyNow = (slug: string) => {
@@ -79,16 +81,28 @@ export default function ResultsScreen() {
         {overBudget ? ' · OVER BUDGET' : ' · IN BUDGET'}
       </Text>
 
+      {result.roles.length > 1 ? (
+        <View style={styles.fanHead}>
+          <Text style={styles.fanHeadLabel}>YOUR LINEUP · {result.roles.length} SHOES</Text>
+          <Text style={styles.fanHeadHint}>SWIPE →</Text>
+        </View>
+      ) : null}
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_W * 0.78 + 14}
+        snapToInterval={CARD_STEP}
         decelerationRate="fast"
+        onScroll={(e) => setActiveCard(Math.round(e.nativeEvent.contentOffset.x / CARD_STEP))}
+        scrollEventThrottle={16}
         contentContainerStyle={styles.fan}
       >
-        {result.roles.map((r) => (
+        {result.roles.map((r, i) => (
           <Pressable key={r.role} onPress={() => router.push(`/shoe/${r.pick.shoe.slug}`)}>
             <View style={styles.fanCard}>
+              <Text style={styles.fanRole}>
+                {ROLE_LABEL[r.role]} · {i + 1}/{result.roles.length}
+              </Text>
               <View style={styles.fanScale}>
                 <ShoeCard shoe={r.pick.shoe} scores={r.pick.scores} match={r.pick.match} context="match" tiltEnabled={false} />
               </View>
@@ -96,6 +110,14 @@ export default function ResultsScreen() {
           </Pressable>
         ))}
       </ScrollView>
+
+      {result.roles.length > 1 ? (
+        <View style={styles.dots}>
+          {result.roles.map((r, i) => (
+            <View key={r.role} style={[styles.dot, i === activeCard && styles.dotActive]} />
+          ))}
+        </View>
+      ) : null}
 
       <View style={styles.budgetBar}>
         <Text style={styles.budgetText}>
@@ -212,8 +234,15 @@ export default function ResultsScreen() {
 const styles = StyleSheet.create({
   title: { fontFamily: font.display, fontSize: 26, letterSpacing: -0.5, color: color.ink },
   console: { fontFamily: font.mono, fontSize: 10, letterSpacing: 0.5, color: color.muted, marginTop: space(1.5), marginBottom: space(4) },
+  fanHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: space(2) },
+  fanHeadLabel: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, color: color.muted },
+  fanHeadHint: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1.5, color: color.cyan },
   fan: { gap: 14, paddingBottom: space(2), paddingRight: space(8) },
-  fanCard: { width: CARD_W * 0.78, height: CARD_H * 0.78, overflow: 'visible' },
+  fanCard: { width: CARD_W * 0.78, height: CARD_H * 0.78 + 18, overflow: 'visible' },
+  fanRole: { fontFamily: font.mono, fontSize: 9, letterSpacing: 1, color: color.cyan, marginBottom: 5 },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: space(2.5) },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.line },
+  dotActive: { backgroundColor: color.volt, width: 18 },
   fanScale: {
     width: CARD_W,
     height: CARD_H,
