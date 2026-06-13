@@ -66,6 +66,8 @@ const ROLE_WEIGHT: Record<Role, number> = { race: 1.15, daily: 1, tempo: 1, reco
 export function assembleRotation(
   rankingsByRole: Map<Role, ScoredShoe[]>,
   p: Profile,
+  /** un-nudged genuine order per role (dead-heat shuffle off) for the upgrade pass */
+  plainByRole?: Map<Role, ScoredShoe[]>,
 ): RotationOutcome {
   const roles = [...rankingsByRole.keys()];
   const notes: string[] = [];
@@ -166,7 +168,44 @@ export function assembleRotation(
     );
   }
   const picks: ScoredShoe[] = chosen.picks;
-  const cost = picks.reduce((t, c) => t + c.shoe.msrpGbp, 0);
+  let cost = picks.reduce((t, c) => t + c.shoe.msrpGbp, 0);
+
+  // Budget-permitting upgrade: never leave a slot on a lower-MATCH shoe to bank
+  // money the runner chose to spend. The dead-heat rotation (cost-blind) and
+  // tight-budget right-sizing can both trade a slot down — right when the cap is
+  // binding, wrong when it isn't. So for each slot, restore the highest-match
+  // shoe that fits the cap and keeps the rotation diverse (biggest gap first, so
+  // the headroom funds the most under-picked slot). A high budget then always
+  // buys the best shoe; a tight one still right-sizes.
+  // Compare by GENUINE (un-nudged) roleScore: match% is soft-capped, so the
+  // elite picks all read ~93% and can't tell the true best apart — roleScore
+  // can. Skip when a priority is set: there the rotate nudge is the runner's
+  // DIRECTED lean (deterministic signal, not the random shuffle that causes the
+  // downgrade), and the priority path already spends to its leaning best.
+  if (!p.priority && plainByRole) {
+    const genuine = (i: number) => plainByRole.get(roles[i])!;
+    const scoreOf = (i: number, slug: string) =>
+      genuine(i).find((s) => s.shoe.slug === slug)?.roleScore ?? picks[i].roleScore;
+    const gap = (i: number) => Math.max(...genuine(i).map((s) => s.roleScore)) - scoreOf(i, picks[i].shoe.slug);
+    const order = roles.map((_, i) => i).sort((a, b) => gap(b) - gap(a));
+    for (const i of order) {
+      const curScore = scoreOf(i, picks[i].shoe.slug);
+      let upgrade: ScoredShoe | undefined;
+      for (const cand of genuine(i)) {
+        if (cand.roleScore <= curScore + 0.1) continue; // only a genuinely better fit
+        if (upgrade && cand.roleScore <= upgrade.roleScore) continue; // keep the best valid one
+        if (cost - picks[i].shoe.msrpGbp + cand.shoe.msrpGbp > cap) continue; // affordable
+        if (picks.some((pp, j) => j !== i && pp.shoe.slug === cand.shoe.slug)) continue; // no dup
+        if (!diversityOk(picks.map((pp, j) => (j === i ? cand : pp)))) continue; // stay diverse
+        upgrade = cand;
+      }
+      if (upgrade) {
+        cost = cost - picks[i].shoe.msrpGbp + upgrade.shoe.msrpGbp;
+        picks[i] = upgrade;
+      }
+    }
+  }
+
   if (p.budget.stretch && capRaw !== Infinity && cost > capRaw && cost <= cap) {
     notes.push('Includes a stretch pick within 10% of your budget.');
   }

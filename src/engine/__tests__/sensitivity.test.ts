@@ -74,6 +74,16 @@ describe('mid-budget rotation quality — no starvation, no broken constraints',
     }
   });
 
+  test('ample budget is never banked: no false budget-sacrifice when the cap affords the best', () => {
+    // owner: if the budget is high enough for the best shoe, don't economise.
+    const r = runMatch(midBudgetRacer({ budget: { type: 'total', amountGbp: 1500, stretch: false } }));
+    expect(r.totals.costGbp).toBeLessThan(1500); // genuine headroom remains
+    expect(r.notes.some((n) => /Budget allocation/i.test(n))).toBe(false); // yet nothing was traded down
+    // and a tight budget still right-sizes (the sacrifice note is allowed there)
+    const tight = runMatch(midBudgetRacer({ budget: { type: 'total', amountGbp: 400, stretch: false } }));
+    expect(tight.totals.costGbp).toBeLessThanOrEqual(400);
+  });
+
   test('no collapse cliff: every profile variant at £400 keeps a true rotation (≥2 shoes)', () => {
     for (const over of [
       {},

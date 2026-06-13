@@ -2,18 +2,16 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
   FadeIn,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withDelay,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { CARD_W, matchBand, ShoeCard } from '@/components/card/ShoeCard';
+import { matchBand, ShoeCard } from '@/components/card/ShoeCard';
 import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
@@ -53,7 +51,6 @@ export function RevealSequence({
   const bannerOpacity = useSharedValue(reduced ? 1 : 0);
   const cardScale = useSharedValue(reduced ? 1 : 0.55);
   const cardOpacity = useSharedValue(reduced ? 1 : 0);
-  const shineX = useSharedValue(reduced ? CARD_W * 1.4 : -CARD_W);
   const flash = useSharedValue(0);
 
   useEffect(() => {
@@ -75,7 +72,6 @@ export function RevealSequence({
         withTiming(0.985, { duration: 110 }),
         withTiming(1, { duration: 90 }),
       );
-      shineX.value = withDelay(340, withTiming(CARD_W * 1.4, { duration: 520 }));
       if (Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
       }
@@ -84,7 +80,7 @@ export function RevealSequence({
     at(elite ? 4000 : 3700, () => setStage('done'));
 
     return () => timers.current.forEach(clearTimeout);
-  }, [reduced, elite, bannerY, bannerOpacity, cardScale, cardOpacity, shineX]);
+  }, [reduced, elite, bannerY, bannerOpacity, cardScale, cardOpacity]);
 
   const skip = () => {
     timers.current.forEach(clearTimeout);
@@ -92,7 +88,6 @@ export function RevealSequence({
     bannerOpacity.value = 1;
     cardScale.value = 1;
     cardOpacity.value = 1;
-    shineX.value = CARD_W * 1.4;
     flash.value = 0;
     setStage('done');
   };
@@ -104,9 +99,6 @@ export function RevealSequence({
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
     transform: [{ scale: cardScale.value }],
-  }));
-  const shineStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shineX.value }, { rotateZ: '18deg' }],
   }));
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
 
@@ -156,14 +148,6 @@ export function RevealSequence({
               statsDelay={statsOn ? 0 : 99999}
               tiltEnabled={stage === 'done'}
             />
-            <Animated.View pointerEvents="none" style={[styles.shine, shineStyle]}>
-              <LinearGradient
-                colors={['transparent', 'rgba(255,255,255,0.16)', 'transparent']}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={StyleSheet.absoluteFill}
-              />
-            </Animated.View>
           </Animated.View>
         ) : null}
         {elite && (stage === 'slam' || stage === 'stats') && !reduced ? <ParticleBurst /> : null}
@@ -225,7 +209,6 @@ const styles = StyleSheet.create({
   tease: { alignItems: 'center', gap: space(3) },
   teaseBrand: { fontFamily: font.display, fontSize: 15, letterSpacing: 8 },
   flash: { position: 'absolute', top: -60, bottom: -60, left: -600, right: -600, opacity: 0 },
-  shine: { position: 'absolute', top: -40, bottom: -40, width: 90 },
   ctas: { width: '100%', maxWidth: 360, gap: space(2.5), marginTop: space(2) },
   whyWrap: { gap: space(1.5) },
   whyEyebrow: { fontFamily: font.mono, fontSize: 9, letterSpacing: 1.5, color: color.muted },

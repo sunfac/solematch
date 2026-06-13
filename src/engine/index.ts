@@ -32,6 +32,10 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
   const roles = planRoles(profile);
 
   const rankingsByRole = new Map<Role, ScoredShoe[]>();
+  // genuine (un-nudged) best-by-fit order per role — the dead-heat shuffle off —
+  // so the rotation assembler can restore a slot's true best when the budget
+  // affords it (a high budget should never be banked behind a tied cheaper pick).
+  const plainByRole = new Map<Role, ScoredShoe[]>();
   for (const role of roles) {
     let ranking = scoreRole(eligible, profile, role, ctx);
     if (stretch.length > 0) {
@@ -45,6 +49,7 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
       ranking = [top, ...ranking.filter((s) => s !== top)];
     }
     rankingsByRole.set(role, ranking);
+    plainByRole.set(role, scoreRole(eligible, profile, role, { ...ctx, rotate: false }));
   }
 
   /**
@@ -77,7 +82,7 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
   let fallback: { roles: RoleResult[]; notes: string[]; minMatch: number } | null = null;
   for (const plan of planCandidates) {
     const subMap = new Map<Role, ScoredShoe[]>(plan.map((r) => [r, rankingsByRole.get(r)!]));
-    const outcome = assembleRotation(subMap, profile);
+    const outcome = assembleRotation(subMap, profile, plainByRole);
     if (outcome.roles.length === 0) continue;
     const minMatch = Math.min(...outcome.roles.map((r) => r.pick.match));
     const trimmedNote =
