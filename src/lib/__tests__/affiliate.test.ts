@@ -94,3 +94,72 @@ test('dropFor surfaces the biggest absolute saving across retailers', () => {
 test('dropFor returns undefined when nothing is dropped', () => {
   expect(dropFor([offer])).toBeUndefined();
 });
+
+describe('per-network affiliate dispatch', () => {
+  // each network test mutates env vars; clean up after every test so they're isolated
+  const envKeys = [
+    'EXPO_PUBLIC_SKIMLINKS_ID',
+    'EXPO_PUBLIC_AMAZON_TAG',
+    'EXPO_PUBLIC_AWIN_ID',
+    'EXPO_PUBLIC_AWIN_MID_NIKE',
+    'EXPO_PUBLIC_WEBGAINS_ID',
+    'EXPO_PUBLIC_WEBGAINS_MID_RUNNERS_NEED',
+    'EXPO_PUBLIC_IMPACT_ID',
+  ];
+  afterEach(() => envKeys.forEach((k) => delete process.env[k]));
+
+  test('Amazon URL wraps with the Amazon Associates tag when configured', () => {
+    process.env.EXPO_PUBLIC_AMAZON_TAG = 'solematch-21';
+    const amazon: Offer = {
+      ...offer,
+      retailer: 'Amazon UK',
+      url: 'https://www.amazon.co.uk/s?k=Nike+Vaporfly+4',
+    };
+    const wrapped = buildAffiliateUrl(amazon, 'm:s:detail');
+    expect(wrapped).toContain('tag=solematch-21');
+    expect(wrapped).toContain('ascsubtag=m%3As%3Adetail');
+    expect(wrapped).toContain('amazon.co.uk');
+  });
+
+  test('Awin wrap activates only when both publisher ID and merchant ID are set', () => {
+    process.env.EXPO_PUBLIC_SKIMLINKS_ID = 'SKIM';
+    const nike: Offer = { ...offer, retailer: 'Nike', url: 'https://www.nike.com/gb/w?q=vaporfly' };
+    // only the publisher ID — Awin merchant ID for Nike not approved yet → falls back to Skimlinks
+    process.env.EXPO_PUBLIC_AWIN_ID = '999999';
+    expect(buildAffiliateUrl(nike, 'm:s:p')).toContain('go.skimresources.com');
+    // merchant ID approved → Awin direct
+    process.env.EXPO_PUBLIC_AWIN_MID_NIKE = '12345';
+    const wrapped = buildAffiliateUrl(nike, 'm:s:p');
+    expect(wrapped).toContain('awin1.com/cread.php');
+    expect(wrapped).toContain('awinmid=12345');
+    expect(wrapped).toContain('awinaffid=999999');
+    expect(wrapped).toContain('clickref=m%3As%3Ap');
+  });
+
+  test('Webgains takes Runners Need when configured (the 8% UK anchor)', () => {
+    process.env.EXPO_PUBLIC_WEBGAINS_ID = 'WG_AFF';
+    process.env.EXPO_PUBLIC_WEBGAINS_MID_RUNNERS_NEED = 'WG_RN';
+    const rn: Offer = { ...offer, retailer: 'Runners Need', url: 'https://www.runnersneed.com/brands/nike.html' };
+    const wrapped = buildAffiliateUrl(rn, 'm:s:p');
+    expect(wrapped).toContain('track.webgains.com/click.html');
+    expect(wrapped).toContain('wgprogramid=WG_RN');
+  });
+
+  test('Impact takes Adidas when configured (~10% direct)', () => {
+    process.env.EXPO_PUBLIC_IMPACT_ID = 'IMP123';
+    const adidas: Offer = { ...offer, retailer: 'Adidas', url: 'https://www.adidas.co.uk/search?q=adios+pro' };
+    const wrapped = buildAffiliateUrl(adidas, 'm:s:p');
+    expect(wrapped).toContain('impact-radius.com');
+    expect(wrapped).toContain('subId1=m%3As%3Ap');
+  });
+
+  test('Skimlinks is the passthrough fallback for unconfigured networks', () => {
+    process.env.EXPO_PUBLIC_SKIMLINKS_ID = 'SKIM';
+    const wrapped = buildAffiliateUrl(offer, 'm:s:p');
+    expect(wrapped).toContain('go.skimresources.com');
+  });
+
+  test('raw URL passthrough when nothing is configured (zero commission, link still works)', () => {
+    expect(buildAffiliateUrl(offer, 'm:s:p')).toBe(offer.url);
+  });
+});

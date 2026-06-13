@@ -88,6 +88,15 @@ const RUNNERS_NEED_BRANDS: Record<string, string> = {
   Reebok: 'reebok',
 };
 
+/**
+ * Amazon UK: instant 4% via Amazon Associates (the fastest network to wire).
+ * We use Amazon's `/s?k=` search URL — always 200, always returns SOMETHING
+ * relevant. When EXPO_PUBLIC_AMAZON_TAG is set, lib/affiliate.ts wraps
+ * automatically. Until then it's a clean fallback.
+ */
+const amazonSearchUrl = (s: { brand: string; model: string; version: string }) =>
+  `https://www.amazon.co.uk/s?k=${qFull(s)}&i=fashion-mens-shoes&rh=p_n_feature_two_browse-bin%3A12471823031`;
+
 const offers: Record<string, unknown[]> = {};
 
 for (const s of shoes as Array<{ slug: string; brand: string; model: string; version: string; msrpGbp: number }>) {
@@ -113,6 +122,14 @@ for (const s of shoes as Array<{ slug: string; brand: string; model: string; ver
       checkedAt: CHECKED,
     });
   }
+  list.push({
+    retailer: 'Amazon UK',
+    region: 'UK',
+    url: amazonSearchUrl(s),
+    priceGbp: s.msrpGbp,
+    kind: 'search',
+    checkedAt: CHECKED,
+  });
   const brandUrl = BRAND_SEARCH[s.brand]?.(s);
   if (brandUrl && !BRAND_SEARCH_DEAD.has(s.slug)) {
     list.push({

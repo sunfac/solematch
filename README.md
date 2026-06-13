@@ -20,12 +20,20 @@ Science-backed running shoe matching with FIFA-style card reveals. An Expo (Reac
 
 ## Environment (all optional — app fully works without them)
 
-| Var | Purpose | Without it |
-|---|---|---|
-| `EXPO_PUBLIC_SKIMLINKS_ID` | Wraps outbound retailer links for commission | Plain links, no tracking |
-| `EXPO_PUBLIC_POSTHOG_KEY` | Analytics events | `console.debug` fallback |
-| `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Phase-2 remote data mode | Bundled static catalogue |
-| (no flag — hostname-gated) | Official brand product images from `devImages.json` render on **localhost only**; deployed domains show tier-coloured silhouettes until affiliate image licences provide licensed feed imagery | — |
+Affiliate dispatch is per-retailer with cascade fallback: direct programmes
+beat Skimlinks beats raw passthrough. Set the env vars below as each
+network approves you — the wire activates without code changes.
+
+| Var | Activates | Rate | Time to live |
+|---|---|---|---|
+| `EXPO_PUBLIC_AMAZON_TAG` | Amazon Associates (Amazon UK SKUs) | 4%, 24h cookie | Instant signup |
+| `EXPO_PUBLIC_AWIN_ID` + `EXPO_PUBLIC_AWIN_MID_<RETAILER>` | Awin direct (Nike, SportsShoes, Mizuno, Saucony — set the MID per advertiser as approved) | 7-10% | ~1 week |
+| `EXPO_PUBLIC_WEBGAINS_ID` + `EXPO_PUBLIC_WEBGAINS_MID_RUNNERS_NEED` | Webgains direct (Runners Need 8%) | 8% | ~1 week |
+| `EXPO_PUBLIC_IMPACT_ID` | Impact direct (Adidas) | ~7-10% | Days |
+| `EXPO_PUBLIC_SKIMLINKS_ID` | Skimlinks passthrough fallback for ~48k merchants | 75% of merchant's rate | Instant signup |
+| `EXPO_PUBLIC_POSTHOG_KEY` | Analytics events | — | — |
+| `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Phase-2 remote data mode | — | — |
+| (no flag — hostname-gated) | Official brand product images render on **localhost only**; deployed domains show tier-coloured silhouettes until licensed feed imagery | — | — |
 
 ## Data freshness
 
@@ -64,10 +72,19 @@ ID and a public URL. Both are free and fast.
 
 ## Owner checklist (post-launch + Phase 2)
 
-1. **More affiliate networks** (better per-click revenue):
-   Awin → Nike (~7%), SportsShoes (3-6%); Webgains → Runners Need (8%); Impact
-   → Adidas (~7-10%); Rakuten → Hoka (3-14%). Each unlocks higher commission
-   on its respective brand vs the 75%-passthrough Skimlinks fallback.
+1. **More affiliate networks** — each one approved roughly doubles the rate
+   on its brand vs the 75% Skimlinks passthrough. Order them by ROI:
+   - **Amazon Associates** — instant signup, 4% but slowest cookie. Set
+     `EXPO_PUBLIC_AMAZON_TAG`. The wire is live the moment Railway redeploys.
+   - **Awin** — ~1 week. Apply, get publisher ID, then apply per advertiser
+     (Nike UK first — ~7%). Set `EXPO_PUBLIC_AWIN_ID` and then
+     `EXPO_PUBLIC_AWIN_MID_NIKE` (and one per other approved advertiser)
+     as each merchant ID lands. The dispatcher gates per-merchant so you can
+     activate them one at a time.
+   - **Webgains** — ~1 week. Runners Need direct at 8% is the biggest single
+     UK rate. Set `EXPO_PUBLIC_WEBGAINS_ID` + `EXPO_PUBLIC_WEBGAINS_MID_RUNNERS_NEED`.
+   - **Impact** — days. Adidas direct ~10%. Set `EXPO_PUBLIC_IMPACT_ID`.
+   - **Rakuten** — Hoka direct (3-14% — verify UK availability on application).
 2. **Datafeed ingestion** replaces [`scripts/check-prices.ts`](scripts/check-prices.ts)
    with per-SKU prices + licensed images (spec §5.4) — kills false-positive
    scrapes and unlocks brand imagery legally.

@@ -72,17 +72,113 @@ export function dropFor(offers: Offer[]): PriceDrop | undefined {
 const OFFERS: Record<string, Offer[]> = offersRaw as Record<string, Offer[]>;
 
 /**
- * Wrap a retailer URL for commission when the Skimlinks publisher id is
- * configured; pass through untouched otherwise (owner-blocked items never
- * block — plan). subId format: matchId:slug:placement for revenue attribution.
- * Env is read per-call so configuration changes apply without a rebuild of
- * this module (and so both branches are unit-testable).
+ * Per-retailer affiliate link dispatch. Each network pays a higher direct
+ * rate than the Skimlinks 75%-passthrough fallback, so we route to the
+ * direct programme whenever its publisher ID is configured, and fall back
+ * to Skimlinks (then to the raw URL) when it isn't.
+ *
+ * Activation order (env var → effect):
+ *   EXPO_PUBLIC_AWIN_ID         → Awin → Nike, SportsShoes, JD Sports, Mizuno, Saucony, Wiggle, Decathlon (7-10%)
+ *   EXPO_PUBLIC_WEBGAINS_ID     → Webgains → Runners Need (8%)
+ *   EXPO_PUBLIC_IMPACT_ID       → Impact → Adidas (~7-10%)
+ *   EXPO_PUBLIC_RAKUTEN_ID      → Rakuten → Hoka, sometimes NB
+ *   EXPO_PUBLIC_AMAZON_TAG      → Amazon Associates → Amazon UK (4%, 24h)
+ *   EXPO_PUBLIC_SKIMLINKS_ID    → Skimlinks → ~48k merchants (passthrough fallback)
+ *
+ * subId format: matchId:slug:placement — every network reports it back per
+ * conversion so revenue is attributable per match × shoe × placement WITHOUT
+ * commission touching ranking (the trust contract).
  */
-export function buildAffiliateUrl(offer: Offer, subId: string): string {
-  const id = process.env.EXPO_PUBLIC_SKIMLINKS_ID;
-  if (!id) return offer.url;
-  const params = new URLSearchParams({ id, xs: '1', url: offer.url, xcust: subId });
+
+/** Awin merchant IDs by retailer string. Empty when the user hasn't been
+ * approved for that advertiser yet; the wrapper falls through to Skimlinks. */
+const AWIN_MERCHANTS: Record<string, string> = {
+  // populated as advertisers approve — placeholder string lets us flag retailers
+  // we KNOW are in Awin so once the publisher ID is set, the wrap activates
+  Nike: 'AWIN_NIKE_MID',
+  'Nike UK': 'AWIN_NIKE_MID',
+  SportsShoes: 'AWIN_SPORTSSHOES_MID',
+  Saucony: 'AWIN_SAUCONY_MID',
+  Mizuno: 'AWIN_MIZUNO_MID',
+};
+
+const WEBGAINS_MERCHANTS: Record<string, string> = {
+  'Runners Need': 'WEBGAINS_RUNNERSNEED_MID',
+};
+
+const IMPACT_MERCHANTS: Record<string, string> = {
+  Adidas: 'IMPACT_ADIDAS_MID',
+};
+
+const env = (k: string): string | undefined => process.env[k];
+const enc = encodeURIComponent;
+
+function awinWrap(merchantId: string, awinId: string, url: string, subId: string): string {
+  // https://www.awin1.com/cread.php?awinmid=<mid>&awinaffid=<id>&clickref=<sub>&ued=<url>
+  return `https://www.awin1.com/cread.php?awinmid=${merchantId}&awinaffid=${enc(awinId)}&clickref=${enc(subId)}&ued=${enc(url)}`;
+}
+
+function webgainsWrap(merchantId: string, programId: string, url: string, subId: string): string {
+  // https://track.webgains.com/click.html?wgcampaignid=<programId>&wgprogramid=<mid>&wgtarget=<url>&clickref=<sub>
+  return `https://track.webgains.com/click.html?wgcampaignid=${enc(programId)}&wgprogramid=${merchantId}&wgtarget=${enc(url)}&clickref=${enc(subId)}`;
+}
+
+function impactWrap(impactId: string, url: string, subId: string): string {
+  // https://impact-go.com/?id=<id>&url=<url>&subId1=<sub> — Impact gives a custom go-link per publisher
+  return `https://goto.impact-radius.com/c/${enc(impactId)}/?u=${enc(url)}&subId1=${enc(subId)}`;
+}
+
+function amazonWrap(tag: string, url: string, subId: string): string {
+  // Amazon Associates: append ?tag=<tag>&ascsubtag=<sub>
+  // strip any existing tag/ascsubtag from the URL first
+  const u = new URL(url);
+  u.searchParams.set('tag', tag);
+  u.searchParams.set('ascsubtag', subId);
+  return u.toString();
+}
+
+function skimlinksWrap(skimId: string, url: string, subId: string): string {
+  const params = new URLSearchParams({ id: skimId, xs: '1', url, xcust: subId });
   return `https://go.skimresources.com/?${params.toString()}`;
+}
+
+const isAmazonUrl = (url: string): boolean => /\bamazon\.[a-z.]+\//.test(url);
+
+export function buildAffiliateUrl(offer: Offer, subId: string): string {
+  const { retailer, url } = offer;
+
+  // Amazon UK: dedicated wrapper (instant 4%, the fastest network to activate)
+  if (isAmazonUrl(url)) {
+    const tag = env('EXPO_PUBLIC_AMAZON_TAG');
+    if (tag) return amazonWrap(tag, url, subId);
+  }
+
+  // Awin: per-advertiser merchant IDs gate the wrap
+  const awinId = env('EXPO_PUBLIC_AWIN_ID');
+  if (awinId && AWIN_MERCHANTS[retailer]) {
+    const mid = env(`EXPO_PUBLIC_AWIN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
+    if (mid) return awinWrap(mid, awinId, url, subId);
+  }
+
+  // Webgains (Runners Need is the marquee 8% UK programme)
+  const webgainsId = env('EXPO_PUBLIC_WEBGAINS_ID');
+  if (webgainsId && WEBGAINS_MERCHANTS[retailer]) {
+    const mid = env(`EXPO_PUBLIC_WEBGAINS_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
+    if (mid) return webgainsWrap(mid, webgainsId, url, subId);
+  }
+
+  // Impact (Adidas direct ~7-10%)
+  const impactId = env('EXPO_PUBLIC_IMPACT_ID');
+  if (impactId && IMPACT_MERCHANTS[retailer]) {
+    return impactWrap(impactId, url, subId);
+  }
+
+  // Skimlinks: the passthrough fallback for everything else (~48k merchants)
+  const skimId = env('EXPO_PUBLIC_SKIMLINKS_ID');
+  if (skimId) return skimlinksWrap(skimId, url, subId);
+
+  // No network configured — raw passthrough (zero commission, but the link works)
+  return url;
 }
 
 export function offersFor(slug: string, region: 'UK' | 'US' = 'UK'): Offer[] {
