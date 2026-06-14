@@ -94,8 +94,12 @@ const RUNNERS_NEED_BRANDS: Record<string, string> = {
  * relevant. When EXPO_PUBLIC_AMAZON_TAG is set, lib/affiliate.ts wraps
  * automatically. Until then it's a clean fallback.
  */
+// plain ?k= keyword search — the old department (i=fashion-mens-shoes) + feature
+// browse-bin (rh=) filter returned EMPTY results for most shoes (running shoes
+// aren't under fashion-mens-shoes), which reads as a broken link. A bare keyword
+// search reliably resolves to the right product.
 const amazonSearchUrl = (s: { brand: string; model: string; version: string }) =>
-  `https://www.amazon.co.uk/s?k=${qFull(s)}&i=fashion-mens-shoes&rh=p_n_feature_two_browse-bin%3A12471823031`;
+  `https://www.amazon.co.uk/s?k=${qFull(s)}`;
 
 const offers: Record<string, unknown[]> = {};
 
