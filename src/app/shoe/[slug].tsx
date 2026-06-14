@@ -153,6 +153,15 @@ export default function ShoeDetailScreen() {
         />
         <SpecRow label="Midsole" value={shoe.foamName} />
         <SpecRow label="Plate" value={shoe.plate === 'none' ? 'None' : shoe.plate} />
+        {shoe.category === 'trail' ? (
+          <>
+            {shoe.lugDepthMm !== undefined ? (
+              <SpecRow label="Lug depth" value={`${shoe.lugDepthMm} mm`} note="grip matched to your terrain" />
+            ) : null}
+            {shoe.outsoleRubber ? <SpecRow label="Outsole" value={shoe.outsoleRubber} /> : null}
+            <SpecRow label="Rock plate" value={shoe.rockPlate ? 'Yes — underfoot protection' : 'None'} />
+          </>
+        ) : null}
         <SpecRow label="Widths" value={shoe.widths.join(', ')} />
         <SpecRow
           label="Women's fit"
