@@ -130,10 +130,12 @@ const awinMid = (retailer: string): string | undefined => {
       return process.env.EXPO_PUBLIC_AWIN_MID_NIKE;
     case 'SportsShoes':
       return process.env.EXPO_PUBLIC_AWIN_MID_SPORTSSHOES;
-    case 'Saucony':
-      return process.env.EXPO_PUBLIC_AWIN_MID_SAUCONY;
-    case 'Mizuno':
-      return process.env.EXPO_PUBLIC_AWIN_MID_MIZUNO;
+    case 'Pro:Direct':
+      return process.env.EXPO_PUBLIC_AWIN_MID_PRODIRECT;
+    case 'Running Point':
+      return process.env.EXPO_PUBLIC_AWIN_MID_RUNNING_POINT;
+    // Saucony (Rakuten) and Mizuno (Impact/Rakuten) are NOT on Awin — they stay
+    // on Skimlinks / their own networks, so there's no Awin arm for them.
     default:
       return undefined;
   }
