@@ -68,10 +68,11 @@ function StepAbout(_: StepProps) {
       </View>
       {sub('Used only to surface women-specific fits — never for performance claims; that research is genuinely unsettled and we say so.')}
       <Text style={styles.fieldLabel}>Age</Text>
-      <NumberField testID="age-input" value={age} onChange={(n) => set('age', n)} min={13} max={95} suffix="years" />
+      <NumberField testID="age-input" label="age" value={age} onChange={(n) => set('age', n)} min={13} max={95} suffix="years" />
       <Text style={styles.fieldLabel}>Weight</Text>
       <NumberField
         testID="weight-input"
+        label="weight"
         value={display}
         onChange={(n) => set('weightKg', units === 'metric' ? n : kgFromLb(n))}
         min={units === 'metric' ? 35 : 77}
@@ -142,13 +143,14 @@ function StepPace({ onAutoNext }: StepProps) {
               />
             ))}
           </View>
-          <TimeField testID="race-time" hours seconds={raceTimeSec} onChange={(n) => set('raceTimeSec', n)} />
+          <TimeField testID="race-time" label="race time" hours seconds={raceTimeSec} onChange={(n) => set('raceTimeSec', n)} />
         </View>
       ) : null}
       {paceKind === 'easy' ? (
         <View style={{ gap: space(2) }}>
           <TimeField
             testID="easy-pace"
+            label="easy pace"
             seconds={
               easyPaceSecPerKm === undefined
                 ? undefined
@@ -316,6 +318,7 @@ function StepBudget(_: StepProps) {
       ) : null}
       <NumberField
         testID="budget-input"
+        label="budget in pounds"
         value={budgetAmountGbp}
         onChange={(n) => set('budgetAmountGbp', n)}
         step={10}

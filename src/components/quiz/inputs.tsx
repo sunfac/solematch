@@ -19,6 +19,7 @@ export function Chip({
     <Pressable
       testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
       style={[styles.chip, selected && { borderColor: tone, backgroundColor: color.surface2 }]}
@@ -32,21 +33,25 @@ export function ChoiceGrid<T extends string>({
   options,
   value,
   onSelect,
+  label,
 }: {
   options: Array<{ key: T; label: string; hint?: string }>;
   value?: T;
   onSelect: (key: T) => void;
+  /** accessible name for the radiogroup (the step's question) */
+  label?: string;
 }) {
   return (
-    <View style={styles.grid}>
+    <View style={styles.grid} accessibilityRole="radiogroup" accessibilityLabel={label}>
       {options.map((o, i) => {
         const selected = value === o.key;
         return (
           <Pressable
             key={o.key}
             testID={`choice-${o.key}`}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
+            accessibilityRole="radio"
+            accessibilityState={{ selected, checked: selected }}
+            accessibilityLabel={o.hint ? `${o.label}, ${o.hint}` : o.label}
             onPress={() => onSelect(o.key)}
             style={({ pressed }) => [
               styles.card,
@@ -86,6 +91,7 @@ export function NumberField({
   max = 999,
   suffix,
   testID,
+  label,
 }: {
   value?: number;
   onChange: (n: number) => void;
@@ -94,8 +100,11 @@ export function NumberField({
   max?: number;
   suffix?: string;
   testID?: string;
+  /** accessible name for the field (e.g. "age", "weight in kg") */
+  label?: string;
 }) {
   const clamp = (n: number) => Math.max(min, Math.min(max, n));
+  const a11yLabel = label ?? (suffix ? `value in ${suffix}` : 'value');
   const [text, setText] = useState(value === undefined ? '' : String(value));
   const current = value ?? min;
 
@@ -110,12 +119,13 @@ export function NumberField({
 
   return (
     <View style={styles.numberRow}>
-      <Pressable accessibilityLabel="decrease" onPress={() => bump(-1)} style={styles.stepBtn}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`decrease ${a11yLabel}`} onPress={() => bump(-1)} style={styles.stepBtn}>
         <Text style={styles.stepBtnText}>−</Text>
       </Pressable>
       <View style={styles.numberBox}>
         <TextInput
           testID={testID}
+          accessibilityLabel={a11yLabel}
           style={styles.numberInput}
           keyboardType="numeric"
           inputMode="numeric"
@@ -140,7 +150,7 @@ export function NumberField({
         />
         {suffix ? <Text style={styles.suffix}>{suffix}</Text> : null}
       </View>
-      <Pressable accessibilityLabel="increase" onPress={() => bump(1)} style={styles.stepBtn}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`increase ${a11yLabel}`} onPress={() => bump(1)} style={styles.stepBtn}>
         <Text style={styles.stepBtnText}>+</Text>
       </Pressable>
     </View>
@@ -153,21 +163,26 @@ export function TimeField({
   onChange,
   hours = false,
   testID,
+  label,
 }: {
   seconds?: number;
   onChange: (totalSec: number) => void;
   hours?: boolean;
   testID?: string;
+  /** accessible name prefix for the field (e.g. "easy pace") */
+  label?: string;
 }) {
   const total = seconds ?? 0;
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = Math.round(total % 60);
+  const UNIT: Record<string, string> = { hrs: 'hours', min: 'minutes', sec: 'seconds' };
   const update = (nh: number, nm: number, ns: number) => onChange(nh * 3600 + nm * 60 + ns);
-  const box = (val: number, set: (n: number) => void, max: number, label: string, id?: string) => (
+  const box = (val: number, set: (n: number) => void, max: number, unit: string, id?: string) => (
     <View style={styles.timeBoxWrap}>
       <TextInput
         testID={id}
+        accessibilityLabel={`${label ? label + ' ' : ''}${UNIT[unit] ?? unit}`}
         style={styles.timeBox}
         keyboardType="numeric"
         inputMode="numeric"
@@ -177,7 +192,7 @@ export function TimeField({
           if (!Number.isNaN(n)) set(Math.min(max, n));
         }}
       />
-      <Text style={styles.timeLabel}>{label}</Text>
+      <Text style={styles.timeLabel}>{unit}</Text>
     </View>
   );
   return (
@@ -206,6 +221,7 @@ export function ToggleRow({
     <Pressable
       testID={testID}
       accessibilityRole="switch"
+      accessibilityLabel={hint ? `${label}. ${hint}` : label}
       accessibilityState={{ checked: value }}
       onPress={onToggle}
       style={styles.toggleRow}
