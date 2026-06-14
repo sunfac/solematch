@@ -26,7 +26,7 @@ export function matchBand(match: number): { label: string; colour: string } {
   if (match >= 92) return { label: 'ELITE MATCH', colour: tierColor.ELITE };
   if (match >= 85) return { label: 'STRONG MATCH', colour: color.volt };
   if (match >= 78) return { label: 'SOLID MATCH', colour: color.cyan };
-  return { label: 'YOUR MATCH', colour: tierColor.SILVER };
+  return { label: 'YOUR MATCH', colour: tierColor.CORE };
 }
 
 /**

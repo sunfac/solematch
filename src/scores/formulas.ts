@@ -151,14 +151,14 @@ export function computeScores(s: Shoe): ShoeScores {
 
 /**
  * Tiers are DISTRIBUTION-BASED (plan decision 9), like FUT itself: rank all current
- * shoes by overall — top 10% ELITE, next 25% GOLD, next 40% SILVER, rest PROVEN.
+ * shoes by overall — top 10% ELITE, next 25% STANDOUT, next 40% CORE, rest PROVEN.
  * This tracks the live market instead of fighting absolute formula drift.
  */
 export function assignTiers(scored: Map<string, ShoeScores>): void {
   const ranked = [...scored.entries()].sort((a, b) => b[1].overall - a[1].overall);
   ranked.forEach(([, sc], i) => {
     const pct = i / ranked.length;
-    sc.tier = (pct < 0.1 ? 'ELITE' : pct < 0.35 ? 'GOLD' : pct < 0.75 ? 'SILVER' : 'PROVEN') as Tier;
+    sc.tier = (pct < 0.1 ? 'ELITE' : pct < 0.35 ? 'STANDOUT' : pct < 0.75 ? 'CORE' : 'PROVEN') as Tier;
   });
 }
 

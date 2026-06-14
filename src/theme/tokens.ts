@@ -59,8 +59,8 @@ export const evidenceColor: Record<EvidenceLevel, string> = {
 
 export const tierColor = {
   ELITE: color.magenta,
-  GOLD: color.gold,
-  SILVER: '#C9D1E0',
+  STANDOUT: color.gold,
+  CORE: '#C9D1E0',
   // entry tier — renamed from BRONZE (read as a downgrade); still a strong,
   // curated shoe, so the badge says PROVEN, not "third place"
   PROVEN: '#B08D57',

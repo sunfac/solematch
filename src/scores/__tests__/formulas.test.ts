@@ -38,7 +38,7 @@ test('distribution-based tiers: ~10% ELITE and flagship racers rank top-quartile
 });
 
 test('the consensus shoe of 2025-26 does not read as scrap', () => {
-  expect(['ELITE', 'GOLD']).toContain(score('adidas-adizero-evo-sl').tier);
+  expect(['ELITE', 'STANDOUT']).toContain(score('adidas-adizero-evo-sl').tier);
 });
 
 test('determinism: recomputing yields identical scores', () => {

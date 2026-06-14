@@ -1,7 +1,7 @@
 export type FoamClass = 'PEBA' | 'TPEE' | 'TPU' | 'EVA' | 'BLEND';
 export type Plate = 'carbon' | 'composite' | 'none';
 export type Category = 'race' | 'tempo' | 'daily' | 'max_cushion' | 'stability' | 'budget' | 'trail';
-export type Tier = 'ELITE' | 'GOLD' | 'SILVER' | 'PROVEN';
+export type Tier = 'ELITE' | 'STANDOUT' | 'CORE' | 'PROVEN';
 
 export interface Shoe {
   id: string;
