@@ -154,6 +154,11 @@ export default function ShoeDetailScreen() {
         <SpecRow label="Midsole" value={shoe.foamName} />
         <SpecRow label="Plate" value={shoe.plate === 'none' ? 'None' : shoe.plate} />
         <SpecRow label="Widths" value={shoe.widths.join(', ')} />
+        <SpecRow
+          label="Women's fit"
+          value={shoe.womensLast ? 'Women-specific last' : 'Unisex last'}
+          note={shoe.womensLast ? 'narrower heel, roomier forefoot' : undefined}
+        />
         <SpecRow label="RRP" value={`£${shoe.msrpGbp}${shoe.priceApprox ? ' (approx)' : ''}`} />
       </View>
 
