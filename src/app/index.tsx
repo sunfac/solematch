@@ -98,7 +98,7 @@ export default function Landing() {
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>MEASURED. NOT MARKETED.</Text>
         <Text style={styles.headline}>
-          Your perfect running shoe,{'\n'}matched in{' '}
+          Your perfect shoe,{'\n'}matched in{'\n'}
           <Text style={styles.headlineAccent}>2 minutes.</Text>
         </Text>
         <Text style={styles.sub}>
