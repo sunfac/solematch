@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import shoes from '../src/data/shoes.json';
+import { LEGACY_SLUGS } from '../src/data/catalogue';
 
 interface Shoe {
   slug: string;
@@ -51,7 +52,12 @@ const HOME_HTML = join(DIST, 'index.html');
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-const CURRENT_SHOES = (shoes as Shoe[]).filter((s) => s.status === 'current');
+// Indexable detail pages: current shoes PLUS the one-back previous-gen models
+// (isLegacy) — they're browsable/matchable and high-search-volume, so they earn
+// their own crawlable stub + sitemap entry.
+const INDEXED_SHOES = (shoes as Shoe[]).filter(
+  (s) => s.status === 'current' || LEGACY_SLUGS.has(s.slug),
+);
 
 function metaBlock(opts: {
   title: string;
@@ -111,7 +117,7 @@ console.log(`+ homepage meta -> ${HOME_HTML}`);
 
 // ---- per-shoe static stubs --------------------------------------------------
 let shoeStubs = 0;
-for (const s of CURRENT_SHOES) {
+for (const s of INDEXED_SHOES) {
   const dir = join(DIST, 'shoe', s.slug);
   mkdirSync(dir, { recursive: true });
   const title = `${s.brand} ${s.model} ${s.version} — match score & honest review · ${SITE_NAME}`;
@@ -156,7 +162,7 @@ const urls = [
   { loc: `${SITE_URL}/legal/disclosure`, prio: '0.3' },
   { loc: `${SITE_URL}/legal/privacy`, prio: '0.3' },
   { loc: `${SITE_URL}/legal/terms`, prio: '0.3' },
-  ...CURRENT_SHOES.map((s) => ({ loc: `${SITE_URL}/shoe/${s.slug}`, prio: '0.8' })),
+  ...INDEXED_SHOES.map((s) => ({ loc: `${SITE_URL}/shoe/${s.slug}`, prio: '0.8' })),
 ];
 
 const sitemap =
