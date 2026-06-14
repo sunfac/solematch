@@ -110,31 +110,40 @@ const OFFERS: Record<string, Offer[]> = offersRaw as Record<string, Offer[]>;
  * commission touching ranking (the trust contract).
  */
 
-/** Awin merchant IDs by retailer string. Empty when the user hasn't been
- * approved for that advertiser yet; the wrapper falls through to Skimlinks. */
-const AWIN_MERCHANTS: Record<string, string> = {
-  // populated as advertisers approve — placeholder string lets us flag retailers
-  // we KNOW are in Awin so once the publisher ID is set, the wrap activates
-  Nike: 'AWIN_NIKE_MID',
-  'Nike UK': 'AWIN_NIKE_MID',
-  SportsShoes: 'AWIN_SPORTSSHOES_MID',
-  Saucony: 'AWIN_SAUCONY_MID',
-  Mizuno: 'AWIN_MIZUNO_MID',
+/**
+ * Per-merchant network IDs, read from EXPO_PUBLIC_* env vars. CRITICAL: every
+ * env read in this file MUST be a STATIC `process.env.EXPO_PUBLIC_X` reference.
+ * Expo/Metro inlines those into the web bundle at build time; a DYNAMIC lookup
+ * (process.env[key]) is NOT inlined and resolves to `undefined` in the browser
+ * — which silently disabled ALL affiliate wrapping (every link opened raw, zero
+ * commission). Hence the literal per-key maps below. undefined = not yet
+ * configured → the wrapper falls through to Skimlinks. (Node/jest reads
+ * process.env live, so the same static expressions also honour test overrides.)
+ */
+// Read at CALL time (not at module load) so Node/jest honour runtime env
+// overrides; each arm is still a STATIC process.env.EXPO_PUBLIC_X expression so
+// Metro inlines it into the web bundle.
+const awinMid = (retailer: string): string | undefined => {
+  switch (retailer) {
+    case 'Nike':
+    case 'Nike UK':
+      return process.env.EXPO_PUBLIC_AWIN_MID_NIKE;
+    case 'SportsShoes':
+      return process.env.EXPO_PUBLIC_AWIN_MID_SPORTSSHOES;
+    case 'Saucony':
+      return process.env.EXPO_PUBLIC_AWIN_MID_SAUCONY;
+    case 'Mizuno':
+      return process.env.EXPO_PUBLIC_AWIN_MID_MIZUNO;
+    default:
+      return undefined;
+  }
 };
+const webgainsMid = (retailer: string): string | undefined =>
+  retailer === 'Runners Need' ? process.env.EXPO_PUBLIC_WEBGAINS_MID_RUNNERS_NEED : undefined;
+const rakutenMid = (retailer: string): string | undefined =>
+  retailer === 'Hoka' ? process.env.EXPO_PUBLIC_RAKUTEN_MID_HOKA : undefined;
+const IMPACT_MERCHANTS = new Set<string>(['Adidas']);
 
-const WEBGAINS_MERCHANTS: Record<string, string> = {
-  'Runners Need': 'WEBGAINS_RUNNERSNEED_MID',
-};
-
-const IMPACT_MERCHANTS: Record<string, string> = {
-  Adidas: 'IMPACT_ADIDAS_MID',
-};
-
-const RAKUTEN_MERCHANTS: Record<string, string> = {
-  Hoka: 'RAKUTEN_HOKA_MID',
-};
-
-const env = (k: string): string | undefined => process.env[k];
 const enc = encodeURIComponent;
 
 /**
@@ -183,24 +192,15 @@ const SKIMLINKS_COVERED = new Set<string>([
 export function retailerIsMonetised(retailer: string): boolean {
   // 1. Amazon → Amazon Associates tag set
   if (retailer === 'Amazon UK' || retailer === 'Amazon') {
-    return Boolean(env('EXPO_PUBLIC_AMAZON_TAG')) || Boolean(env('EXPO_PUBLIC_SKIMLINKS_ID'));
+    return Boolean(process.env.EXPO_PUBLIC_AMAZON_TAG) || Boolean(process.env.EXPO_PUBLIC_SKIMLINKS_ID);
   }
-  // 2. Direct networks
-  if (env('EXPO_PUBLIC_AWIN_ID') && AWIN_MERCHANTS[retailer]) {
-    const mid = env(`EXPO_PUBLIC_AWIN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
-    if (mid) return true;
-  }
-  if (env('EXPO_PUBLIC_WEBGAINS_ID') && WEBGAINS_MERCHANTS[retailer]) {
-    const mid = env(`EXPO_PUBLIC_WEBGAINS_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
-    if (mid) return true;
-  }
-  if (env('EXPO_PUBLIC_IMPACT_ID') && IMPACT_MERCHANTS[retailer]) return true;
-  if (env('EXPO_PUBLIC_RAKUTEN_ID') && RAKUTEN_MERCHANTS[retailer]) {
-    const mid = env(`EXPO_PUBLIC_RAKUTEN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
-    if (mid) return true;
-  }
+  // 2. Direct networks (publisher ID set AND a per-merchant ID configured)
+  if (process.env.EXPO_PUBLIC_AWIN_ID && awinMid(retailer)) return true;
+  if (process.env.EXPO_PUBLIC_WEBGAINS_ID && webgainsMid(retailer)) return true;
+  if (process.env.EXPO_PUBLIC_IMPACT_ID && IMPACT_MERCHANTS.has(retailer)) return true;
+  if (process.env.EXPO_PUBLIC_RAKUTEN_ID && rakutenMid(retailer)) return true;
   // 3. Skimlinks passthrough if the retailer is in their merchant network
-  if (env('EXPO_PUBLIC_SKIMLINKS_ID') && SKIMLINKS_COVERED.has(retailer)) return true;
+  if (process.env.EXPO_PUBLIC_SKIMLINKS_ID && SKIMLINKS_COVERED.has(retailer)) return true;
   return false;
 }
 
@@ -245,39 +245,31 @@ export function buildAffiliateUrl(offer: Offer, subId: string): string {
 
   // Amazon UK: dedicated wrapper (instant 4%, the fastest network to activate)
   if (isAmazonUrl(url)) {
-    const tag = env('EXPO_PUBLIC_AMAZON_TAG');
+    const tag = process.env.EXPO_PUBLIC_AMAZON_TAG;
     if (tag) return amazonWrap(tag, url, subId);
   }
 
   // Awin: per-advertiser merchant IDs gate the wrap
-  const awinId = env('EXPO_PUBLIC_AWIN_ID');
-  if (awinId && AWIN_MERCHANTS[retailer]) {
-    const mid = env(`EXPO_PUBLIC_AWIN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
-    if (mid) return awinWrap(mid, awinId, url, subId);
-  }
+  const awinId = process.env.EXPO_PUBLIC_AWIN_ID;
+  const am = awinMid(retailer);
+  if (awinId && am) return awinWrap(am, awinId, url, subId);
 
   // Webgains (Runners Need is the marquee 8% UK programme)
-  const webgainsId = env('EXPO_PUBLIC_WEBGAINS_ID');
-  if (webgainsId && WEBGAINS_MERCHANTS[retailer]) {
-    const mid = env(`EXPO_PUBLIC_WEBGAINS_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
-    if (mid) return webgainsWrap(mid, webgainsId, url, subId);
-  }
+  const webgainsId = process.env.EXPO_PUBLIC_WEBGAINS_ID;
+  const wm = webgainsMid(retailer);
+  if (webgainsId && wm) return webgainsWrap(wm, webgainsId, url, subId);
 
   // Impact (Adidas direct ~7-10%)
-  const impactId = env('EXPO_PUBLIC_IMPACT_ID');
-  if (impactId && IMPACT_MERCHANTS[retailer]) {
-    return impactWrap(impactId, url, subId);
-  }
+  const impactId = process.env.EXPO_PUBLIC_IMPACT_ID;
+  if (impactId && IMPACT_MERCHANTS.has(retailer)) return impactWrap(impactId, url, subId);
 
   // Rakuten (Hoka direct ~3-14%)
-  const rakutenId = env('EXPO_PUBLIC_RAKUTEN_ID');
-  if (rakutenId && RAKUTEN_MERCHANTS[retailer]) {
-    const mid = env(`EXPO_PUBLIC_RAKUTEN_MID_${retailer.toUpperCase().replace(/\W+/g, '_')}`);
-    if (mid) return rakutenWrap(rakutenId, mid, url, subId);
-  }
+  const rakutenId = process.env.EXPO_PUBLIC_RAKUTEN_ID;
+  const rm = rakutenMid(retailer);
+  if (rakutenId && rm) return rakutenWrap(rakutenId, rm, url, subId);
 
   // Skimlinks: the passthrough fallback for everything else (~48k merchants)
-  const skimId = env('EXPO_PUBLIC_SKIMLINKS_ID');
+  const skimId = process.env.EXPO_PUBLIC_SKIMLINKS_ID;
   if (skimId) return skimlinksWrap(skimId, url, subId);
 
   // No network configured — raw passthrough (zero commission, but the link works)
