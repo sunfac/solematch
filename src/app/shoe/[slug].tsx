@@ -42,9 +42,16 @@ export default function ShoeDetailScreen() {
   if (!shoe) {
     return (
       <Screen>
-        <View style={styles.center}>
-          <Text style={styles.muted}>Shoe not found.</Text>
-          <PillButton label="Browse all shoes" onPress={() => router.replace('/browse')} />
+        <View style={styles.notFound}>
+          <Text style={styles.notFoundEyebrow}>OFF THE MAP</Text>
+          <Text style={styles.notFoundTitle}>Shoe not found</Text>
+          <Text style={styles.notFoundSub}>
+            That model isn&apos;t in the catalogue — it may have been superseded, or the link&apos;s gone stale.
+          </Text>
+          <View style={styles.notFoundCtas}>
+            <PillButton label="Browse all shoes" onPress={() => router.replace('/browse')} />
+            <PillButton label="Take the quiz" variant="ghost" onPress={() => router.replace('/quiz/1')} />
+          </View>
         </View>
       </Screen>
     );
@@ -308,4 +315,9 @@ const styles = StyleSheet.create({
   altMeta: { fontFamily: font.ui, fontSize: 12, color: color.muted, marginTop: 4 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space(4) },
   muted: { fontFamily: font.ui, fontSize: 13.5, color: color.muted },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space(6), gap: space(2) },
+  notFoundEyebrow: { fontFamily: font.mono, fontSize: 10, letterSpacing: 2, color: color.volt },
+  notFoundTitle: { fontFamily: font.display, fontSize: 28, letterSpacing: -0.5, color: color.ink, marginTop: space(1) },
+  notFoundSub: { fontFamily: font.ui, fontSize: 13.5, lineHeight: 20, color: color.muted, textAlign: 'center', maxWidth: 320, marginTop: space(1) },
+  notFoundCtas: { alignSelf: 'stretch', maxWidth: 320, gap: space(2.5), marginTop: space(4) },
 });

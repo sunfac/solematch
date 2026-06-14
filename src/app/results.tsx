@@ -83,8 +83,15 @@ export default function ResultsScreen() {
     return (
       <Screen>
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>No match yet — take the quiz first.</Text>
-          <PillButton label="Find my shoe" onPress={() => router.replace('/quiz/1')} />
+          <Text style={styles.emptyEyebrow}>NO SIGNAL</Text>
+          <Text style={styles.emptyTitle}>No match yet</Text>
+          <Text style={styles.emptySub}>
+            Nine quick questions and the engine deals your shoe — as a card, with the study to prove it.
+          </Text>
+          <View style={styles.emptyCtas}>
+            <PillButton testID="empty-quiz" label="Find my shoe" onPress={() => router.replace('/quiz/1')} />
+            <PillButton label="Browse the catalogue" variant="ghost" onPress={() => router.replace('/browse')} />
+          </View>
         </View>
       </Screen>
     );
@@ -386,6 +393,9 @@ const styles = StyleSheet.create({
   shuffleHint: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted, textAlign: 'center' },
   actions: { flexDirection: 'row', gap: space(3), marginTop: space(5), justifyContent: 'center' },
   disclosure: { fontFamily: font.ui, fontSize: 11, color: color.muted, textAlign: 'center', marginVertical: space(4), opacity: 0.8 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space(4) },
-  emptyText: { fontFamily: font.ui, fontSize: 14, color: color.muted },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space(6), gap: space(2) },
+  emptyEyebrow: { fontFamily: font.mono, fontSize: 10, letterSpacing: 2, color: color.volt },
+  emptyTitle: { fontFamily: font.display, fontSize: 28, letterSpacing: -0.5, color: color.ink, marginTop: space(1) },
+  emptySub: { fontFamily: font.ui, fontSize: 13.5, lineHeight: 20, color: color.muted, textAlign: 'center', maxWidth: 320, marginTop: space(1) },
+  emptyCtas: { alignSelf: 'stretch', maxWidth: 320, gap: space(2.5), marginTop: space(4) },
 });
