@@ -7,6 +7,7 @@ import { runMatch } from '@/engine';
 import type { MatchResult } from '@/types/match';
 import { roleDrivers } from '@/scores/formulas';
 import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice } from '@/lib/affiliate';
+import { buildShareText } from '@/lib/share';
 import { CARD_H, CARD_W, ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
@@ -99,16 +100,7 @@ export default function ResultsScreen() {
 
   const overBudget = result.totals.costGbp > result.totals.budgetGbp;
   const copySummary = async () => {
-    const lines = [
-      result.mode === 'rotation' ? 'My SoleMatch rotation:' : 'My SoleMatch:',
-      ...result.roles.map(
-        (r) =>
-          `${ROLE_LABEL[r.role]}: ${r.pick.shoe.brand} ${r.pick.shoe.model} ${r.pick.shoe.version} — ${r.pick.match}% match`,
-      ),
-      `Total £${result.totals.costGbp}`,
-      'Matched by SoleMatch — science-backed shoe matching.',
-    ];
-    await Clipboard.setStringAsync(lines.join('\n'));
+    await Clipboard.setStringAsync(buildShareText(result));
     track('share_copy', { roles: result.roles.length });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

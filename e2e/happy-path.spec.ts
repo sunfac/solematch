@@ -74,6 +74,16 @@ test('quiz to reveal to rotation results to detail', async ({ page }) => {
     page.getByTestId('role-row-daily').getByText(/STRONG|MODERATE|EMERGING|FIT & FEEL/).first(),
   ).toBeVisible();
 
+  // share copy: the referral text lands on the clipboard with a hook line and a
+  // clickable CTA on the LIVE host (not the SEO-canonical solematch.app)
+  await page.getByText('Copy my result', { exact: true }).click();
+  await expect(page.getByText('Copied ✓')).toBeVisible();
+  const clip = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clip).toMatch(/^My top SoleMatch pick: \d+% \S/);
+  expect(clip).toContain('Total £');
+  expect(clip).toContain('Match yours → https://solematch-production.up.railway.app');
+  expect(clip).not.toContain('solematch.app/');
+
   // detail: offers with disclosure + cited reasons
   await page.getByTestId('role-row-race').click();
   await expect(page.getByText(/Why this shoe/).first()).toBeVisible({ timeout: 10_000 });
