@@ -117,6 +117,24 @@ export const COMMUNITY_DARLINGS: ReadonlySet<string> = new Set([
 export const COMMUNITY_BONUS = 5;
 export const COMMUNITY_NUDGE = 2;
 
+/**
+ * Display rescale for the headline rating. The mechanical role-weighted stat sum
+ * (+ community bonus) naturally tops out ~90 for the best racers and bottoms ~64
+ * across the June-2026 catalogue — so even a flagship supershoe reads "90", which
+ * undersells a best-in-class shoe. Map that raw band onto a PREMIUM display band
+ * so best-in-class reaches the high-90s and the curated floor still reads strong.
+ * It's a monotonic affine map, so every relative ordering AND the distribution-
+ * based tiers are preserved exactly (the unit-test invariants still hold). Anchored
+ * to the catalogue's observed raw range; recalibrate the anchors if the spread of
+ * the catalogue shifts materially.
+ */
+const RAW_LO = 64;
+const RAW_HI = 90;
+const DISP_LO = 78;
+const DISP_HI = 99;
+const rescaleOverall = (raw: number): number =>
+  clamp(Math.round(DISP_LO + ((raw - RAW_LO) * (DISP_HI - DISP_LO)) / (RAW_HI - RAW_LO)));
+
 export function computeScores(s: Shoe): ShoeScores {
   const v = { spd: spd(s), csh: csh(s), stb: stb(s), lgt: lgt(s), dur: dur(s), val: val(s) };
   const mechanical = Math.max(
@@ -126,7 +144,8 @@ export function computeScores(s: Shoe): ShoeScores {
       ),
     ),
   );
-  const overall = clamp(mechanical + (COMMUNITY_DARLINGS.has(s.slug) ? COMMUNITY_BONUS : 0));
+  const raw = mechanical + (COMMUNITY_DARLINGS.has(s.slug) ? COMMUNITY_BONUS : 0);
+  const overall = rescaleOverall(raw);
   return { ...v, overall, tier: 'BRONZE', formulaVersion: FORMULA_VERSION };
 }
 
