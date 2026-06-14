@@ -113,9 +113,9 @@ const OFFERS: Record<string, Offer[]> = offersRaw as Record<string, Offer[]>;
 /**
  * Per-merchant network IDs, read from EXPO_PUBLIC_* env vars. CRITICAL: every
  * env read in this file MUST be a STATIC `process.env.EXPO_PUBLIC_X` reference.
- * Expo/Metro inlines those into the web bundle at build time; a DYNAMIC lookup
- * (process.env[key]) is NOT inlined and resolves to `undefined` in the browser
- * — which silently disabled ALL affiliate wrapping (every link opened raw, zero
+ * Expo/Metro inlines those into the web bundle at build time; a DYNAMIC computed
+ * lookup (bracket access with a variable key) is NOT inlined and resolves to
+ * `undefined` in the browser — which silently disabled ALL wrapping (raw links, zero
  * commission). Hence the literal per-key maps below. undefined = not yet
  * configured → the wrapper falls through to Skimlinks. (Node/jest reads
  * process.env live, so the same static expressions also honour test overrides.)

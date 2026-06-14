@@ -15,6 +15,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Guard — affiliate env reads must be static (Metro inlining)
+        run: |
+          if grep -nE 'process\.env[[:space:]]*\[' src/lib/affiliate.ts; then
+            echo "::error::affiliate.ts uses dynamic process.env[...] — Metro will not inline it into the web bundle, which silently disables affiliate wrapping. Use static process.env.EXPO_PUBLIC_X instead."
+            exit 1
+          fi
       - run: npx tsc --noEmit
       - run: npx jest --ci --silent
       - run: npx expo export --platform web

@@ -1,14 +1,14 @@
 name: Freshness — weekly link health + price drops
 # What this does (run weekly + on demand):
 #   1. Health-checks every offer URL → flag dead retailer patterns
-#   2. Scrapes live prices via firecrawl → write streetPriceGbp + priceDropped
-#      on the offers that have actually dropped
+#   2. Scrapes live UK prices firecrawl-FREE (scrape-prices.ts; plain fetch of
+#      SportsShoes' embedded price+rrp JSON) → write streetPriceGbp + priceDropped
+#      on the offers that have actually dropped. Covers the SportsShoes featured
+#      set; agent-sourced prices for other shoes are refreshed manually / via the
+#      licensed feed (not by this cron).
 #   3. Opens a PR if anything changed — never auto-merges to master, so the
 #      owner reviews price snapshots before they go live
-# Required secrets:
-#   FIRECRAWL_API_KEY  - firecrawl token (free tier covers weekly runs)
-# Optional secrets (gate redundant network failure noise):
-#   none — the checker is read-only against retailer URLs
+# Required secrets: none (the price scraper and link checker are plain HTTPS).
 on:
   schedule:
     - cron: '17 4 * * 1'   # Mondays 04:17 UTC (off-peak; retailer load light)
@@ -39,10 +39,8 @@ jobs:
           path: link-health.log
           retention-days: 30
 
-      - name: Live prices (writes offers.json on drops)
-        env:
-          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
-        run: npx tsx scripts/check-prices.ts --retailer SportsShoes || true
+      - name: Live prices (firecrawl-free; writes offers.json on drops)
+        run: npx tsx scripts/scrape-prices.ts || true
 
       - name: Detect changes
         id: diff
