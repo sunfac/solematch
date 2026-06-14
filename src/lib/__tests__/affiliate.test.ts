@@ -157,12 +157,13 @@ describe('per-network affiliate dispatch', () => {
     expect(wrapped).toContain('wgprogramid=WG_RN');
   });
 
-  test('Impact takes Adidas when configured (~10% direct)', () => {
+  test('Impact takes New Balance / Brooks when configured (brand-direct, Impact-only)', () => {
     process.env.EXPO_PUBLIC_IMPACT_ID = 'IMP123';
-    const adidas: Offer = { ...offer, retailer: 'Adidas', url: 'https://www.adidas.co.uk/search?q=adios+pro' };
-    const wrapped = buildAffiliateUrl(adidas, 'm:s:p');
+    const nb: Offer = { ...offer, retailer: 'New Balance', url: 'https://www.newbalance.co.uk/sc-elite' };
+    const wrapped = buildAffiliateUrl(nb, 'm:s:p');
     expect(wrapped).toContain('impact-radius.com');
     expect(wrapped).toContain('subId1=m%3As%3Ap');
+    delete process.env.EXPO_PUBLIC_IMPACT_ID;
   });
 
   test('Skimlinks is the passthrough fallback for unconfigured networks', () => {

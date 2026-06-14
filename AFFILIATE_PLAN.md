@@ -49,6 +49,19 @@ A `*.railway.app` subdomain will likely fail their review.
 - 🤖 *(done)* Saucony + ASICS wired to Rakuten; New Balance + Adidas wired to Impact.
 - 🤖 Set `EXPO_PUBLIC_RAKUTEN_ID` + Saucony/ASICS MIDs (and `EXPO_PUBLIC_IMPACT_ID` if you go Impact).
 
+## Phase 3b — Impact.com (Brooks + New Balance, direct‑only — and where Rakuten is migrating)
+Impact's *unique* value is concentrated but high: **Brooks** runs a single global Impact programme
+with **no Awin/Rakuten UK route — Impact is the only direct way to get it**, and **New Balance UK**
+is Impact too (both carbon‑racer running brands). Don't over‑rotate: Nike/adidas/Hoka/On/Salomon are
+all Awin (already covered). But it's getting more central — as Rakuten migrates onto impact.com
+(2026‑27), **ASICS + Saucony will become reachable here as well**, so joining Impact now is forward‑looking.
+- 🧑 Sign up as a publisher at **impact.com** (needs the live domain — Phase 0), then apply to **Brooks**
+      and **New Balance UK** (per‑advertiser approval). Sensible to do alongside Rakuten since Rakuten is moving here.
+- 🧑 When approved, send me your Impact account ID + the campaign IDs (only visible post‑approval).
+- 🤖 *(done)* Brooks + New Balance wired to Impact; Adidas corrected to Awin (it's Awin UK, not Impact).
+- 🤖 Set `EXPO_PUBLIC_IMPACT_ID`; add brand buy‑options for Brooks / New Balance so they route direct
+      (their shoes currently route via SportsShoes/Amazon).
+
 ## Phase 4 — Webgains + Amazon (quick adds)
 - 🧑 Webgains: once approved, confirm Runners Need (programme `5503`, 8%); send me your Webgains publisher ID.
 - 🧑 Amazon Associates UK: apply (instant approval) → send me your tag (e.g. `solematch-21`).

@@ -141,6 +141,8 @@ const awinMid = (retailer: string): string | undefined => {
       return process.env.EXPO_PUBLIC_AWIN_MID_ON;
     case 'Salomon':
       return process.env.EXPO_PUBLIC_AWIN_MID_SALOMON;
+    case 'Adidas':
+      return process.env.EXPO_PUBLIC_AWIN_MID_ADIDAS;
     // additional UK running retailers on Awin (wired ready; added as buy-options
     // progressively — Voodoo Running pays the best at ~12%)
     case 'Voodoo Running':
@@ -169,7 +171,10 @@ const rakutenMid = (retailer: string): string | undefined => {
       return undefined;
   }
 };
-const IMPACT_MERCHANTS = new Set<string>(['Adidas', 'New Balance']);
+// Brooks runs a SINGLE global programme on Impact (no Awin/Rakuten UK route — so
+// Impact is the only direct path); New Balance UK is also Impact. Adidas, by
+// contrast, is Awin UK (see awinMid), not Impact.
+const IMPACT_MERCHANTS = new Set<string>(['New Balance', 'Brooks']);
 
 const enc = encodeURIComponent;
 
