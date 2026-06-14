@@ -1,4 +1,5 @@
 import { SHOES } from '@/data/catalogue';
+import { LOCAL_SHOE_IMAGES } from '@/data/localShoeImages';
 import { bestOffer, buildAffiliateUrl, dropFor, offersFor, payPrice, retailerIsMonetised, type Offer } from '../affiliate';
 
 const offer: Offer = {
@@ -93,6 +94,17 @@ test('dropFor surfaces the biggest absolute saving across retailers', () => {
 
 test('dropFor returns undefined when nothing is dropped', () => {
   expect(dropFor([offer])).toBeUndefined();
+});
+
+test('bundled cut images (prod-cleared) all map to real catalogue slugs and give healthy coverage', () => {
+  const slugs = Object.keys(LOCAL_SHOE_IMAGES);
+  // guards a stale/typo'd registry after a re-cut: every key must be a real slug
+  for (const slug of slugs) {
+    expect(SHOES.some((s) => s.slug === slug)).toBe(true);
+  }
+  // these are the images that ship to production; if a regression empties the
+  // registry the deployed app falls back to generic art, so hold a floor
+  expect(slugs.length).toBeGreaterThanOrEqual(25);
 });
 
 describe('per-network affiliate dispatch', () => {

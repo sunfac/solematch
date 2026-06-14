@@ -295,26 +295,31 @@ export function offersFor(slug: string, region: 'UK' | 'US' = 'UK'): Offer[] {
 }
 
 /**
- * Product image resolution. Licensed sources (offer feeds / press kits) always
- * win. devImages.json holds official brand-site product images for LOCAL
- * PREVIEW ONLY — gated by hostname, so they can show on localhost but can
- * never leak to a deployed domain until affiliate image licences exist
- * (spec §5.3 / §9.2), at which point licensed feed images replace them anyway.
+ * Product image resolution, in order of preference:
+ *   1. licensed retailer-feed / offer images (prod-safe, monetised source)
+ *   2. LOCAL_SHOE_IMAGES — our OWN rembg-cut, background-free, BUNDLED shots.
+ *      These ship to production: they're transparent (float on the dark card,
+ *      no white tile) and processed by us, not hotlinked. This is the channel
+ *      that puts the real shoes we have onto the live site.
+ *   3. devImages.json — raw hotlinked brand-site images with baked backgrounds,
+ *      kept LOCAL-PREVIEW ONLY (hostname-gated) until they're cut into (2).
+ * Anything without a real image falls through to category art → silhouette.
  */
 const isLocalPreview =
   typeof window !== 'undefined' &&
   /^(localhost|127\.|0\.0\.0\.0)/.test(window.location?.hostname ?? '');
 
 export function imageFor(slug: string): ImageRef | undefined {
-  // licensed retailer-feed image — cleared for production, so never gated
   const feed = FEED_IMAGES[slug]?.imageUrl;
   if (feed) return { source: feed, cut: false };
   const licensed = (OFFERS[slug] ?? []).find((o) => o.imageUrl)?.imageUrl;
   if (licensed) return { source: licensed, cut: false };
-  if (!isLocalPreview) return undefined;
+  // our bundled background-free cut — prod-cleared. expo-image on web rejects
+  // bare asset-module numbers, so resolve to a URI.
   const local = LOCAL_SHOE_IMAGES[slug];
-  // expo-image on web rejects bare asset-module numbers — resolve to a URI
   if (local !== undefined) return { source: Asset.fromModule(local).uri, cut: true };
+  // raw hotlinks (baked backgrounds, licence question) never leave localhost
+  if (!isLocalPreview) return undefined;
   const dev = DEV_IMAGES[slug];
   if (dev) return { source: dev.url, cut: dev.cut };
   return undefined;
