@@ -148,10 +148,11 @@ const SKIMLINKS_COVERED = new Set<string>([
   'SportsShoes',
   'Runners Need',
   'Amazon UK',
-  // additional UK specialist retailers Skimlinks aggregates (live-price sources)
-  'Start Fitness',
+  // additional UK specialist retailers verified on a Skimlinks-aggregated network
+  // (Awin) — Start Fitness (in-house Kajabi) and Northern Runner (no programme)
+  // are deliberately NOT here: their links don't earn, so we never present them
+  // as a monetised option.
   'Pro:Direct',
-  'Northern Runner',
   'Running Point',
   // brand sites whose UK affiliate programmes Skimlinks aggregates
   'Nike',
