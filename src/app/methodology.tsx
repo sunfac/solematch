@@ -44,7 +44,7 @@ export default function MethodologyScreen() {
         market ranking, but only a +{COMMUNITY_NUDGE} nudge to YOUR personal match: your shoe is
         decided by fit and evidence, not by what&apos;s trending. Tiers are percentile-based
         against the current market: the top 10% of the catalogue
-        is ELITE, the next 25% GOLD, the next 40% SILVER, the rest BRONZE. When two shoes are
+        is ELITE, the next 25% GOLD, the next 40% SILVER, the rest PROVEN. When two shoes are
         statistically tied for your slot (within ±0.8 points), a deterministic, profile-seeded
         tiebreak decides — different runners see different but equally right picks, and the same
         runner always gets the same answer. Match percentages cap at 96, never 100: no real

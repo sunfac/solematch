@@ -61,5 +61,7 @@ export const tierColor = {
   ELITE: color.magenta,
   GOLD: color.gold,
   SILVER: '#C9D1E0',
-  BRONZE: '#B08D57',
+  // entry tier — renamed from BRONZE (read as a downgrade); still a strong,
+  // curated shoe, so the badge says PROVEN, not "third place"
+  PROVEN: '#B08D57',
 } as const;

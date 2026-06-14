@@ -19,7 +19,7 @@ export const CARD_H = 460;
 
 /**
  * On personal-match surfaces the card celebrates YOUR fit, not the market tier —
- * a 90% match framed "BRONZE" reads as a downgrade (owner feedback). Tier
+ * a 90% match framed "PROVEN" reads as a downgrade (owner feedback). Tier
  * framing stays on catalogue surfaces where it ranks the market.
  */
 export function matchBand(match: number): { label: string; colour: string } {
