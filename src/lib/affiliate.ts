@@ -148,6 +148,11 @@ const SKIMLINKS_COVERED = new Set<string>([
   'SportsShoes',
   'Runners Need',
   'Amazon UK',
+  // additional UK specialist retailers Skimlinks aggregates (live-price sources)
+  'Start Fitness',
+  'Pro:Direct',
+  'Northern Runner',
+  'Running Point',
   // brand sites whose UK affiliate programmes Skimlinks aggregates
   'Nike',
   'Adidas',
