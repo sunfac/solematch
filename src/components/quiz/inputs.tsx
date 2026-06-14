@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { color, font, radius, space } from '@/theme/tokens';
+import { color, focusRing, font, radius, space, type PressState } from '@/theme/tokens';
 
 export function Chip({
   label,
@@ -22,7 +22,11 @@ export function Chip({
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={[styles.chip, selected && { borderColor: tone, backgroundColor: color.surface2 }]}
+      style={({ focused }: PressState) => [
+        styles.chip,
+        selected && { borderColor: tone, backgroundColor: color.surface2 },
+        focused && focusRing,
+      ]}
     >
       <Text style={[styles.chipText, selected && { color: tone }]}>{label}</Text>
     </Pressable>
@@ -53,10 +57,11 @@ export function ChoiceGrid<T extends string>({
             accessibilityState={{ selected, checked: selected }}
             accessibilityLabel={o.hint ? `${o.label}, ${o.hint}` : o.label}
             onPress={() => onSelect(o.key)}
-            style={({ pressed }) => [
+            style={({ pressed, focused }: PressState) => [
               styles.card,
               selected && styles.cardSelected,
               pressed && { transform: [{ scale: 0.99 }] },
+              focused && focusRing,
             ]}
           >
             {selected ? <View style={styles.cardAccent} /> : null}

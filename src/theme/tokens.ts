@@ -17,6 +17,27 @@ export const color = {
 
 export const radius = { card: 18, pill: 999, input: 14 } as const;
 
+/**
+ * Keyboard focus ring for WEB. react-native-web maps outline* to CSS outline,
+ * and its Pressable style callback exposes a `focused` state — spread this when
+ * focused so Tab users get a visible cyan ring. Typed `object` so the web-only
+ * outline props bypass RN's ViewStyle typing; native ignores them (and `focused`
+ * is undefined there, so it never applies).
+ */
+export const focusRing: object = {
+  outlineWidth: 2,
+  outlineStyle: 'solid',
+  outlineColor: color.cyan,
+  outlineOffset: 2,
+};
+
+/**
+ * Pressable style-callback state. RN's own type is just { pressed }; react-
+ * native-web adds `focused`/`hovered` at runtime but not in the types, so we
+ * widen it here (the extras optional) to read `focused` without a cast.
+ */
+export type PressState = { pressed: boolean; focused?: boolean; hovered?: boolean };
+
 export const space = (n: number) => n * 4;
 
 export const font = {

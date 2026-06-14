@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
-import { color, font, radius, space } from '@/theme/tokens';
+import { color, focusRing, font, radius, space, type PressState } from '@/theme/tokens';
 
 type Props = {
   label: string;
@@ -19,7 +19,7 @@ export function PillButton({ label, onPress, variant = 'primary', disabled, styl
       accessibilityLabel={label}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={({ pressed, focused }: PressState) => [
         styles.base,
         primary ? styles.primary : styles.ghost,
         // disabled primary now reads as a ghost outline with low-key text —
@@ -27,6 +27,7 @@ export function PillButton({ label, onPress, variant = 'primary', disabled, styl
         disabled && primary && styles.disabledPrimary,
         disabled && !primary && { opacity: 0.4 },
         pressed && !disabled && { transform: [{ scale: 0.98 }] },
+        focused && focusRing,
         style,
       ]}
     >

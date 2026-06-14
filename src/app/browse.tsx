@@ -11,7 +11,7 @@ import { ShoeSilhouette } from '@/components/card/ShoeSilhouette';
 import { TierBadge } from '@/components/ui/Badge';
 import { Screen } from '@/components/ui/Screen';
 import { TopBar } from '@/components/ui/TopBar';
-import { color, font, space, tierColor } from '@/theme/tokens';
+import { color, focusRing, font, space, tierColor, type PressState } from '@/theme/tokens';
 import type { Category } from '@/types/shoe';
 
 const CATS: Array<{ key: Category | 'all'; label: string }> = [
@@ -61,7 +61,7 @@ export default function BrowseScreen() {
             <Pressable
               key={s.slug}
               testID={`browse-${s.slug}`}
-              style={styles.tile}
+              style={({ focused }: PressState) => [styles.tile, focused && focusRing]}
               onPress={() => router.push(`/shoe/${s.slug}`)}
             >
               <View style={styles.tileTop}>
