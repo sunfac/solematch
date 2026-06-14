@@ -24,6 +24,13 @@ export interface RoleResult {
   alternates: ScoredShoe[];
   /** one-line comparative edge vs the nearest alternate ("intelligence" line) */
   edge?: string;
+  /**
+   * The nearest alternate whose GENUINE (un-nudged) fit sits within the dead-heat
+   * band of the pick — a statistical tie. Present only when truly co-equal, so the
+   * UI can say "pick on feel" and the seeded re-roll reads as equally-right options
+   * rather than inconsistency. Mutually exclusive with a decisive `edge`.
+   */
+  coEqual?: { slug: string; name: string };
 }
 
 export interface MatchResult {

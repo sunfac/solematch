@@ -2,7 +2,7 @@ import type { RoleResult, ScoredShoe } from '@/types/match';
 import type { Profile, Role } from '@/types/profile';
 import type { Shoe } from '@/types/shoe';
 import { PRIORITY_LABEL, priorityAffinity } from './modifiers';
-import { DEAD_HEAT, seededUnit } from './scoring';
+import { DEAD_HEAT, isCoEqual, seededUnit } from './scoring';
 
 export interface RotationOutcome {
   /** empty = no feasible combination under the budget (caller collapses to single) */
@@ -240,22 +240,32 @@ export function assembleRotation(
       );
     }
 
-    // Comparative edge vs the nearest alternate — the "why this one" line.
+    // Comparative intelligence vs the nearest alternate. Two mutually-exclusive,
+    // both-honest cases: a genuine statistical tie on FIT (within the dead-heat
+    // band → coEqual, "pick on feel", explains the seeded re-roll), or a decisive
+    // edge on a specific stat. Co-equality is judged on the un-nudged fit score
+    // (plainByRole) so the rotation nudge can't manufacture or hide a tie.
     let edge: string | undefined;
+    let coEqual: RoleResult['coEqual'];
     const rival = alternates[0];
     if (rival) {
-      const dims = ['spd', 'csh', 'stb', 'lgt', 'dur', 'val'] as const;
-      const bestDim = dims.reduce((a, b) =>
-        pick.scores[a] - rival.scores[a] >= pick.scores[b] - rival.scores[b] ? a : b,
-      );
-      const gap = pick.scores[bestDim] - rival.scores[bestDim];
-      edge =
-        gap >= 3
-          ? `Beats the ${rival.shoe.brand} ${rival.shoe.model} on ${STAT_LABEL[bestDim]} (+${gap}) for this slot`
-          : `A dead heat with the ${rival.shoe.brand} ${rival.shoe.model} — fit and feel should decide`;
+      const fit = (s: ScoredShoe) =>
+        plainByRole?.get(role)?.find((x) => x.shoe.slug === s.shoe.slug)?.roleScore ?? s.roleScore;
+      if (isCoEqual(fit(pick), fit(rival))) {
+        coEqual = { slug: rival.shoe.slug, name: `${rival.shoe.brand} ${rival.shoe.model}` };
+      } else {
+        const dims = ['spd', 'csh', 'stb', 'lgt', 'dur', 'val'] as const;
+        const bestDim = dims.reduce((a, b) =>
+          pick.scores[a] - rival.scores[a] >= pick.scores[b] - rival.scores[b] ? a : b,
+        );
+        const gap = pick.scores[bestDim] - rival.scores[bestDim];
+        if (gap >= 2) {
+          edge = `Beats the ${rival.shoe.brand} ${rival.shoe.model} on ${STAT_LABEL[bestDim]} (+${gap}) for this slot`;
+        }
+      }
     }
 
-    return { role, pick, alternates, edge };
+    return { role, pick, alternates, edge, coEqual };
   });
 
   return { roles: results, notes, costGbp: cost };

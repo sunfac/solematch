@@ -202,7 +202,11 @@ export default function ResultsScreen() {
                 {r.pick.reasons[0].text}
               </Text>
             </View>
-            {r.edge ? (
+            {r.coEqual ? (
+              <Text style={styles.coEqual} numberOfLines={2}>
+                FIT & FEEL · CO-EQUAL WITH {r.coEqual.name.toUpperCase()} — PICK ON FEEL
+              </Text>
+            ) : r.edge ? (
               <Text style={styles.edge} numberOfLines={2}>
                 {r.edge}
               </Text>
@@ -213,9 +217,7 @@ export default function ResultsScreen() {
             {r.alternates.length > 0 ? (
               <View style={styles.altRow}>
                 <Text style={styles.altLabel}>
-                  {Math.abs(r.alternates[0].match - r.pick.match) <= 2
-                    ? 'DEAD HEAT · SWAP ON FIT & FEEL'
-                    : 'ALSO STRONG'}
+                  {r.coEqual ? 'ALSO IN THE DEAD HEAT' : 'ALSO STRONG'}
                 </Text>
                 {r.alternates.map((alt) => (
                   <Pressable key={alt.shoe.slug} onPress={() => router.push(`/shoe/${alt.shoe.slug}`)}>
@@ -338,6 +340,7 @@ const styles = StyleSheet.create({
   reasonRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: space(2) },
   reasonText: { flex: 1, fontFamily: font.ui, fontSize: 12, color: color.muted, lineHeight: 16 },
   edge: { fontFamily: font.ui, fontSize: 11.5, color: color.cyan, marginTop: space(1.5), lineHeight: 15 },
+  coEqual: { fontFamily: font.mono, fontSize: 9.5, letterSpacing: 0.5, color: color.cyan, marginTop: space(1.5), lineHeight: 14 },
   drivers: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted, marginTop: space(1.5) },
   altRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space(2), marginTop: space(2.5) },
   altLabel: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.5, color: color.muted, width: '100%' },

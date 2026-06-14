@@ -8,7 +8,7 @@ import { hardFilter } from './filters';
 import { marathonPaceSecPerKm, plateFactor } from './paces';
 import { isVersatilityMode, planRoles } from './rolePlan';
 import { assembleRotation } from './rotation';
-import { scoreRole } from './scoring';
+import { isCoEqual, scoreRole } from './scoring';
 
 export const ENGINE_VERSION = '1.0.0';
 
@@ -115,7 +115,14 @@ export function runMatch(profile: Profile, shoes: Shoe[] = SHOES): MatchResult {
     const affordable = eligible.filter((s) => s.msrpGbp <= profile.budget.amountGbp);
     const pool = affordable.length > 0 ? affordable : eligible;
     const single = scoreRole(pool, profile, 'daily', versatileCtx);
-    finalRoles = [{ role: 'daily', pick: single[0], alternates: single.slice(1, 3) }];
+    // rotate:false → these are genuine fit scores, so a within-band runner-up is
+    // a true co-equal (the "show me another" re-roll's honest partner).
+    const runnerUp = single[1];
+    const coEqual =
+      runnerUp && isCoEqual(single[0].roleScore, runnerUp.roleScore)
+        ? { slug: runnerUp.shoe.slug, name: `${runnerUp.shoe.brand} ${runnerUp.shoe.model}` }
+        : undefined;
+    finalRoles = [{ role: 'daily', pick: single[0], alternates: single.slice(1, 3), coEqual }];
     const raceRanking = rankingsByRole.get('race');
     if (raceRanking && raceRanking.length > 0) {
       const top = raceRanking[0];

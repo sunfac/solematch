@@ -74,6 +74,12 @@ function fnv(str: string): number {
  * probability simply decays with the gap to the leader.
  */
 export const DEAD_HEAT = 2.5;
+/**
+ * Two shoes are co-equal for a slot when their genuine (un-nudged) fit scores sit
+ * within the dead-heat band — a statistical tie on a 40-99 scale where curated-stat
+ * noise swamps the gap, so feel should decide. Pass the un-nudged roleScores.
+ */
+export const isCoEqual = (a: number, b: number): boolean => Math.abs(a - b) <= DEAD_HEAT;
 /** Deterministic uniform [0,1) from a profile seed + key — drives every dead-heat rotation. */
 export const seededUnit = (seed: string, key: string): number => (fnv(`${seed}|${key}`) % 100000) / 100000;
 
