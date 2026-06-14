@@ -23,12 +23,14 @@ export default function MethodologyScreen() {
   return (
     <Screen scroll maxWidth={560}>
       <TopBar />
+      <Text style={styles.eyebrow}>THE METHOD · PUBLISHED IN FULL</Text>
       <Text style={styles.title}>Methodology</Text>
+      <Text style={styles.console}>
+        ENGINE v{ENGINE_VERSION} · RULESET {RULESET_VERSION} · FORMULAS v{FORMULA_VERSION} · DETERMINISTIC
+      </Text>
       <Text style={styles.intro}>
         Every recommendation reason cites one of the rules below, each graded by the strength of its
-        evidence. Engine v{ENGINE_VERSION} · ruleset {RULESET_VERSION} · formulas v{FORMULA_VERSION}.
-        The engine is deterministic — no machine learning, no black box: the same answers always
-        produce the same match.
+        evidence. No machine learning, no black box: the same answers always produce the same match.
       </Text>
 
       <Text style={styles.sectionTitle}>How the card stats work</Text>
@@ -142,9 +144,19 @@ export default function MethodologyScreen() {
 
 const styles = StyleSheet.create({
   back: { fontFamily: font.ui, fontSize: 14, color: color.muted, marginBottom: space(3) },
-  title: { fontFamily: font.display, fontSize: 26, color: color.ink },
-  intro: { fontFamily: font.ui, fontSize: 13.5, lineHeight: 20, color: color.muted, marginTop: space(2) },
-  sectionTitle: { fontFamily: font.display, fontSize: 16, color: color.ink, marginTop: space(6), marginBottom: space(2) },
+  eyebrow: { fontFamily: font.mono, fontSize: 10, letterSpacing: 2, color: color.volt, marginBottom: 6 },
+  title: { fontFamily: font.display, fontSize: 26, letterSpacing: -0.5, color: color.ink },
+  console: { fontFamily: font.mono, fontSize: 10, letterSpacing: 0.5, color: color.muted, marginTop: space(1.5) },
+  intro: { fontFamily: font.ui, fontSize: 13.5, lineHeight: 20, color: color.muted, marginTop: space(3) },
+  sectionTitle: {
+    fontFamily: font.mono,
+    fontSize: 11.5,
+    letterSpacing: 1.5,
+    color: color.cyan,
+    textTransform: 'uppercase',
+    marginTop: space(6),
+    marginBottom: space(2.5),
+  },
   body: { fontFamily: font.ui, fontSize: 13, lineHeight: 19, color: color.muted },
   groupHeader: { flexDirection: 'row', alignItems: 'center', gap: space(2.5), marginTop: space(6), marginBottom: space(2) },
   groupHint: { fontFamily: font.ui, fontSize: 12, color: color.muted },
