@@ -134,17 +134,42 @@ const awinMid = (retailer: string): string | undefined => {
       return process.env.EXPO_PUBLIC_AWIN_MID_PRODIRECT;
     case 'Running Point':
       return process.env.EXPO_PUBLIC_AWIN_MID_RUNNING_POINT;
-    // Saucony (Rakuten) and Mizuno (Impact/Rakuten) are NOT on Awin — they stay
-    // on Skimlinks / their own networks, so there's no Awin arm for them.
+    // brand programmes that run their UK affiliate on Awin
+    case 'Hoka':
+      return process.env.EXPO_PUBLIC_AWIN_MID_HOKA;
+    case 'On':
+      return process.env.EXPO_PUBLIC_AWIN_MID_ON;
+    case 'Salomon':
+      return process.env.EXPO_PUBLIC_AWIN_MID_SALOMON;
+    // additional UK running retailers on Awin (wired ready; added as buy-options
+    // progressively — Voodoo Running pays the best at ~12%)
+    case 'Voodoo Running':
+      return process.env.EXPO_PUBLIC_AWIN_MID_VOODOO;
+    case 'Wiggle':
+      return process.env.EXPO_PUBLIC_AWIN_MID_WIGGLE;
+    case 'Altra':
+      return process.env.EXPO_PUBLIC_AWIN_MID_ALTRA;
+    // Saucony + Asics run their UK brand programmes on RAKUTEN (see rakutenMid),
+    // New Balance on Impact, Mizuno off-network — so no Awin arm for those.
     default:
       return undefined;
   }
 };
 const webgainsMid = (retailer: string): string | undefined =>
   retailer === 'Runners Need' ? process.env.EXPO_PUBLIC_WEBGAINS_MID_RUNNERS_NEED : undefined;
-const rakutenMid = (retailer: string): string | undefined =>
-  retailer === 'Hoka' ? process.env.EXPO_PUBLIC_RAKUTEN_MID_HOKA : undefined;
-const IMPACT_MERCHANTS = new Set<string>(['Adidas']);
+// Saucony + Asics run their UK brand programmes on Rakuten Advertising (Hoka,
+// by contrast, is Awin in the UK — see awinMid).
+const rakutenMid = (retailer: string): string | undefined => {
+  switch (retailer) {
+    case 'Saucony':
+      return process.env.EXPO_PUBLIC_RAKUTEN_MID_SAUCONY;
+    case 'Asics':
+      return process.env.EXPO_PUBLIC_RAKUTEN_MID_ASICS;
+    default:
+      return undefined;
+  }
+};
+const IMPACT_MERCHANTS = new Set<string>(['Adidas', 'New Balance']);
 
 const enc = encodeURIComponent;
 
@@ -165,6 +190,9 @@ const SKIMLINKS_COVERED = new Set<string>([
   // as a monetised option.
   'Pro:Direct',
   'Running Point',
+  'Voodoo Running',
+  'Wiggle',
+  'Altra',
   // brand sites whose UK affiliate programmes Skimlinks aggregates
   'Nike',
   'Adidas',

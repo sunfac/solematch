@@ -175,16 +175,16 @@ describe('per-network affiliate dispatch', () => {
     expect(buildAffiliateUrl(offer, 'm:s:p')).toBe(offer.url);
   });
 
-  test('Rakuten wraps Hoka when both IDs set (3-14%)', () => {
+  test('Rakuten wraps Saucony when both IDs set (UK brand-direct)', () => {
     process.env.EXPO_PUBLIC_RAKUTEN_ID = 'RAK';
-    process.env.EXPO_PUBLIC_RAKUTEN_MID_HOKA = '54321';
-    const hoka: Offer = { ...offer, retailer: 'Hoka', url: 'https://www.hoka.com/en/gb/search?q=clifton' };
-    const wrapped = buildAffiliateUrl(hoka, 'm:s:p');
+    process.env.EXPO_PUBLIC_RAKUTEN_MID_SAUCONY = '54321';
+    const saucony: Offer = { ...offer, retailer: 'Saucony', url: 'https://www.saucony.com/en/endorphin-pro' };
+    const wrapped = buildAffiliateUrl(saucony, 'm:s:p');
     expect(wrapped).toContain('click.linksynergy.com');
     expect(wrapped).toContain('mid=54321');
     expect(wrapped).toContain('u1=m%3As%3Ap');
     delete process.env.EXPO_PUBLIC_RAKUTEN_ID;
-    delete process.env.EXPO_PUBLIC_RAKUTEN_MID_HOKA;
+    delete process.env.EXPO_PUBLIC_RAKUTEN_MID_SAUCONY;
   });
 });
 
