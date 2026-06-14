@@ -98,12 +98,13 @@ export default function Landing() {
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>MEASURED. NOT MARKETED.</Text>
         <Text style={styles.headline}>
-          Stop guessing.{'\n'}Your shoe,{' '}
-          <Text style={styles.headlineAccent}>revealed.</Text>
+          Your perfect running shoe,{'\n'}matched in{' '}
+          <Text style={styles.headlineAccent}>2 minutes.</Text>
         </Text>
         <Text style={styles.sub}>
-          Nine questions. The published science picks — myths and house favourites don&apos;t get a
-          vote. Your match, dealt as a card with the study to prove it.
+          Skip the 20-tab review spiral. Answer a few questions about your stride, goals and
+          budget — the engine matches you across 120+ shoes, every pick backed by published
+          research and ranked by nobody&apos;s marketing budget.
         </Text>
 
         {/* instrument viewport */}
@@ -127,7 +128,7 @@ export default function Landing() {
 
         <PillButton
           testID="cta-start"
-          label="Reveal my match"
+          label="Find my match — free"
           onPress={() => {
             reset();
             track('quiz_start');
