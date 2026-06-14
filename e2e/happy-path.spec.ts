@@ -106,3 +106,25 @@ test('browse renders the catalogue grid with tiers', async ({ page }) => {
   await expect(page.getByTestId('browse-nike-vaporfly-4')).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText('ELITE').first()).toBeVisible();
 });
+
+test('social card: shipped HTML carries OG/Twitter tags and a reachable card image', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/');
+  // on-brand, trail-inclusive, summary_large_image so the unfurl isn't bare
+  await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+    'content',
+    /road & trail shoes/,
+  );
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+    'content',
+    'summary_large_image',
+  );
+  // canonical stays on the SEO domain (not the railway host)
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /solematch\.app\/$/);
+  // the card image is actually served at the site root (same path the live host uses)
+  const img = await request.get('/og-default.png');
+  expect(img.status()).toBe(200);
+  expect(img.headers()['content-type']).toContain('image');
+});

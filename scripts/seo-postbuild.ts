@@ -14,7 +14,7 @@
  * Run after `npm run export:web`: npx tsx scripts/seo-postbuild.ts
  * Vercel does both via `buildCommand` (see package.json:build).
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import shoes from '../src/data/shoes.json';
 import { LEGACY_SLUGS } from '../src/data/catalogue';
@@ -31,9 +31,27 @@ interface Shoe {
 }
 
 const SITE_URL = process.env.SOLEMATCH_SITE_URL ?? 'https://solematch.app';
+/**
+ * Origin the social-card IMAGE actually resolves on. og:image must be an
+ * absolute URL that loads or the unfurl is blank — and the canonical domain
+ * (SITE_URL) may not have DNS yet, so default the image origin to the live
+ * deployment. Canonical/og:url stay on SITE_URL for SEO; only the image bytes
+ * are served from here. Override once the canonical domain is live.
+ */
+const ASSET_URL = process.env.SOLEMATCH_ASSET_URL ?? 'https://solematch-production.up.railway.app';
 const SITE_NAME = 'SoleMatch';
 const SITE_DESC =
-  'Science-backed running-shoe matching. An 11-step quiz feeds a deterministic, evidence-cited engine over 100+ road shoes — every recommendation cites peer-reviewed research, commission never reorders the ranking.';
+  'Find your perfect running shoe. A quick quiz drives an evidence-cited engine across 100+ road & trail shoes — independent, unbiased matching that cites the research.';
+/** Human label for a shoe category, used to lead per-shoe social cards. */
+const CAT_LABEL: Record<string, string> = {
+  race: 'Race-day shoe',
+  tempo: 'Tempo shoe',
+  daily: 'Daily trainer',
+  max_cushion: 'Max-cushion trainer',
+  stability: 'Stability shoe',
+  trail: 'Trail shoe',
+  budget: 'Budget trainer',
+};
 const SKIMLINKS_ID = process.env.EXPO_PUBLIC_SKIMLINKS_ID;
 /**
  * Skimlinks client-side auto-wrap: belt and braces for the server-side wrap in
@@ -67,7 +85,7 @@ function metaBlock(opts: {
   jsonLd?: object;
 }): string {
   const { title, description, canonical, ogImage, jsonLd } = opts;
-  const img = ogImage ?? `${SITE_URL}/og-default.png`;
+  const img = ogImage ?? `${ASSET_URL}/og-default.png`;
   const tags: string[] = [
     `<meta name="description" content="${escapeHtml(description)}" />`,
     `<link rel="canonical" href="${canonical}" />`,
@@ -109,19 +127,36 @@ const homeMeta = metaBlock({
   },
 });
 
+// brand voice: the public pitch is "independent / unbiased", never "commission"
+if (/commission/i.test(homeMeta)) {
+  throw new Error('homepage meta must not mention commission — brand voice is independent/unbiased');
+}
+
 const newHome = homeHtml
   .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(homeTitle)}</title>`)
   .replace(/<\/head>/, `    ${homeMeta}\n  </head>`);
 writeFileSync(HOME_HTML, newHome);
 console.log(`+ homepage meta -> ${HOME_HTML}`);
 
+// ---- social-share card ------------------------------------------------------
+// Ship the pre-rendered OG card (committed; regenerate with gen-og-card.ts).
+// Plain fs copy so the deploy build never needs a browser. A missing card means
+// broken unfurl images everywhere, so fail loudly rather than silently.
+const OG_SRC = join(ROOT, 'assets', 'og', 'og-default.png');
+if (!existsSync(OG_SRC)) {
+  throw new Error(`OG card missing at ${OG_SRC} — run: npx tsx scripts/gen-og-card.ts`);
+}
+copyFileSync(OG_SRC, join(DIST, 'og-default.png'));
+console.log(`+ og-default.png -> ${join(DIST, 'og-default.png')}`);
+
 // ---- per-shoe static stubs --------------------------------------------------
 let shoeStubs = 0;
 for (const s of INDEXED_SHOES) {
   const dir = join(DIST, 'shoe', s.slug);
   mkdirSync(dir, { recursive: true });
+  const catLabel = CAT_LABEL[s.category] ?? 'Running shoe';
   const title = `${s.brand} ${s.model} ${s.version} — match score & honest review · ${SITE_NAME}`;
-  const desc = `${s.consensus} See if it matches your stride: 11-question quiz, evidence-cited engine, no commission bias.`;
+  const desc = `${catLabel}. ${s.consensus} See if it fits your stride — a quick quiz, an evidence-cited engine, independent matching.`;
   const canonical = `${SITE_URL}/shoe/${s.slug}`;
   const meta = metaBlock({
     title,
