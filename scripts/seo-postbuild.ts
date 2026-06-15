@@ -18,15 +18,16 @@ import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from
 import { join } from 'node:path';
 import shoes from '../src/data/shoes.json';
 import { LEGACY_SLUGS } from '../src/data/catalogue';
+import {
+  CAT_LABEL,
+  escapeHtml,
+  homeFallbackMain,
+  injectFallbackBody,
+  shoeFallbackMain,
+  type SeoShoe,
+} from './seo-content';
 
-interface Shoe {
-  slug: string;
-  brand: string;
-  model: string;
-  version: string;
-  category: string;
-  msrpGbp: number;
-  consensus: string;
+interface Shoe extends SeoShoe {
   status: 'current' | 'superseded' | 'upcoming';
 }
 
@@ -42,16 +43,6 @@ const ASSET_URL = process.env.SOLEMATCH_ASSET_URL ?? 'https://solematch-producti
 const SITE_NAME = 'SoleMatch';
 const SITE_DESC =
   'Find your perfect running shoe. A quick quiz drives an evidence-cited engine across 100+ road & trail shoes — independent, unbiased matching that cites the research.';
-/** Human label for a shoe category, used to lead per-shoe social cards. */
-const CAT_LABEL: Record<string, string> = {
-  race: 'Race-day shoe',
-  tempo: 'Tempo shoe',
-  daily: 'Daily trainer',
-  max_cushion: 'Max-cushion trainer',
-  stability: 'Stability shoe',
-  trail: 'Trail shoe',
-  budget: 'Budget trainer',
-};
 const SKIMLINKS_ID = process.env.EXPO_PUBLIC_SKIMLINKS_ID;
 /**
  * Skimlinks client-side auto-wrap: belt and braces for the server-side wrap in
@@ -66,9 +57,6 @@ const skimlinksTag = SKIMLINKS_ID
 const ROOT = join(__dirname, '..');
 const DIST = join(ROOT, 'dist');
 const HOME_HTML = join(DIST, 'index.html');
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // Indexable detail pages: current shoes PLUS the one-back previous-gen models
 // (isLegacy) — they're browsable/matchable and high-search-volume, so they earn
@@ -132,11 +120,15 @@ if (/commission/i.test(homeMeta)) {
   throw new Error('homepage meta must not mention commission — brand voice is independent/unbiased');
 }
 
-const newHome = homeHtml
-  .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(homeTitle)}</title>`)
-  .replace(/<\/head>/, `    ${homeMeta}\n  </head>`);
+const popularShoes = INDEXED_SHOES.filter((s) => s.status === 'current').slice(0, 12);
+const newHome = injectFallbackBody(
+  homeHtml
+    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(homeTitle)}</title>`)
+    .replace(/<\/head>/, `    ${homeMeta}\n  </head>`),
+  homeFallbackMain({ description: SITE_DESC, popular: popularShoes }),
+);
 writeFileSync(HOME_HTML, newHome);
-console.log(`+ homepage meta -> ${HOME_HTML}`);
+console.log(`+ homepage meta + crawlable body -> ${HOME_HTML}`);
 
 // ---- social-share card ------------------------------------------------------
 // Ship the pre-rendered OG card (committed; regenerate with gen-og-card.ts).
@@ -177,11 +169,19 @@ for (const s of INDEXED_SHOES) {
       },
     },
   });
-  // re-use the SPA shell but with shoe-specific head: social bots see the
-  // right card, then the SPA router picks up /shoe/<slug> client-side
-  const stub = homeHtml
-    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`)
-    .replace(/<\/head>/, `    ${meta}\n  </head>`);
+  // re-use the SPA shell but with shoe-specific head (social bots get the right
+  // card) AND crawlable body content + internal links (search bots get real,
+  // indexable text instead of an empty root div); the SPA router takes over
+  // client-side once a real visitor lands.
+  const related = INDEXED_SHOES.filter(
+    (r) => r.category === s.category && r.slug !== s.slug,
+  ).slice(0, 4);
+  const stub = injectFallbackBody(
+    homeHtml
+      .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`)
+      .replace(/<\/head>/, `    ${meta}\n  </head>`),
+    shoeFallbackMain(s, related),
+  );
   writeFileSync(join(dir, 'index.html'), stub);
   shoeStubs++;
 }
