@@ -75,6 +75,10 @@ function metaBlock(opts: {
   const { title, description, canonical, ogImage, jsonLd } = opts;
   const img = ogImage ?? `${ASSET_URL}/og-default.png`;
   const tags: string[] = [
+    // Paint the brand-dark background before React mounts — the SPA shell sets
+    // no body colour, so without this the app flashes white on every cold load
+    // (matches color.bg / theme-color #0A0B0F).
+    `<style>html,body{background:#0A0B0F;color-scheme:dark}</style>`,
     `<meta name="description" content="${escapeHtml(description)}" />`,
     `<link rel="canonical" href="${canonical}" />`,
     `<meta property="og:type" content="website" />`,

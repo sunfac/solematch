@@ -93,12 +93,17 @@ describe('homeFallbackMain', () => {
 describe('injectFallbackBody', () => {
   const shell = '<body>\n    <div id="root"></div>\n  <script src="/entry.js" defer></script>\n</body>';
 
-  it('inserts the fallback main and a hide-on-boot script while keeping the root', () => {
+  it('inserts the fallback main hidden-by-default with a no-JS override, keeping the root', () => {
     const out = injectFallbackBody(shell, '<h1>Hi</h1>');
     expect(out).toContain('<div id="root"></div>');
     expect(out).toContain('<main id="seo-fallback"');
     expect(out).toContain('<h1>Hi</h1>');
-    expect(out).toContain("getElementById('seo-fallback')");
+    // hidden by default for JS visitors (no flash), restored for no-JS crawlers
+    expect(out).toContain('#seo-fallback{display:none}');
+    expect(out).toContain('<noscript>');
+    expect(out).toContain('display:block!important');
+    // the hide rule must precede the element so it never paints
+    expect(out.indexOf('display:none')).toBeLessThan(out.indexOf('<main id="seo-fallback"'));
     // root must still precede the entry bundle
     expect(out.indexOf('id="root"')).toBeLessThan(out.indexOf('entry.js'));
   });

@@ -111,18 +111,19 @@ export function homeFallbackMain(opts: { description: string; popular?: SeoShoe[
 }
 
 /**
- * Insert a crawlable `<main>` after the SPA root and hide it the moment JS runs.
- * The inline script executes during parse (before the deferred app bundle), so
- * real users never see it; the `<noscript>` re-enables scrolling for the (rare)
- * no-JS visitor because the shell sets `body{overflow:hidden}`. Uses a replacer
- * function so `$` sequences in the content aren't treated as `String.replace`
- * special patterns.
+ * Insert a crawlable `<main>` after the SPA root, hidden by default via a CSS
+ * rule emitted *before* the element — so it never paints for a JS visitor (no
+ * script-timing flash), while a no-JS crawler/visitor gets it back through the
+ * `<noscript>` override (which also re-enables scrolling, since the shell sets
+ * `body{overflow:hidden}`). Non-JS search bots read the raw DOM text regardless
+ * of CSS, so the content stays fully indexable. Uses a replacer function so `$`
+ * sequences in the content aren't treated as `String.replace` special patterns.
  */
 export function injectFallbackBody(html: string, mainInner: string): string {
   const block =
     `<div id="root"></div>\n` +
+    `    <style>#seo-fallback{display:none}</style>\n` +
     `    <main id="seo-fallback" class="seo-fallback">${mainInner}</main>\n` +
-    `    <noscript><style>body{overflow:auto!important}</style></noscript>\n` +
-    `    <script>(function(){var f=document.getElementById('seo-fallback');if(f){f.style.display='none';}})();</script>`;
+    `    <noscript><style>#seo-fallback{display:block!important}body{overflow:auto!important}</style></noscript>`;
   return html.replace('<div id="root"></div>', () => block);
 }
