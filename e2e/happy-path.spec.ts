@@ -107,6 +107,14 @@ test('browse renders the catalogue grid with tiers', async ({ page }) => {
   await expect(page.getByText('ELITE').first()).toBeVisible();
 });
 
+test('category landing page renders the engine-ranked list via the SPA route', async ({ page }) => {
+  // a search visitor lands on /best/race — the SPA route must render the ranked
+  // list, not the not-found screen (and not just the hidden crawler fallback)
+  await page.goto('/best/race');
+  await expect(page.getByTestId('best-nike-vaporfly-4')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('No such category')).toHaveCount(0);
+});
+
 test('social card: shipped HTML carries OG/Twitter tags and a reachable card image', async ({
   page,
   request,

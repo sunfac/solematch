@@ -1,7 +1,9 @@
 import {
   shoeFallbackMain,
   homeFallbackMain,
+  categoryFallbackMain,
   injectFallbackBody,
+  type RankedSeoShoe,
   type SeoShoe,
 } from '../seo-content';
 
@@ -75,8 +77,42 @@ describe('shoeFallbackMain', () => {
   });
 });
 
+describe('categoryFallbackMain', () => {
+  const ranked: RankedSeoShoe[] = [
+    { ...ALPHAFLY, overall: 96 },
+    { slug: 'adidas-adios-pro-4', brand: 'Adidas', model: 'Adios Pro', version: '4', category: 'race', msrpGbp: 250, consensus: 'x', weightG: 207, overall: 94 },
+  ];
+  const html = categoryFallbackMain({
+    h1: 'Best race-day running shoes',
+    intro: 'Carbon-plated super-shoes built for one thing.',
+    shoes: ranked,
+    siblings: [{ key: 'trail', label: 'trail' }],
+  });
+
+  it('renders the H1, intro and an ordered ranked list with ratings', () => {
+    expect(html).toContain('<h1>Best race-day running shoes</h1>');
+    expect(html).toContain('Carbon-plated super-shoes built for one thing.');
+    expect(html).toContain('<ol>');
+    expect(html).toContain('<a href="/shoe/nike-alphafly-3">Nike Alphafly 3</a> — 96 rating');
+    expect(html).toContain('£250');
+  });
+
+  it('links to the quiz, methodology and sibling category pages', () => {
+    expect(html).toContain('href="/quiz/1"');
+    expect(html).toContain('href="/methodology"');
+    expect(html).toContain('href="/best/trail"');
+  });
+});
+
 describe('homeFallbackMain', () => {
-  const html = homeFallbackMain({ description: 'Find your perfect running shoe.', popular: RELATED });
+  const html = homeFallbackMain({
+    description: 'Find your perfect running shoe.',
+    popular: RELATED,
+    categories: [
+      { key: 'race', label: 'race-day' },
+      { key: 'stability', label: 'stability' },
+    ],
+  });
 
   it('has the homepage H1 and the primary funnel links', () => {
     expect(html).toContain('<h1>SoleMatch');
@@ -85,8 +121,11 @@ describe('homeFallbackMain', () => {
     expect(html).toContain('href="/methodology"');
   });
 
-  it('lists popular shoes as internal links', () => {
+  it('lists popular shoes and category landing pages as internal links', () => {
     expect(html).toContain('href="/shoe/adidas-adios-pro-4"');
+    expect(html).toContain('href="/best/race"');
+    expect(html).toContain('href="/best/stability"');
+    expect(html).toContain('Best race-day running shoes');
   });
 });
 

@@ -94,9 +94,56 @@ export function shoeFallbackMain(shoe: SeoShoe, related: SeoShoe[] = []): string
     .join('');
 }
 
+export interface RankedSeoShoe extends SeoShoe {
+  /** Engine overall rating, for the ranked list copy. */
+  overall: number;
+}
+
+/** Crawlable body content for a `/best/<category>` landing page. */
+export function categoryFallbackMain(opts: {
+  h1: string;
+  intro: string;
+  shoes: RankedSeoShoe[];
+  siblings?: { key: string; label: string }[];
+}): string {
+  const h1 = escapeHtml(opts.h1);
+  const list = opts.shoes
+    .map((s) => {
+      const wt = s.weightG ? `${s.weightG} g · ` : '';
+      return `<li><a href="/shoe/${s.slug}">${escapeHtml(fullName(s))}</a> — ${s.overall} rating · ${wt}£${s.msrpGbp}</li>`;
+    })
+    .join('');
+  const siblings = opts.siblings ?? [];
+  const siblingHtml = siblings.length
+    ? `<h2>Other categories</h2><p>${siblings
+        .map((c) => `<a href="/best/${c.key}">Best ${escapeHtml(c.label)} running shoes</a>`)
+        .join(' · ')}</p>`
+    : '';
+  return [
+    `<nav aria-label="Breadcrumb"><a href="/">SoleMatch</a> › <a href="/browse">All shoes</a> › ${h1}</nav>`,
+    `<h1>${h1}</h1>`,
+    `<p>${escapeHtml(opts.intro)}</p>`,
+    `<p><a href="/quiz/1">Take the free 2-minute quiz</a> for a personal match, or <a href="/methodology">read the methodology</a> behind the ranking.</p>`,
+    `<h2>Ranked by the engine</h2><ol>${list}</ol>`,
+    siblingHtml,
+  ]
+    .filter(Boolean)
+    .join('');
+}
+
 /** Crawlable body content for the homepage. */
-export function homeFallbackMain(opts: { description: string; popular?: SeoShoe[] }): string {
+export function homeFallbackMain(opts: {
+  description: string;
+  popular?: SeoShoe[];
+  categories?: { key: string; label: string }[];
+}): string {
   const popular = opts.popular ?? [];
+  const categories = opts.categories ?? [];
+  const catsHtml = categories.length
+    ? `<h2>Best running shoes by category</h2><ul>${categories
+        .map((c) => `<li><a href="/best/${c.key}">Best ${escapeHtml(c.label)} running shoes</a></li>`)
+        .join('')}</ul>`
+    : '';
   const popularHtml = popular.length
     ? `<h2>Popular running shoes</h2><ul>${popular.map(linkItem).join('')}</ul>`
     : '';
@@ -104,6 +151,7 @@ export function homeFallbackMain(opts: { description: string; popular?: SeoShoe[
     `<h1>SoleMatch — science-backed running shoe matching</h1>`,
     `<p>${escapeHtml(opts.description)}</p>`,
     `<p><a href="/quiz/1">Start the free 2-minute quiz</a> · <a href="/browse">Browse all running shoes</a> · <a href="/methodology">How the matching works</a></p>`,
+    catsHtml,
     popularHtml,
   ]
     .filter(Boolean)

@@ -18,12 +18,16 @@ import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from
 import { join } from 'node:path';
 import shoes from '../src/data/shoes.json';
 import { LEGACY_SLUGS } from '../src/data/catalogue';
+import { CATEGORY_CONTENT, CATEGORY_ORDER } from '../src/data/categories';
+import { SCORED } from '../src/scores/formulas';
 import {
   CAT_LABEL,
+  categoryFallbackMain,
   escapeHtml,
   homeFallbackMain,
   injectFallbackBody,
   shoeFallbackMain,
+  type RankedSeoShoe,
   type SeoShoe,
 } from './seo-content';
 
@@ -125,11 +129,12 @@ if (/commission/i.test(homeMeta)) {
 }
 
 const popularShoes = INDEXED_SHOES.filter((s) => s.status === 'current').slice(0, 12);
+const categoryLinks = CATEGORY_ORDER.map((k) => ({ key: k, label: CATEGORY_CONTENT[k].label }));
 const newHome = injectFallbackBody(
   homeHtml
     .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(homeTitle)}</title>`)
     .replace(/<\/head>/, `    ${homeMeta}\n  </head>`),
-  homeFallbackMain({ description: SITE_DESC, popular: popularShoes }),
+  homeFallbackMain({ description: SITE_DESC, popular: popularShoes, categories: categoryLinks }),
 );
 writeFileSync(HOME_HTML, newHome);
 console.log(`+ homepage meta + crawlable body -> ${HOME_HTML}`);
@@ -191,6 +196,52 @@ for (const s of INDEXED_SHOES) {
 }
 console.log(`+ ${shoeStubs} per-shoe static stubs -> dist/shoe/<slug>/index.html`);
 
+// ---- category landing pages -------------------------------------------------
+// /best/<category> — crawlable, engine-ranked "best running shoes" hubs that
+// target head search terms and funnel into the quiz. Same shape as the shoe
+// stubs: category-specific head + crawlable body; the SPA route
+// (app/best/[category].tsx) takes over once a real visitor lands.
+let catStubs = 0;
+for (const key of CATEGORY_ORDER) {
+  const c = CATEGORY_CONTENT[key];
+  const ranked: RankedSeoShoe[] = INDEXED_SHOES.filter((s) => s.category === key)
+    .map((s) => ({ ...s, overall: SCORED.get(s.slug)?.overall ?? 0 }))
+    .sort((a, b) => b.overall - a.overall);
+  const canonical = `${SITE_URL}/best/${key}`;
+  const meta = metaBlock({
+    title: c.seoTitle,
+    description: c.seoDescription,
+    canonical,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: c.h1,
+      description: c.seoDescription,
+      itemListElement: ranked.map((s, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE_URL}/shoe/${s.slug}`,
+        name: `${s.brand} ${s.model} ${s.version}`.trim(),
+      })),
+    },
+  });
+  const siblings = CATEGORY_ORDER.filter((k) => k !== key).map((k) => ({
+    key: k as string,
+    label: CATEGORY_CONTENT[k].label,
+  }));
+  const stub = injectFallbackBody(
+    homeHtml
+      .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(c.seoTitle)}</title>`)
+      .replace(/<\/head>/, `    ${meta}\n  </head>`),
+    categoryFallbackMain({ h1: c.h1, intro: c.intro, shoes: ranked, siblings }),
+  );
+  const dir = join(DIST, 'best', key);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'index.html'), stub);
+  catStubs++;
+}
+console.log(`+ ${catStubs} category landing pages -> dist/best/<category>/index.html`);
+
 // ---- sitemap + robots -------------------------------------------------------
 const today = new Date().toISOString().slice(0, 10);
 const urls = [
@@ -201,6 +252,7 @@ const urls = [
   { loc: `${SITE_URL}/legal/disclosure`, prio: '0.3' },
   { loc: `${SITE_URL}/legal/privacy`, prio: '0.3' },
   { loc: `${SITE_URL}/legal/terms`, prio: '0.3' },
+  ...CATEGORY_ORDER.map((k) => ({ loc: `${SITE_URL}/best/${k}`, prio: '0.8' })),
   ...INDEXED_SHOES.map((s) => ({ loc: `${SITE_URL}/shoe/${s.slug}`, prio: '0.8' })),
 ];
 
