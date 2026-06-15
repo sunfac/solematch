@@ -3,6 +3,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { bySlug } from '@/data/catalogue';
 import { consensusBestForSlug, consensusRunnerUpForSlug } from '@/data/consensusBest';
 import { SCORED, roleDrivers } from '@/scores/formulas';
+import { avoidIf } from '@/scores/avoidIf';
 import { ShoeCard } from '@/components/card/ShoeCard';
 import { EvidenceBadge } from '@/components/ui/Badge';
 import { PillButton } from '@/components/ui/PillButton';
@@ -184,6 +185,24 @@ export default function ShoeDetailScreen() {
         {shoe.athleteNotes ? <Text style={styles.athlete}>{shoe.athleteNotes}</Text> : null}
       </View>
 
+      {(() => {
+        const caveats = avoidIf(shoe);
+        return caveats.length ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Who it&apos;s not for</Text>
+            {caveats.map((t, i) => (
+              <View key={i} style={styles.avoidRow}>
+                <Text style={styles.avoidMark}>✕</Text>
+                <Text style={styles.avoidText}>{t}</Text>
+              </View>
+            ))}
+            <Text style={styles.avoidFoot}>
+              Honest fit guidance, derived from the specs — no shoe is right for every runner.
+            </Text>
+          </View>
+        ) : null;
+      })()}
+
       <View style={styles.section} nativeID="offers">
         <Text style={styles.sectionTitle}>Where to buy</Text>
         {offers.length > 0 ? (
@@ -271,6 +290,10 @@ const styles = StyleSheet.create({
   specNote: { fontFamily: font.ui, fontSize: 11, color: color.muted, opacity: 0.8 },
   consensus: { fontFamily: font.ui, fontSize: 14, lineHeight: 21, color: color.ink },
   athlete: { fontFamily: font.ui, fontSize: 12.5, lineHeight: 18, color: color.muted },
+  avoidRow: { flexDirection: 'row', gap: space(2), marginTop: space(1.5) },
+  avoidMark: { fontFamily: font.mono, fontSize: 12, color: color.magenta, marginTop: 1 },
+  avoidText: { flex: 1, fontFamily: font.ui, fontSize: 13.5, lineHeight: 19, color: color.ink },
+  avoidFoot: { fontFamily: font.mono, fontSize: 9, letterSpacing: 0.3, lineHeight: 14, color: color.muted, marginTop: space(2) },
   critics: {
     backgroundColor: color.surface,
     borderWidth: 1,
