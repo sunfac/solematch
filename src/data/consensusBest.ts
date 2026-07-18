@@ -71,7 +71,7 @@ export const CONSENSUS_BEST: ConsensusPick[] = [
     confidence: 'clear',
     why: 'The consensus daily trainer of 2025-26 — best-overall at Believe in the Run and RunRepeat and the community favourite — delivering full-length race-grade Lightstrike Pro foam in a ~224 g do-everything trainer.',
     keyTech: 'Full-length Lightstrike Pro (supercritical TPEE), plateless',
-    runnerUpSlug: 'asics-novablast-5',
+    runnerUpSlug: 'asics-novablast-6',
     sources: [
       'https://believeintherun.com/shoe-reviews/best-road-running-shoes-of-2025/',
       'https://runrepeat.com/guides/best-running-shoes',
@@ -103,13 +103,13 @@ export const CONSENSUS_BEST: ConsensusPick[] = [
   },
   {
     label: 'Budget',
-    slug: 'puma-velocity-nitro-4',
+    slug: 'puma-velocity-nitro-5',
     confidence: 'near-tie',
-    why: "Believe in the Run's best daily trainer of 2025 and the standout value pick — supercritical Nitro foam and a PUMAGRIP outsole punch well above the price. For the true sub-£75 bracket, RunRepeat's winner is the Nike Revolution 8.",
-    keyTech: 'Nitro (nitrogen-infused EVA), plateless, PUMAGRIP outsole',
+    why: "The 2026 value standout — reviewers' 'budget banger' now runs a full TPU NITROFOAM midsole with a PUMAGRIP outsole that punches well above its sub-£110 price. For the true sub-£75 bracket, RunRepeat's winner is the Nike Revolution 8.",
+    keyTech: 'Full-length TPU NITROFOAM (nitrogen-infused supercritical TPU), plateless, PUMAGRIP outsole',
     runnerUpSlug: 'nike-revolution-8',
     sources: [
-      'https://believeintherun.com/shoe-reviews/best-road-running-shoes-of-2025/',
+      'https://www.sportsshoes.com/store/puma-velocity-nitro',
       'https://runrepeat.com/guides/best-cheap-running-shoes',
     ],
   },
